@@ -1,0 +1,14 @@
+@(firstColumn:String,input: Map[String, String])(implicit request: play.api.mvc.Request[Any])
+@if(Option(input).getOrElse(Map()).nonEmpty) {
+    <tr>
+        <th rowspan="@input.size">@firstColumn</th>
+        <td >@Html(input.head._1)</td>
+        <td >@Html(input.head._2)</td>
+    </tr>
+    @for((key, value) <- input drop 1) {
+        <tr>
+            <td >@Html(key)</td>
+            <td >@Html(value)</td>
+        </tr>
+    }
+}

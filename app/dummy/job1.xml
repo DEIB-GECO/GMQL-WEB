@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<gmqlSchemaCollection xmlns="http://genomic.elet.polimi.it/entities" name="GLOBAL_SCHEMAS">
+    <gmqlSchema name="job_Extraction_biclust_B_liuba1_20160413_210828_PROM_HM_TF_PROMonly_ECC1" type1="gtf">
+        <field type="STRING">source</field>
+        <field type="STRING">feature</field>
+        <field type="FLOAT">score</field>
+        <field type="INTEGER">frame</field>
+        <field type="STRING">name</field>
+        <field type="INTEGER">count</field>
+    </gmqlSchema>
+</gmqlSchemaCollection>

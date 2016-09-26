@@ -1,0 +1,60 @@
+@()
+
+<div id="tree-panel" class="panel panel-default">
+    <div class="panel-heading">
+        <b>Data sets</b>
+        <button id="refresh-tree" type="button" class="login-event btn btn-info btn-xs pull-right" data-toggle="tooltip" data-placement="right" title="Reload tree">
+            <span class="glyphicon glyphicon-refresh"></span>
+        </button>
+        <button id="button-expand-all" class="tree-btn btn btn-xs btn-warning pull-right" data-toggle="tooltip" data-placement="right" title="Expand all">
+            <span class="glyphicon glyphicon-expand" aria-hidden="true"></span>
+            @*Expand all*@</button>
+        <button id="button-collapse-all" class="tree-btn btn btn-xs btn-warning  pull-right" data-toggle="tooltip" data-placement="right" title="Collapse all">
+            <span class="glyphicon glyphicon-collapse-down" aria-hidden="true"></span>
+            @*Collapse all*@</button>
+        <div class="clearfix"></div>
+    </div>
+    <div class="panel-body panel-body-no-padding" id="tree-panel-body">
+        <div id="tree" class="fancytree-colorize-hover fancytree-fade-expander"></div>
+    </div>
+    <div class="panel-footer">
+        <button type="button" class="tree-btn btn btn-primary btn-xs pull-left" data-toggle="modal" data-target="#upload-modal">
+            <span class="glyphicon glyphicon-upload" aria-hidden="true"></span>
+            Add
+        </button>
+        <button id="button-delete-data-set" type="button" class="tree-btn btn btn-danger btn-xs pull-left">
+            <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
+            Delete
+        </button>
+
+        <button id="button-download-data-set" type="button" class="tree-btn btn btn-success btn-xs pull-left">
+            <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+            Download
+        </button>
+
+        <button id="button-ucsc-data-set" type="button" class="tree-btn btn btn-success btn-xs pull-right">
+            <span class="glyphicon glyphicon-cloud" aria-hidden="true"></span>
+            UCSC G. B.
+        </button>
+
+
+        <div class="clearfix"></div>
+    </div>
+</div>
+
+<div id="upload-modal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Upload new data set</h4>
+            </div>
+            <div class="modal-body">
+                <div>@views.html.gmql.gmql_upload()</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

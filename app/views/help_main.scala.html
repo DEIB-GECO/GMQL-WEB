@@ -1,0 +1,67 @@
+@()(implicit request: play.api.mvc.Request[Any])
+
+<!DOCTYPE html>
+
+
+<html>
+    <head>
+        @head("GMQL Rest Help page")
+    <link rel="stylesheet" href="@routes.Assets.at("stylesheets/help_page.css")">
+    </head>
+    <body>
+        <nav class="navbar navbar-default navbar-fixed-top">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="#">GMQL-REST</a>
+                </div>
+                @*<ul class="nav navbar-nav">*@
+                @*<li class="active"><a href="#">Home</a></li>*@
+                @*<li class="dropdown">*@
+                @*<a class="dropdown-toggle" data-toggle="dropdown" href="#">Page 1*@
+                @*<span class="caret"></span></a>*@
+                @*<ul class="dropdown-menu">*@
+                @*<li><a href="#">Page 1-1</a></li>*@
+                @*<li><a href="#">Page 1-2</a></li>*@
+                @*<li><a href="#">Page 1-3</a></li>*@
+                @*</ul>*@
+                @*</li>*@
+                @*<li><a href="#">Page 2</a></li>*@
+                @*<li><a href="#">Page 3</a></li>*@
+                @*</ul>*@
+                <ul class="nav navbar-nav navbar-right">
+                    @* <li><a href="#"><span class="glyphicon glyphicon-user"></span> Sign Up</a></li>
+                    <li><a href="#"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>*@
+                    <li><div id="login" class="login-div"></div></li>
+                </ul>
+            </div>
+        </nav>
+
+
+        GMQL-REST API services defined as in the below section.
+
+        All the operations except login needs authentication token in the HTTP header <i>"X&#8209;Auth&#8209;Token"</i>.
+
+        <div id="container">
+
+
+            <div>@help.help_authentication()</div>
+
+            <div id="data-set-management"></div>
+            @*<div id="left" class="left">*@
+            <div>@help.help_data_set("public.HG19_BED_ANNOTATION", "GUEST_TEST_DS") </div>
+            <div>@help.help_query()</div>
+
+            @*</div>*@
+
+
+            <br>
+
+            @*<div id="right" class="right" >*@
+
+
+            @*</div>*@
+        </div>
+
+
+    </body>
+</html>

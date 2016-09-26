@@ -1,0 +1,18 @@
+@import views.html.help.help_table_map
+@import views.ViewHelper
+@(call: Call, input: Map[String, String], output: Map[String, String])(implicit request: play.api.mvc.Request[Any])
+
+<table class="help_main-table">
+    <tr>
+        <th >Url</th>
+        <td colspan="2">@ViewHelper.reformat(call.url)</td>
+        @*<td colspan="2">@ViewHelper.reformat(call.url)</td>*@
+        @*<td>@call.absoluteURL</td>*@
+    </tr>
+    <tr>
+        <th>Method</th>
+        <td colspan="2">@call.method</td>
+    </tr>
+    @help_table_map("Input", input)
+    @help_table_map("Output", output)
+</table>

@@ -1,0 +1,58 @@
+ @(title: String)(implicit request: play.api.mvc.Request[Any])
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>@title</title>
+@*favicon*@
+<link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/gmql-icon.png")">
+@*imported CSS*@
+<link rel='stylesheet' href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.css"))'>
+<link rel='stylesheet' href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrapValidator.min.css"))'>
+@*<link rel='stylesheet' href='@routes.WebJarAssets.at(WebJarAssets.locate("skin-bootstrap/ui.fancytree.css"))'>*@
+@*<link rel='stylesheet' href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap-multiselect.css"))'>*@
+ <link rel='stylesheet' href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap-select.css"))'>
+ @*<link rel='stylesheet' href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap-notify.css"))'>*@
+
+
+
+ <link rel='stylesheet' href='@routes.Assets.at("bootstrap3-dialog/bootstrap-dialog.min.css")'>
+ <link rel='stylesheet' href='@routes.Assets.at("tabdrop/css/tabdrop.css")'>
+ <link rel='stylesheet' href='@routes.Assets.at("fancytree/skin-bootstrap-n/ui.fancytree.css")'>
+
+
+ @*imported JS*@
+<script src="@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))"></script>
+<script src="@routes.WebJarAssets.at(WebJarAssets.locate("jquery-ui.min.js"))"></script>
+@*<script src="@routes.WebJarAssets.at(WebJarAssets.locate("src-min/ace.js"))" type="text/javascript"></script>*@
+ <script src="@routes.Assets.at("ace/src/ace.js")" type="text/javascript"></script>
+ <script src="@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.js"))" type="text/javascript"></script>
+<script src="@routes.WebJarAssets.at(WebJarAssets.locate("bootstrapValidator.min.js"))" type="text/javascript"></script>
+ @*<script src="@routes.WebJarAssets.at(WebJarAssets.locate("jquery.fancytree-all.js"))" type="text/javascript"></script>*@
+<script src="@routes.WebJarAssets.at(WebJarAssets.locate("js.cookie.js"))" type="text/javascript"></script>
+@*<script src="@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap-multiselect.js"))" type="text/javascript"></script>*@
+<script src="@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap-select.js"))" type="text/javascript"></script>
+@*<script src="@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap-filestyle.js"))" type="text/javascript"></script>*@
+@*<script src="@routes.Assets.at("javascripts/bootstrap-filestyle.js")" type="text/javascript"></script>*@
+<script src="@routes.WebJarAssets.at(WebJarAssets.locate("jquery.iframe-transport.js"))" type="text/javascript"></script>
+ <script src="@routes.WebJarAssets.at(WebJarAssets.locate("jquery.fileupload.js"))" type="text/javascript"></script>
+ <script src="@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap-notify.js"))" type="text/javascript"></script>
+
+ <script src="@routes.Assets.at("bootstrap3-dialog/bootstrap-dialog.min.js")" type="text/javascript"></script>
+ <script src="@routes.Assets.at("fancytree/jquery.fancytree-all.js")" type="text/javascript"></script>
+
+ @*My JS*@
+<script src="@routes.Assets.at("javascripts/ace-default.js")" type="text/javascript"></script>
+ <script src="@routes.Assets.at("javascripts/jquery.binarytransport.js")" type="text/javascript"></script>
+ <script src="@routes.Assets.at("tabdrop/js/bootstrap-tabdrop.js")" type="text/javascript"></script>
+@*My coffeescript*@
+<script src="@routes.Assets.at("javascripts/utils.js")" type="text/javascript"></script>
+<script src="@routes.Assets.at("javascripts/authentication.js")" type="text/javascript"></script>
+@*reverse routing JSs*@
+<script type="text/javascript" src="@routes.JavascriptRoute.javascriptRoutes"></script>
+
+ <script src="@routes.Assets.at("javascripts/log_status.js")" type="text/javascript"></script>
+
+
+ @*<link rel='stylesheet' href='@routes.Assets.at("stylesheets/bootstrap-same-height.css")'>*@

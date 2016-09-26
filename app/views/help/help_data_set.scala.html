@@ -1,0 +1,105 @@
+@import views.html.help.help_table
+@import views.ViewHelper
+@(dataSetName: String, newDataSetName: String)(implicit request: play.api.mvc.Request[Any])
+
+    @dataSetNameDescription = @{
+        "The name of the data set for the selected operation."
+    }
+
+
+    <div id="data-set-operations">
+        <input type="hidden" id="data-set-name" name="data-set-name" value="@dataSetName">
+        <input type="hidden" id="new-data-set-name" name="new-data-set-name" value="@newDataSetName">
+
+        For using the REST API, user
+        In order to login as <i>Guest</i> user,
+
+        <h2>Data set Operations</h2>
+
+        <h3>List data sets</h3>
+        This API list all the data sets of the user.
+
+        @help_table(controllers.gmql.routes.DSManager.dataSetAll,
+            null,
+            Map("text/plain" -> "The result of the logout operation"))
+
+        <button id="data-set" type="button" class="help-button">
+        @ViewHelper.reformat(controllers.gmql.routes.DSManager.dataSetAll)
+        </button>
+        <div class="row">
+            <div id="data-set-request" class="col-sm-4"></div>
+            <div id="data-set-response" class="col-sm-4"></div>
+            <div id="data-set-result" class="col-sm-4"></div>
+        </div>
+
+        <h3>List samples in a data set</h3>
+        @help_table(controllers.gmql.routes.DSManager.dataSetSamples("{dataSetName}"),
+            Map("dataSetName" -> dataSetNameDescription),
+            Map("text/plain" -> "The result of the logout operation"))
+
+        <button id="data-set-sample" type="button" class="help-button">
+        @ViewHelper.reformat(controllers.gmql.routes.DSManager.dataSetSamples(dataSetName))
+        </button>
+        <div class="row">
+            <div id="data-set-sample-request" class="col-sm-4"></div>
+            <div id="data-set-sample-response" class="col-sm-4"></div>
+            <div id="data-set-sample-result" class="col-sm-4"></div>
+        </div>
+
+        <h3>upload samples from URLs</h3>
+        @help_table(controllers.gmql.routes.DSManager.uploadSamplesFromUrls("{dataSetName}", Some("bed")),
+            Map("dataSetName" -> dataSetNameDescription),
+            Map("text/plain" -> "The result of upload operation"))
+        <button id="data-set-upload-url" type="button" class="help-button">
+        @ViewHelper.reformat(controllers.gmql.routes.DSManager.uploadSamplesFromUrls(newDataSetName, None))
+        </button>
+        <div id="data-set-upload-url-input"></div>
+        <div class="row">
+            <div id="data-set-upload-url-request" class="col-sm-4"></div>
+            <div id="data-set-upload-url-response" class="col-sm-4"></div>
+            <div id="data-set-upload-url-result" class="col-sm-4"></div>
+        </div>
+
+        <h3>zipFilePreparation data set samples</h3>
+        This is not necessary to download.<br>
+        @help_table(controllers.gmql.routes.DSManager.zipFilePreparation("{dataSetName}", "{clean}"),
+            Map("dataSetName" -> dataSetNameDescription,
+                "clean" -> "Plain‐text which is either true or false. To clean the previous folder if it exists and rebuild, or just send ready when it exists."),
+            Map("text/plain" -> "Plain‐text representation the word “OK”. Folder contains the data sets samples, copied from HDFS, and the query used to run it plus the vocabulary used in the metadata"))
+        <button id="data-set-zip-file" type="button" class="help-button">
+        @ViewHelper.reformat(controllers.gmql.routes.DSManager.zipFilePreparation(newDataSetName, "true"))
+        </button>
+        <div class="row">
+            <div id="data-set-zip-file-request" class="col-sm-4"></div>
+            <div id="data-set-zip-file-response" class="col-sm-4"></div>
+            <div id="data-set-zip-file-result" class="col-sm-4"></div>
+        </div>
+
+        <h3>Download data set</h3>
+        @help_table(controllers.gmql.routes.DSManager.downloadFileZip("{dataSetName}"),
+            Map("dataSetName" -> dataSetNameDescription),
+            Map("text/plain" -> "Response containing the zip file as an attachment."))
+        <button id="data-set-download-file" type="button" class="help-button">
+        @ViewHelper.reformat(controllers.gmql.routes.DSManager.downloadFileZip(newDataSetName))
+        </button>
+        <div class="row">
+            <div id="data-set-download-file-request" class="col-sm-4"></div>
+            <div id="data-set-download-file-response" class="col-sm-4"></div>
+        </div>
+
+        <h3>Delete data set</h3>
+        @help_table(controllers.gmql.routes.DSManager.dataSetDeletion("{dataSetName}"),
+            Map("dataSetName" -> dataSetNameDescription),
+            Map("text/plain" -> "Plain‐text representation the word \"OK\""))
+        <button id="data-set-delete" type="button" class="help-button">
+        @ViewHelper.reformat(controllers.gmql.routes.DSManager.dataSetDeletion(newDataSetName))
+        </button>
+        <div class="row">
+            <div id="data-set-delete-request" class="col-sm-4"></div>
+            <div id="data-set-delete-response" class="col-sm-4"></div>
+            <div id="data-set-delete-result" class="col-sm-4"></div>
+        </div>
+    </div>
+
+
+    <script src="@routes.Assets.at("javascripts/help_data_set.js")" type="text/javascript"></script>

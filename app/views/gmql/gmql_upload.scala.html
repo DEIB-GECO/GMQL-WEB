@@ -1,0 +1,71 @@
+@()
+
+<form id="file-upload-form" role="form">
+    <div class="form-group">
+        <label for="file-upload-name">Data set name:</label>
+        <input
+        class="form-control"
+        name="file-upload-name"
+        id="file-upload-name"
+        placeholder="Enter data set name">
+    </div>
+    <div class="form-group">
+        <label for="file-upload-type">File Type:</label>
+        <select class="form-control selectpicker" id="file-upload-type" title= "Choose file type">
+            <option value="bed">bed</option>
+            <option value="bedGraph">bedGraph</option>
+            <option value="gtf">gtf</option>
+            <option value="tab">tab</option>
+            <option value="NarrowPeak">NarrowPeak</option>
+            <option value="BroadPeak">BroadPeak</option>
+            <option value="vcf">vcf</option>
+            <option value="UPLOAD">Custom</option>
+        </select>
+    </div>
+    <div id="file-upload-schema-div" class="form-group">
+        <label for="file-upload-schema">Schema file:</label>
+        <input type="file"
+        name="file-upload-schema"
+        id="file-upload-schema"
+        class="filestyle"
+        data-buttonText="Choose file"
+        data-buttonName="btn-primary"
+        data-buttonBefore="true"
+        data-placeholder="No file"
+        data-iconName="glyphicon glyphicon-open-file"
+        data-badge="true"
+        >
+        @*data-badge="true"*@
+        @*data-input="false"*@
+    </div>
+    <div class="form-group">
+        <label for="file-upload-files">Files:</label>
+        <input type="file" multiple
+        name="file-upload-files"
+        id="file-upload-files"
+        class="filestyle"
+        data-buttonText="Choose file"
+        data-buttonName="btn-primary"
+        data-buttonBefore="true"
+        data-placeholder="No file"
+        data-iconName="glyphicon glyphicon-open-file"
+        data-badge="true"
+        >
+        @*data-badge="true"*@
+        @*data-input="false"*@
+    </div>
+    <div id="file-upload-progress-div" class="form-group">
+        <div  class="progress">
+            <div id="file-upload-progress" class="progress-bar" role="progressbar" >
+            </div>
+        </div>
+    </div>
+
+
+
+    <div class="form-group">
+        <button type="button" id="file-upload-button" class="btn btn-default">
+            <span class="glyphicon glyphicon-upload" aria-hidden="true"></span> Upload
+        </button>
+    </div>
+</form>

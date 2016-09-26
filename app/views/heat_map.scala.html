@@ -1,0 +1,58 @@
+@import views.ViewHelper
+@(data: List[String], row: Int, col: Int, rowNames: List[String], colNames: List[String])(implicit request: play.api.mvc.Request[Any])
+<!DOCTYPE html>
+
+
+<html>
+    <head>
+        @head("GMQL heat map viewer")
+        @*My less*@
+
+    <script src="@routes.Assets.at("heatmap/htmlwidgets-0.6/htmlwidgets.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("heatmap/d3-3.5.3/./d3.min.js")" type="text/javascript"></script>
+    <link rel="stylesheet" href="@routes.Assets.at("heatmap/d3heatmapcore-0.0.0/heatmapcore.css")">
+    <script src="@routes.Assets.at("heatmap/d3heatmapcore-0.0.0/heatmapcore.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("heatmap/d3-tip-0.6.6/index.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("heatmap/d3heatmap-binding-0.6.1.1/d3heatmap.js")" type="text/javascript"></script>
+    </head>
+    <body>
+        <div>@views.html.gmql.gmql_navbar()</div>
+
+        <div id="htmlwidget_container">
+            <div id="htmlwidget-1234" style="width: 960px;
+                height: 500px;" class="d3heatmap html-widget"></div>
+        </div>
+        <script type="application/json" data-for="htmlwidget-1234">
+    {
+        "x": {
+            "matrix": {
+                "data": @ViewHelper.formatList(data),
+                "dim": [@row,@col],
+                "rows": @ViewHelper.formatList(rowNames),
+                "cols": @ViewHelper.formatList(colNames)
+            },
+            "theme": null,
+            "options": {
+                "xaxis_height": 175,
+                "yaxis_width": 250,
+                "xaxis_font_size": 15,
+                "yaxis_font_size": 15,
+                "brush_color": "#0000FF",
+                "show_grid": true,
+                "anim_duration": 500
+            }
+        },
+        "evals": [],
+        "jsHooks": []
+    }
+
+
+
+
+        </script>
+        <script type="application/htmlwidget-sizing" data-for="htmlwidget-1234">
+            {"viewer":{"width":450,"height":350,"padding":15,"fill":true},"browser":{"width":960,"height":500,"padding":[70,20],"fill":true}}
+        </script>
+
+    </body>
+</html>

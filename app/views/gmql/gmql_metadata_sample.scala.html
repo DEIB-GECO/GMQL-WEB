@@ -1,0 +1,29 @@
+@(totalCount: Int, list: Array[Int])
+
+<div id="search-result">
+
+    <h2>@totalCount
+        @if(totalCount > 1) {
+            samples
+        } else {
+            sample
+        }
+        found
+    </h2>
+
+    @if(totalCount > list.length) {
+        <h3>@list.length is shown</h3>
+    }
+    <ul class="nav nav-tabs">
+        @*<ul class="nav nav-pills">*@
+        @for(i <- list) {
+            <li><a id="a-sample-@i" data-toggle="tab" href="#sample-@i">Sample @i</a></li>
+        }
+    </ul>
+
+    <div class="tab-content">
+    @for(i <- list) {
+        <div id="sample-@i" class="tab-pane fade in active" looaded="false"></div>
+    }
+    </div>
+</div>

@@ -1,0 +1,75 @@
+//body {
+//  min-height: 100%;
+//  height: 90vh; /* Try removing this.. */
+//}
+
+body {
+  min-height: 2000px;
+  padding-top: 70px;
+}
+
+@header-color: blue;
+h2, h3, h4 {
+  color: @header-color;
+}
+
+.help-table{
+  width: 80%;
+}
+
+@link-button: darkblue;
+.help-button {
+  background:none!important;
+  border:none;
+  padding:0!important;
+  font: inherit;
+  /*border is optional*/
+  border-bottom:1px solid @link-button;
+  cursor: pointer;
+  color: @link-button;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+
+.login-div{
+  float: right;
+}
+
+#container{
+  width: 95%;
+  margin-left: 2%;
+}
+
+
+
+//#container {
+//  width: 100%;
+//  height: 100%;
+//}
+
+table, th, td {
+  border: 1px solid #535353;
+  text-align: left;
+  vertical-align: text-top;
+}
+
+.left {
+  float: left;
+  width: 50%;
+}
+
+.right {
+  float: right;
+  width: 50%;
+}
+
+#result_pane {
+  height: 90vh;
+  width: 100%;
+}
+
+textarea {
+  width: 100%;
+}

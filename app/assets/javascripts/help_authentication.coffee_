@@ -1,0 +1,66 @@
+#document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+$ -> init()
+init = () ->
+  console.log "document.cookie: " + document.cookie
+  # try to get an auth token
+  for cookieString in document.cookie.split "; "
+    cookie = cookieString.split("=")
+    if (cookie.length == 2 && cookie[0] == "authToken")
+      window.authToken = cookie[1]
+  if (window.authToken == undefined)
+    displayGuestButton()
+  else
+    displayLoggedIn()
+
+
+displayGuestButton = () ->
+  $("#login").empty()
+  $("#login").append $("<button class='btn btn-default navbar-btn'>").text("Guest Login").click(doGuestLogin)
+
+
+displayLoggedIn = () ->
+  $("#login").empty()
+  displayInfo("Logged in")
+  $("#login").append $("<button class='btn btn-default navbar-btn'>").text("Logout").click(doLogout)
+
+
+doGuestLogin = (event) ->
+  call = jsRoutes.controllers.SecurityControllerScala.loginGuest()
+  #  $.get call.url, {asd}, (data) -> doLogin(data), 'json'
+
+  $.ajax
+    url: call.url
+    type: call.type
+    method: call.method
+    dataType: 'json'
+    success: (result, textStatus, jqXHR) ->
+      doLogin(result)
+
+
+doLogin = (data) ->
+  token = data.authToken
+  window.authToken = token # global state holder for the auth token
+  document.cookie = "authToken" + "=" + token
+  displayInfo("LOGIN OK")
+  displayLoggedIn()
+
+
+doLogout = (event) ->
+  call = jsRoutes.controllers.SecurityControllerScala.logout()
+  $.ajax
+    url: call.url
+    type: call.method
+    headers: {"X-Auth-Token": window.authToken}
+    success: (data, textStatus, jqXHR) ->
+      displayInfo("logout success")
+      displayGuestButton()
+    error: (jqXHR, textStatus, errorThrown) ->
+      console.log "document.cookie: " + document.cookie
+      window.authToken = undefined
+      console.log "document.cookie: " + document.cookie
+      displayError("logout failed:" + jqXHR + "&" + textStatus + "&" + errorThrown)
+      displayGuestButton()
+      document.cookie = "authToken" + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT"
+      console.log "document.cookie: " + document.cookie
+
+

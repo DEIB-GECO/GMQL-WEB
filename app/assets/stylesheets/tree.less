@@ -1,0 +1,56 @@
+.first-drop-down {
+  width: 100px;
+}
+
+
+ul.fancytree-container {
+  min-height: 300px;
+  width: 100%;
+  max-height: 500px;
+}
+
+#tree {
+  width: 100%;
+}
+
+
+
+
+@selected-colour: transparent;
+
+span.fancytree-node.fancytree-selected {
+  background-color: @selected-colour;
+  border-color: @selected-colour;
+}
+
+span.fancytree-node.fancytree-selected span.fancytree-title {
+  background-color: @selected-colour;
+}
+
+table.fancytree-ext-table tbody tr.fancytree-selected,
+table.fancytree-ext-table tbody tr.fancytree-selected span.fancytree-node,
+table.fancytree-ext-table tbody tr.fancytree-selected span.fancytree-title {
+  background-color: @selected-colour;
+}
+
+.fancytree-container.fancytree-treefocus span.fancytree-node.fancytree-selected,
+.fancytree-container.fancytree-treefocus span.fancytree-node.fancytree-selected span.fancytree-title {
+  background-color: @selected-colour;
+}
+
+.fancytree-container.fancytree-treefocus span.fancytree-node.fancytree-active {
+  background-color: #428bca;
+  border-color: #428bca;
+}
+
+.fancytree-container.fancytree-treefocus span.fancytree-node.fancytree-focused {
+  border-color: @selected-colour;
+}
+
+.fancytree-container.fancytree-treefocus span.fancytree-node:hover {
+  background-color: #e9f2f9;
+}
+
+.fancytree-container.fancytree-treefocus span.fancytree-node.fancytree-active:hover {
+  background-color: #6aa3d5;
+}

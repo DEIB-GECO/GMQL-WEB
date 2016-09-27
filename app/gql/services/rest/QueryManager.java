@@ -23,10 +23,10 @@ import com.sun.jersey.multipart.FormDataParam;
 import it.polimi.genomics.manager.GMQLExecute;
 import it.polimi.genomics.manager.Launchers.GMQLLivyLauncher;
 import it.polimi.genomics.manager.Launchers.GMQLSparkLauncher;
+import it.polimi.genomics.manager.Launchers.GMQLLauncher;
 import it.polimi.genomics.manager.Status;
 import it.polimi.genomics.repository.FSRepository.DFSRepository;
 import it.polimi.genomics.repository.FSRepository.RFSRepository;
-import it.polimi.genomics.spark.implementation.GMQLSparkExecutor;
 import orchestrator.services.GQLServiceException;
 import orchestrator.entities.JobList;
 import orchestrator.scripts.GMQLJob;
@@ -79,6 +79,8 @@ import scala.collection.JavaConverters.*;
 public class QueryManager {
 
     private static SparkContext sparkContext;
+    private static it.polimi.genomics.repository.GMQLRepository.GMQLRepository repository = new DFSRepository();
+    private static GMQLLauncher launcher = null;
     /**
      * Reads the content of query file and returns it as response to the
      * requester
@@ -262,7 +264,7 @@ public class QueryManager {
         }
 
         it.polimi.genomics.manager.GMQLJob job = server.registerJob(queryFilePath.toString(),script,execType,5000,user,"",sparkContext,gtf);
-        server.scheduleGQLJobForYarn(job.jobId(),new GMQLSparkLauncher(job), new DFSRepository());
+        server.scheduleGQLJobForYarn(job.jobId(),new GMQLSparkLauncher(job),  repository);
 
 
         return Response.ok(job.jobId()).build();
@@ -337,6 +339,18 @@ public class QueryManager {
         JobList jobLogList = new JobList(jobLog);
         return Response.ok(jobLogList).build();
     }
+
+    @GET
+    @Path("/kill/{jobid}")
+    public Response killJob(String user,
+                           @PathParam("jobid") String jobId) throws NoJobsFoundException {
+        GMQLExecute server = GMQLExecute.apply();
+        it.polimi.genomics.manager.GMQLJob job = server.getGMQLJob(user, jobId);
+        job.submitHandle().killJob();
+
+        return Response.ok().build();
+    }
+
     /**
      *
      * @param jobId

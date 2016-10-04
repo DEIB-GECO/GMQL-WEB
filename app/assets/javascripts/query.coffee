@@ -8,6 +8,12 @@ $ ->
   $('#query-status').click ->
     lastJobLog()
   $("#query-status").hide()
+
+  $('#query-stop').click ->
+    lastJobStop()
+  $("#query-stop").hide()
+  $("#query-stop").tooltip()
+
 #  $('#main-query-select').change selectQuery()
   $('#main-query-select').change selectQuery
 
@@ -93,14 +99,17 @@ runQuery = (fileKey, type) ->
       switch result.gmqlJobStatusXML.status
         when "PENDING", "RUNNING", "EXEC_SUCCESS", "COMPILING", "DS_CREATION_RUNNING", "DS_CREATION_SUCCESS"
           setTimeout checkLastJob, 5000
+          $("#query-stop").show()
         when  "SUCCESS"
           setTimeout reloadComponents, 1000
 #          alert('job finished');
+          $("#query-stop").hide()
         when  "COMPILE_SUCCESS"
-
+          $("#query-stop").hide()
         else
           #alert('job error status(TODO SHOW IN A BETTER FORMAT): ' + JSON.stringify(result, null, "\t") )
           jobLog(jobId)
+          $("#query-stop").hide()
 #          setTimeout(checkLastJob, 1000)
     error: (jqXHR, textStatus, errorThrown)->
       console.log("error checkLastJob:" + "runQuery: " + jqXHR + "&" + textStatus + "&" + errorThrown)
@@ -274,3 +283,8 @@ changeFullScreen = ->
   $('#col-schema').toggleClass('col-md-4 col-md-0');
   $('#main-query-full-screen span').toggleClass('glyphicon-resize-full glyphicon-resize-small');
   ace.edit("main-query-editor").resize()
+
+
+lastJobStop = ->
+  jobId = window.lastJobId
+  stopJob(jobId)

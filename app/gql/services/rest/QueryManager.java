@@ -340,6 +340,7 @@ public class QueryManager {
         return Response.ok(jobLogList).build();
     }
 
+/*  MOVED TO OTHER CLASS
     @GET
     @Path("/kill/{jobid}")
     public Response killJob(String user,
@@ -349,7 +350,7 @@ public class QueryManager {
         job.submitHandle().killJob();
 
         return Response.ok().build();
-    }
+    }*/
 
     /**
      *

@@ -42,6 +42,7 @@ class JavascriptRoute extends Controller {
         controllers.gmql.routes.javascript.QueryMan.traceJobV2,
         controllers.gmql.routes.javascript.QueryMan.getJobsV2,
         controllers.gmql.routes.javascript.QueryMan.getLog,
+        controllers.gmql.routes.javascript.QueryMan.stopJob,
 
         controllers.gmql.routes.javascript.RepositoryBro.dataSetSchema,
         controllers.gmql.routes.javascript.RepositoryBro.dataSetMeta,

@@ -11,7 +11,7 @@ GET           /help                                                            c
 #GET        /help_redirect                                                   controllers.Application.helpRedirect
 GET           /metadata/:totalCount/:list                                      controllers.Application.sampleMetadata(totalCount:Int, list)
 
-GET           /gmqlHelp                                                       controllers.Application.gmqlHelp
+GET           /gmqlHelp                                                        controllers.Application.gmqlHelp
 
 
 
@@ -43,33 +43,36 @@ POST          /updatePassword                                                  c
 #multipart
 
 #dataSet
-GET           /dataSet                                                         controllers.gmql.DSManager.dataSetAll
+GET           /dataSets                                                        controllers.gmql.DSManager.dataSetAll
 
-GET           /dataSet/:dataSetName                                            controllers.gmql.DSManager.dataSetSamples(dataSetName)
+GET           /dataSets/:dataSetName                                           controllers.gmql.DSManager.dataSetSamples(dataSetName)
 
-DELETE        /dataSet/:dataSetName                                            controllers.gmql.DSManager.dataSetDeletion(dataSetName)
-GET           /dataSet/delete/:dataSetName                                     controllers.gmql.DSManager.dataSetDeletion(dataSetName)
+DELETE        /dataSets/:dataSetName                                           controllers.gmql.DSManager.dataSetDeletion(dataSetName)
+#GET           /dataSets/delete/:dataSetName                                     controllers.gmql.DSManager.dataSetDeletion(dataSetName)
 
-GET           /dataSet/preparaZip/:dataSetName/:clean                          controllers.gmql.DSManager.zipFilePreparation(dataSetName, clean)
-GET           /dataSet/downloadZip/:dataSetName                                controllers.gmql.DSManager.downloadFileZip(dataSetName:String)
-POST          /dataSet/uploadSample/:dataSetName                               controllers.gmql.DSManager.uploadSample(dataSetName: String, schemaType: Option[String])
+GET           /dataSets/:dataSetName/preparaZip/:clean                         controllers.gmql.DSManager.zipFilePreparation(dataSetName, clean)
+GET           /dataSets/:dataSetName/downloadZip                               controllers.gmql.DSManager.downloadFileZip(dataSetName:String)
+POST          /dataSets/uploadSample/:dataSetName                              controllers.gmql.DSManager.uploadSample(dataSetName: String, schemaType: Option[String])
 #POST        /dataSet/upload/:dataSetName                                     controllers.gmql.DSManager.upload(dataSetName:String)
-POST          /dataSet/uploadSampleUrls/:dataSetName                           controllers.gmql.DSManager.uploadSamplesFromUrls(dataSetName: String, schemaType: Option[String])
-GET           /dataSet/:dataSetName/parse/:columnName                          controllers.gmql.DSManager.parseFiles(dataSetName:String, columnName: String)
+POST          /dataSets/:dataSetName/uploadSampleUrls                          controllers.gmql.DSManager.uploadSamplesFromUrls(dataSetName: String, schemaType: Option[String])
+GET           /dataSets/:dataSetName/parse/:columnName                         controllers.gmql.DSManager.parseFiles(dataSetName:String, columnName: String)
 
-GET           /dataSet/:dataSetName/getUCSCList                                controllers.gmql.DSManager.getUcscList(dataSetName:String)
-GET           /dataSet/:dataSetName/getSampleFile/:sample                      controllers.gmql.DSManager.getSampleFile(dataSetName:String, sample:String)
-GET           /dataSet/:dataSetName/getUCSCLink                                controllers.gmql.DSManager.getUcscLink(dataSetName:String)
+GET           /dataSets/:dataSetName/getUCSCList                               controllers.gmql.DSManager.getUcscList(dataSetName:String)
+GET           /dataSets/:dataSetName/getSampleFile/:sample                     controllers.gmql.DSManager.getSampleFile(dataSetName:String, sample:String)
+GET           /dataSets/:dataSetName/getUCSCLink                               controllers.gmql.DSManager.getUcscLink(dataSetName:String)
 
 #Query
-GET           /query/read/:fileKey                                             controllers.gmql.QueryMan.readQuery(fileKey:String)
-GET           /query/delete/:fileKey                                           controllers.gmql.QueryMan.deleteQuery(fileKey:String)
-POST          /query/save/:fileName/:fileKey                                   controllers.gmql.QueryMan.saveQueryAs(fileName: String, fileKey: String)
-GET           /query/runv2/:fileKey/:gtfOutput/:execType                       controllers.gmql.QueryMan.runQueryV2File(fileKey: String, gtfOutput: String, execType: String)
-GET           /query/compilev2/:fileKey/:execType                              controllers.gmql.QueryMan.compileQueryV2File(fileKey: String, execType: String)
-GET           /query/jobs                                                      controllers.gmql.QueryMan.getJobsV2
-GET           /query/traceJob/:jobId                                           controllers.gmql.QueryMan.traceJobV2(jobId: String)
-GET           /query/getLog/:jobId                                             controllers.gmql.QueryMan.getLog(jobId: String)
+GET           /queries/read/:fileKey                                           controllers.gmql.QueryMan.readQuery(fileKey:String)
+GET           /queries/delete/:fileKey                                         controllers.gmql.QueryMan.deleteQuery(fileKey:String)
+POST          /queries/save/:fileName/:fileKey                                 controllers.gmql.QueryMan.saveQueryAs(fileName: String, fileKey: String)
+GET           /queries/runv2/:fileKey/:gtfOutput/:execType                     controllers.gmql.QueryMan.runQueryV2File(fileKey: String, gtfOutput: String, execType: String)
+GET           /queries/compilev2/:fileKey/:execType                            controllers.gmql.QueryMan.compileQueryV2File(fileKey: String, execType: String)
+
+#Jobs
+GET           /jobs                                                            controllers.gmql.QueryMan.getJobsV2
+GET           /jobs/:id/trace                                                  controllers.gmql.QueryMan.traceJobV2(id: String)
+GET           /jobs/:id/log                                                    controllers.gmql.QueryMan.getLog(id: String)
+GET           /jobs/:id/stop                                                   controllers.gmql.QueryMan.stopJob(id: String)
 
 
 ##COMPILE

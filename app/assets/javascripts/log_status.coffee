@@ -76,9 +76,23 @@ loadTable = (dialog,tbody) ->
           a = $("<a href='#' data-job-id='#{jobId}'>#{jobId}</a>")
           a.click ->
             jobLog($(this).data('jobId'))
+          a.attr("data-toggle", "tooltip")
+          .attr("data-placement", "bottom")
+          .attr("title", "Click to see log")
+          a.tooltip()
+
+          buttonStop = $("<button class='btn btn-danger btn-xs' data-job-id='#{jobId}'><span class='glyphicon glyphicon-stop'/></button>")
+          buttonStop.click -> stopJob($(this).data('jobId'))
+          buttonStop.attr("data-toggle", "tooltip")
+          .attr("data-placement", "bottom")
+          .attr("title", "Click to stop job")
+          buttonStop.tooltip()
 
           cell1 = $("<td ></td>")
+          cell1.css("white-space", "nowrap")
+          cell1.append buttonStop
           cell1.append a
+
           cell2 = $("<td ></td>")#.html jobId + " status"
           cell3 = $("<td ></td>")#.html jobId + " Message"
           cell4 = $("<td ></td>")#.html jobId + " ds"
@@ -134,10 +148,34 @@ fillTable = (jobId,cell1, cell2, cell3, cell4, cell5, firstTime) ->
           console.log "len " + $("[data-job-id='#{jobId}']").length
           setTimeout (-> fillTable(jobId, cell1, cell2, cell3, cell4, cell5)), 5000 if(firstTime || $("[data-job-id='#{jobId}']").length > 0)
         when  "SUCCESS", "COMPILE_SUCCESS"
+          cell1.find("button").hide()
         else
+          cell1.find("button").hide()
 
 selectNode = (title) ->
   node  = $("#tree").fancytree("getTree").findFirst(title)
   if(node?.title == title )
     BootstrapDialog.getDialog("showJobs")?.close()
     node.setActive()
+  else
+    BootstrapDialog.alert("There is no dataset available in the tree")
+
+@stopJob = (jobId) ->
+  call = jsRoutes.controllers.gmql.QueryMan.stopJob jobId
+  $.ajax
+    url: call.url
+    type: call.type
+    method: call.method
+    headers: {'X-Auth-Token': window.authToken}
+    success: (result, textStatus, jqXHR) ->
+      BootstrapDialog.alert
+        message: result
+        closable: true
+        closeByBackdrop: false
+    error: (jqXHR, textStatus, errorThrown) ->
+      BootstrapDialog.alert
+        title: "Error #{errorThrown}"
+        message: jqXHR.responseText
+        type: BootstrapDialog.TYPE_DANGER
+        closable: true
+        closeByBackdrop: false

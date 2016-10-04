@@ -382,7 +382,7 @@ downloadDataset = () ->
       success: (result, textStatus, jqXHR) ->
         if(result != "inProgress")
           callUrl = jsRoutes.controllers.gmql.DSManager.downloadFileZip window.lastSelectedDataSet
-          window.open callUrl.url
+          window.location = callUrl.url
           dialog.close()
         else
           BootstrapDialog.alert "Download preparation is still in preparation"

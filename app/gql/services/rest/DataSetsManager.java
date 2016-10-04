@@ -247,7 +247,7 @@ public class DataSetsManager {
                     BufferedReader br = new BufferedReader(new FileReader(metaFile))) {
                 String line = br.readLine();
                 while (line != null) {
-                    Scanner lineS = new Scanner(line);
+                    Scanner lineS = new Scanner(line).useDelimiter("\\t");
                     String name = lineS.next();
                     String value = lineS.next();
                     if (vocabulary.containsKey(name)) {

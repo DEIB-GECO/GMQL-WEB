@@ -279,8 +279,8 @@ selectQuery = () ->
 
 changeFullScreen = ->
   $('#col-tree').toggleClass('col-md-4 col-md-0');
-  $('#col-query').toggleClass('col-md-4 col-md-12');
-  $('#col-schema').toggleClass('col-md-4 col-md-0');
+  $('#col-query').toggleClass('col-md-8 col-md-12');
+#  $('#col-schema').toggleClass('col-md-4 col-md-0');
   $('#main-query-full-screen span').toggleClass('glyphicon-resize-full glyphicon-resize-small');
   ace.edit("main-query-editor").resize()
 

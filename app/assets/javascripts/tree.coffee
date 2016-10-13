@@ -372,6 +372,7 @@ downloadDataset = () ->
     BootstrapDialog.alert "Public dataset is not available to download"
   else
     dialog = BootstrapDialog.alert "Download file is preparing, please wait"
+    window.lastDownloadDataSet = window.lastSelectedDataSet
     call = jsRoutes.controllers.gmql.DSManager.zipFilePreparation window.lastSelectedDataSet, false
     $.ajax
       url: call.url
@@ -381,7 +382,7 @@ downloadDataset = () ->
       headers: {'X-Auth-Token': window.authToken}
       success: (result, textStatus, jqXHR) ->
         if(result != "inProgress")
-          callUrl = jsRoutes.controllers.gmql.DSManager.downloadFileZip window.lastSelectedDataSet
+          callUrl = jsRoutes.controllers.gmql.DSManager.downloadFileZip window.lastDownloadDataSet
           window.location = callUrl.url
           dialog.close()
         else

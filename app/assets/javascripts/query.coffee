@@ -162,38 +162,44 @@ lastJobLog = () ->
     contentType: 'application/json'
     success: (result, textStatus, jqXHR) ->
       jobStatus = result.gmqlJobStatusXML
+      console.log jobStatus
       BootstrapDialog.show
         size: BootstrapDialog.SIZE_WIDE
         title: (dialog) ->
           dialog.getData('title')
-        message:   "<div class='form-horizontal'>
-                      <div class='form-group'>
-                          <label class='col-xs-2 control-label'>Status</label>
-                          <div class='col-xs-10'>
-                            <p class='form-control-static'>#{jobStatus.status}</p>
-                          </div>
-                      </div>
-                      <div class='form-group'>
-                          <label class='col-xs-2 control-label'>Message</label>
-                          <div class='col-xs-10'>
-                            <p class='form-control-static'>#{jobStatus.message}</p>
-                          </div>
-                      </div>
-                      <div class='form-group'>
-                          <label class='col-xs-2 control-label'>Data set names</label>
-                          <div class='col-xs-10'>
-                            <p class='form-control-static'>#{jobStatus.datasetNames.replace /,/, "<br>"}</p>
-                          </div>
-                      </div>
-                      <div class='form-group'>
-                          <label class='col-xs-2 control-label'>Execution time</label>
-                          <div class='col-xs-10'>
-                            <p class='form-control-static'>#{jobStatus.execTime.replace /Execution Time: /, ""}</p>
-                          </div>
-                      </div>
-                    </div>"
+        message:  (dialog) ->
+          divs = $("<div class='form-horizontal'>
+            <div class='form-group'>
+                <label class='col-xs-2 control-label'>Status</label>
+                <div class='col-xs-10'>
+                  <p class='form-control-static'>#{jobStatus.status}</p>
+                </div>
+            </div>
+            <div class='form-group'>
+                <label class='col-xs-2 control-label'>Message</label>
+                <div class='col-xs-10'>
+                  <p class='form-control-static'>#{jobStatus.message}</p>
+                </div>
+            </div>
+            <div class='form-group'>
+                <label class='col-xs-2 control-label'>Data set names</label>
+                <div class='col-xs-10'>
+                  <p id ='datasetNames' class='form-control-static'></p>
+                </div>
+            </div>
+            <div class='form-group'>
+                <label class='col-xs-2 control-label'>Execution time</label>
+                <div class='col-xs-10'>
+                  <p class='form-control-static'>#{jobStatus.execTime.replace /Execution Time: /, ""}</p>
+                </div>
+            </div>
+          </div>")
+          divs.find("#datasetNames").html getDatasetList(jobStatus.datasetNames)
+          divs
+
         onshow: (dialog) ->
           call = jsRoutes.controllers.gmql.QueryMan.getLog(jobId)
+          window.test = dialog.getMessage()
           $.ajax
             url: call.url
             type: call.type
@@ -204,8 +210,9 @@ lastJobLog = () ->
             success: (result, textStatus, jqXHR) ->
               console.log result
               window.result = result
-              dialog.setMessage(dialog.getMessage()+result.jobList.jobs.join('<br>'))
-        onshown: ->
+              # there are two consecutive paranthesis after get message, because get message returns a function
+              dialog.setMessage(dialog.getMessage()().append(result.jobList.jobs.join('<br>')))
+        onshown: (dialog) ->
 
         data:
           result : result
@@ -228,7 +235,6 @@ lastJobLog = () ->
 #      if execTime == "Execution Under Progress"
 #        execTime = ""
 #      cell5.html execTime
-
 
 
 

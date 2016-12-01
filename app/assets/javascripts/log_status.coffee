@@ -125,16 +125,7 @@ fillTable = (jobId,cell1, cell2, cell3, cell4, cell5, firstTime) ->
       cell2.html jobStatus.status
       cell3.html jobStatus.message
 
-      cell4.html ""
-      for dsName in jobStatus.datasetNames.split ","
-        a = $("<a href='#' data-ds-name='#{dsName}'>#{dsName}</a>")
-        a.click -> selectNode($(this).data('dsName'))
-        a.attr("data-toggle", "tooltip")
-        .attr("data-placement", "bottom")
-        .attr("title", "Click to select on tree")
-        a.tooltip()
-        cell4.append a
-        cell4.append "<br>"
+      cell4.html getDatasetList(jobStatus.datasetNames)
 
       execTime = jobStatus.execTime.replace /Execution Time: /, ""
       if execTime == "Execution Under Progress"

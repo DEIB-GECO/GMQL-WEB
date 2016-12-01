@@ -86,3 +86,26 @@ printResult = (result, responseDivId, contentType) ->
 #  else
 #    window.open("http://www.w3schools.com")
 
+
+# returns splitted clickable datasets list. When it is clicked, it selected the related DS from tree
+@getDatasetList = (datasetNames) ->
+  result = $("<div>")
+  for dsName in datasetNames.split ","
+    a = $("<a href='#' data-ds-name='#{dsName}'>#{dsName}</a>")
+    a.click -> selectNode($(this).data('dsName'))
+    a.attr("data-toggle", "tooltip")
+    .attr("data-placement", "bottom")
+    .attr("title", "Click to select on tree")
+    a.tooltip()
+    result.append a
+    result.append "<br>"
+  result
+
+
+selectNode = (title) ->
+  node  = $("#tree").fancytree("getTree").findFirst(title)
+  if(node?.title == title )
+    BootstrapDialog.getDialog("showJobs")?.close()
+    node.setActive()
+  else
+    BootstrapDialog.alert("There is no dataset available in the tree")

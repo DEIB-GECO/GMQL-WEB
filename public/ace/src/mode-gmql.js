@@ -7,15 +7,31 @@ var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
 var GmqlHighlightRules = function() {
 
     var keywords = (
-        "select|cover|materialize|map|project|join"
+        "select|project|extend|group|merge|order" //relational unary operations
+			+ "|sort" // ?do we have? //relational unary operations
+			+ "|union|difference" //relational binary operations
+			+ "|cover|flat|summit|histogram|map|join" //domain specific operations
+			+ "|materialize" //utility operations
     );
 
     var builtinConstants = (
-        "true|false|distance|mindistance|dle|dge|md|any|all|start|stop|chr|strand|left|right|up|down|downstream|upstream"
+        "true|false|distance|mindist|mindistance|dle|dge|md|any|all|start|stop|chr|strand|left|right|up|down|downstream|upstream"
+			+ "|and|or|not|as|in|allbut"
+			+ "|count|bag|sum|avg|min|max|median|std"
+			+ "|cat|contig"
     );
 
     var builtinFunctions = (
-        "semijoin|region|parser|region_modifier|meta_modifier|meta_project|into|groupby|aggregate|joinby|output|meta_top|meta_topg|region_order|region_top|region_topg"
+        "region|semijoin" // SELECT
+			+ "|metadata|region_update|metadata_update" // PROJECT
+			+ "|meta_aggregate|region_group|region_aggregate" //GROUP
+			+ "|groupby" // MERGE
+			+ "|desc|meta_top|meta_topg|region_order|region_top|region_topg|" // ORDER
+			+ "|groupby" // MERGE
+			+ "|joinby" //DIFFERENCE
+			+ "|aggregate" //COVER(flat/summit/histogram
+			+ "|output" //JOIN
+			+ "|into" //MATERIALIZE
     );
 
     var dataTypes = (
@@ -48,7 +64,7 @@ var GmqlHighlightRules = function() {
             regex : "[a-zA-Z_$][a-zA-Z0-9_$]*\\b"
         }, {
             token : "keyword.operator",
-            regex : "\\+|\\-|\\/|\\/\\/|%|<@>|@>|<@|&|\\^|~|<|>|<=|=>|==|!=|<>|="
+            regex : "\\+|\\-|\\/|\\/\\/|%|<@>|@>|<@|&|\\^|~|<|>|<=|=>|==|!=|<>|=|,|;|:" 
         }, {
             token : "paren.lparen",
             regex : "[\\(]"

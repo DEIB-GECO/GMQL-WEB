@@ -44,8 +44,8 @@ import it.polimi.genomics.core.DataStructures.IRDataSet;
 import it.polimi.genomics.core.ParsingType;
 import it.polimi.genomics.repository.FSRepository.DFSRepository;
 import it.polimi.genomics.repository.FSRepository.RFSRepository;
-import it.polimi.genomics.repository.GMQLRepository.GMQLSample;
-import it.polimi.genomics.repository.GMQLRepository.GMQLSchemaTypes;
+import it.polimi.genomics.repository.GMQLSample;
+import it.polimi.genomics.repository.GMQLSchemaTypes;
 import orchestrator.entities.Attribute;
 import orchestrator.entities.AttributeList;
 import orchestrator.entities.GMQLSchema;
@@ -59,6 +59,7 @@ import orchestrator.util.Utilities;
 import org.apache.commons.io.FileUtils;
 import play.libs.Scala;
 import scala.Tuple2;
+import utils.GMQL_Globals$;
 
 /**
  * @author Francesco Venco
@@ -68,7 +69,7 @@ public class DataSetsManager {
 
     private static final Utilities ut = Utilities.getInstance();
 
-    private static it.polimi.genomics.repository.GMQLRepository.GMQLRepository repository = new DFSRepository();
+    private static it.polimi.genomics.repository.GMQLRepository repository = GMQL_Globals$.MODULE$.apply().repository();
     //private final String tempFolderRoot = File.separator + "home" + File.separator + "gql_repository" + File.separator + "tmp";
     //private final String dataFolderRoot = File.separator + "home" + File.separator + "gql_repository" + File.separator + "data";
     public static final String tempFolderRoot = ut.GMQLHOME + File.separator + "tmp";
@@ -652,7 +653,7 @@ public class DataSetsManager {
                 }
             });
 
-            List<it.polimi.genomics.repository.GMQLRepository.GMQLSample> samples = new LinkedList<it.polimi.genomics.repository.GMQLRepository.GMQLSample>();
+            List<it.polimi.genomics.repository.GMQLSample> samples = new LinkedList<it.polimi.genomics.repository.GMQLSample>();
             for (int i = 0; i < listOfFiles.length; i++) {
                 samples.add(new GMQLSample(listOfFiles[i].toString(), listOfFiles[i].toString() + ".meta", null));
             }

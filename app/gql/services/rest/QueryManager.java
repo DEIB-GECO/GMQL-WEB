@@ -20,13 +20,11 @@ package gql.services.rest;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.sun.jersey.multipart.FormDataParam;
+import it.polimi.genomics.manager.GMQLContext;
 import it.polimi.genomics.manager.GMQLExecute;
-import it.polimi.genomics.manager.Launchers.GMQLLivyLauncher;
 import it.polimi.genomics.manager.Launchers.GMQLSparkLauncher;
 import it.polimi.genomics.manager.Launchers.GMQLLauncher;
-import it.polimi.genomics.manager.Status;
 import it.polimi.genomics.repository.FSRepository.DFSRepository;
-import it.polimi.genomics.repository.FSRepository.RFSRepository;
 import orchestrator.services.GQLServiceException;
 import orchestrator.entities.JobList;
 import orchestrator.scripts.GMQLJob;
@@ -40,34 +38,25 @@ import orchestrator.util.GQLFileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
-import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.util.*;
-import javax.swing.text.Utilities;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 
-import org.apache.commons.lang.ObjectUtils;
 import org.apache.pig.PigException;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import orchestrator.entities.TimePhase;
-import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
-import scala.collection.JavaConverters.*;
+import it.polimi.genomics.core.*;
+import utils.GMQL_Globals$;
 
 /**
  * This class contains the set of REST resources to read, save, edit and run a
@@ -79,8 +68,6 @@ import scala.collection.JavaConverters.*;
 public class QueryManager {
 
     private static SparkContext sparkContext;
-    private static it.polimi.genomics.repository.GMQLRepository.GMQLRepository repository = new DFSRepository();
-    private static GMQLLauncher launcher = null;
     /**
      * Reads the content of query file and returns it as response to the
      * requester
@@ -262,9 +249,19 @@ public class QueryManager {
         }catch(IOException ioe){
             ioe.printStackTrace();
         }
+        int outputFormat ;
 
-        it.polimi.genomics.manager.GMQLJob job = server.registerJob(queryFilePath.toString(),script,execType,5000,user,"",sparkContext,gtf);
-        server.scheduleGQLJobForYarn(job.jobId(),new GMQLSparkLauncher(job),  repository);
+        if(gtf)
+            outputFormat = GMQLOutputFormat.GTF().id();
+        else
+            outputFormat = GMQLOutputFormat.TAB().id();
+
+        GMQLScript gmqlScript = new GMQLScript(script, queryFilePath.toString());
+        BinSize binSize = new BinSize(5000,5000,1000);
+        GMQLContext gmqlContext = new GMQLContext (ImplementationPlatform.SPARK(), GMQL_Globals$.MODULE$.apply().repository(),GMQLOutputFormat.apply(outputFormat),binSize,user,sparkContext);
+
+        it.polimi.genomics.manager.GMQLJob job = server.registerJob(gmqlScript,gmqlContext,"");
+        server.execute(job.jobId(),new GMQLSparkLauncher(job));
 
 
         return Response.ok(job.jobId()).build();
@@ -288,7 +285,12 @@ public class QueryManager {
             ioe.printStackTrace();
         }
 
-        it.polimi.genomics.manager.GMQLJob job = server.registerJob(queryFilePath.toString(),script,execType,5000,user,"",sparkContext,false);
+
+        GMQLScript gmqlScript = new GMQLScript(queryFilePath.toString(),script);
+        BinSize binSize = new BinSize(5000,5000,1000);
+        GMQLContext gmqlContext = new GMQLContext (ImplementationPlatform.SPARK(), GMQL_Globals$.MODULE$.apply().repository(),GMQLOutputFormat.TAB(),binSize,user,sparkContext);
+
+        it.polimi.genomics.manager.GMQLJob job = server.registerJob(gmqlScript,gmqlContext,"");
 
         return Response.ok(job.jobId()).build();
     }

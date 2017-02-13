@@ -4,7 +4,8 @@ import javax.inject.Singleton
 
 import controllers.Validation
 import gql.services.rest.QueryManager
-import it.polimi.genomics.manager.{GMQLExecute, GMQLJob, InvalidGMQLJobException}
+import it.polimi.genomics.manager.Exceptions.InvalidGMQLJobException
+import it.polimi.genomics.manager.{GMQLExecute, GMQLJob}
 import play.api.mvc.Controller
 import wrappers.authanticate.AuthenticatedAction
 

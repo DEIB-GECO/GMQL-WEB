@@ -75,14 +75,12 @@ libraryDependencies += "org.eclipse.persistence" % "eclipselink" % "2.6.3"
 
 
 libraryDependencies += "orchestrator.genomics" % "orchestrator" % "7.1"
-libraryDependencies += "it.polimi.genomics" % "GMQL-Cli" % "2.0"
-libraryDependencies += "it.polimi.genomics" % "GMQL-Spark" % "3.0"
+libraryDependencies += "it.polimi.genomics" % "GMQL-Spark" % "4.0"
 libraryDependencies += "it.polimi.genomics" % "GMQL-Server" % "2.0"
 libraryDependencies += "it.polimi.genomics" % "GMQL-Core" % "2.0"
-libraryDependencies += "it.polimi.genomics" % "Compiler" % "2.0"
-libraryDependencies += "it.polimi.genomics" % "GMQL-R" % "3.0"
+libraryDependencies += "it.polimi.genomics" % "Compiler" % "3.0"
 libraryDependencies += "it.polimi.genomics" % "GMQL-Repository" % "1.0"
-libraryDependencies += "it.polimi.genomics" % "GMQL-Flink" % "2.0"
+libraryDependencies += "it.polimi.genomics" % "GMQL-Flink" % "3.0"
 libraryDependencies += "it.polimi.genomics" % "GMQL-SManager" % "2.0"
 
 

@@ -9,6 +9,7 @@ import javax.ws.rs.core.Response
 import gql.services.rest.DataSetsManager
 import it.polimi.genomics.core.{GNull, _}
 import it.polimi.genomics.spark.implementation.loaders.CustomParser
+import it.polimi.genomics.repository.Utilities
 import org.xml.sax.SAXException
 import play.api.Logger
 import play.api.mvc.{Action, Controller}
@@ -163,7 +164,9 @@ class DSManager extends Controller {
 
 
     val parser = new CustomParser()
-    parser.setSchema(dataSetName, username)
+
+    val schemaPath = Utilities().getSchemaDir(username)+dataSetName+".schema"
+    parser.setSchema(schemaPath)
     var count = -1
     def f(x: String) = {
       count += 1

@@ -1,9 +1,12 @@
 package utils
 
+import it.polimi.genomics.core.DataStructures.IRDataSet
 import it.polimi.genomics.core.ParsingType
+import it.polimi.genomics.core.ParsingType.PARSING_TYPE
 
 //import it.polimi.genomics.flink.FlinkImplementation.reader.parser.DelimiterSeparatedValuesParser
-import it.polimi.genomics.repository.util.Utilities
+import it.polimi.genomics.repository.{Utilities => General_Utilities}
+import it.polimi.genomics.repository.FSRepository.{LFSRepository, FS_Utilities => FSR_Utilities}
 import org.slf4j.LoggerFactory
 
 import scala.xml.XML
@@ -17,13 +20,16 @@ object RepositoryParser {
   final val VCF = "vcf"
 
   //val schema = List(("name", ParsingType.STRING), ("score", ParsingType.DOUBLE))
-  def apply(dataset: String, username: String = Utilities.USERNAME): DelimiterSeparatedValuesParser = {
+  def apply(dataset: String, username: String = General_Utilities().USERNAME): DelimiterSeparatedValuesParser = {
 
+    val repository = new LFSRepository()
+    import scala.collection.JavaConverters._
+    val ds = new IRDataSet(dataset, List[(String,PARSING_TYPE)]().asJava)
 
-    val XMLfile = if (!Utilities.getInstance().checkDSNameinPublic(dataset))
-      Utilities.getInstance().RepoDir + username + "/schema/" + dataset + ".schema"
+    val XMLfile = if (!repository.DSExistsInPublic(ds))
+      General_Utilities().getSchemaDir(username) + dataset + ".schema"
     else
-      Utilities.getInstance().RepoDir + "public" + "/schema/" + dataset + ".schema"
+      General_Utilities().getSchemaDir("public")  + dataset + ".schema"
 
     println(XMLfile)
     var schematype = "tab"

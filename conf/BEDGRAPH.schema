@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gmqlSchemaCollection name="GLOBAL_SCHEMAS" xmlns="http://genomic.elet.polimi.it/entities">
+	<gmqlSchema  type="bedGraph">
+		<field type="FLOAT">score</field>
+	</gmqlSchema>
+</gmqlSchemaCollection>

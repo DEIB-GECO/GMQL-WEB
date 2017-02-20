@@ -4,9 +4,8 @@ import java.util
 import javax.inject.Singleton
 import javax.ws.rs.core.Response
 
+import gql.services.rest.Orchestrator.{GMQLFile, GMQLFileTypes}
 import gql.services.rest.{MetadataBrowserCached, QueryManager, RepositoryBrowser, SchemaBrowser}
-import orchestrator.entities.GMQLFile
-import orchestrator.repository.GMQLFileTypes
 import play.api.Logger
 import play.api.libs.json.Reads._
 import play.api.libs.json._

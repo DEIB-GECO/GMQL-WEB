@@ -17,16 +17,8 @@
  */
 package gql.services.rest;
 
-import orchestrator.entities.Metadata;
-import orchestrator.entities.AttributeList;
-import orchestrator.entities.ExperimentIdList;
-import orchestrator.entities.Experiment;
-import orchestrator.entities.ExperimentList;
-import orchestrator.entities.ValueList;
-import orchestrator.services.GQLServiceException;
-import orchestrator.entities.Attribute;
-import orchestrator.entities.Value;
-import orchestrator.util.GQLFileUtils;
+import gql.services.rest.Orchestrator.*;
+
 import java.security.InvalidKeyException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -58,16 +50,16 @@ public class MetadataBrowserBasic {
      *
      * @param filekey Key of the experiment/annotation file to be explored
      * @return A [@code Response} containing a sorted list of unique attributes
-     * @throws GQLServiceException
+     * @throws GMQLServiceException
      * @throws InvalidKeyException
      */
     @GET
     @Path("/{filekey}")
-    public Response browseResourceFile(@PathParam("filekey") String filekey) throws GQLServiceException, InvalidKeyException {
+    public Response browseResourceFile(@PathParam("filekey") String filekey) throws GMQLServiceException, InvalidKeyException {
 
-        java.nio.file.Path filePath = GQLFileUtils.getPathFromFileKey(filekey);
+        java.nio.file.Path filePath = GMQLFileUtils.getPathFromFileKey(filekey);
 
-        Map<String, Set<String>> attr_to_value_map = GQLFileUtils.buildAttributeToValueMap(filePath.toString());
+        Map<String, Set<String>> attr_to_value_map = GMQLFileUtils.buildAttributeToValueMap(filePath.toString());
 
         List<Attribute> attributeList = new ArrayList<>();
         for (String attr : attr_to_value_map.keySet()) {
@@ -87,17 +79,17 @@ public class MetadataBrowserBasic {
      * @param filekey Key of the experiment/annotation file to be explored
      * @param attribute Name of the attribute to be explored
      * @return A {@code Response} containing a sorted list of unique values
-     * @throws GQLServiceException
+     * @throws GMQLServiceException
      * @throws InvalidKeyException
      */
     @GET
     @Path("/{filekey}/{attribute}")
     public Response browseAttribute(@PathParam("filekey") String filekey,
-            @PathParam("attribute") String attribute) throws GQLServiceException, InvalidKeyException {
+            @PathParam("attribute") String attribute) throws GMQLServiceException, InvalidKeyException {
 
-        java.nio.file.Path filePath = GQLFileUtils.getPathFromFileKey(filekey);
+        java.nio.file.Path filePath = GMQLFileUtils.getPathFromFileKey(filekey);
 
-        Map<String, Set<String>> attr_to_value_map = GQLFileUtils.buildAttributeToValueMap(filePath.toString());
+        Map<String, Set<String>> attr_to_value_map = GMQLFileUtils.buildAttributeToValueMap(filePath.toString());
         Set<String> valueSet = attr_to_value_map.get(attribute);
 
         if (valueSet != null) {
@@ -108,7 +100,7 @@ public class MetadataBrowserBasic {
             ValueList values = new ValueList(valueList);
             return Response.ok(values).build();
         } else {
-            throw new GQLServiceException("Attribute " + attribute + " not found.");
+            throw new GMQLServiceException("Attribute " + attribute + " not found.");
         }
     }
 
@@ -122,18 +114,18 @@ public class MetadataBrowserBasic {
      * @param attribute Name of the attribute to be explored
      * @param value Name of the value to be explored
      * @return A {@code Response} containing a sorted list of unique ids
-     * @throws GQLServiceException
+     * @throws GMQLServiceException
      * @throws InvalidKeyException
      */
     @GET
     @Path("/{filekey}/{attribute}/{value}")
     public Response browseAttributeValue(@PathParam("filekey") String filekey,
             @PathParam("attribute") String attribute,
-            @PathParam("value") String value) throws GQLServiceException, InvalidKeyException {
+            @PathParam("value") String value) throws GMQLServiceException, InvalidKeyException {
 
-        java.nio.file.Path filePath = GQLFileUtils.getPathFromFileKey(filekey);
+        java.nio.file.Path filePath = GMQLFileUtils.getPathFromFileKey(filekey);
 
-        Map<Metadata, Set<String>> metadata_to_id_map = GQLFileUtils.buildMetadataToIdMap(filePath.toString());
+        Map<Metadata, Set<String>> metadata_to_id_map = GMQLFileUtils.buildMetadataToIdMap(filePath.toString());
 
         Metadata meta = new Metadata(attribute, value);
         Set<String> idSet = metadata_to_id_map.get(meta);
@@ -142,7 +134,7 @@ public class MetadataBrowserBasic {
             ExperimentIdList ids = new ExperimentIdList(new ArrayList<>(idSet));
             return Response.ok(ids).build();
         } else {
-            throw new GQLServiceException("Metadata " + meta.toString() + " not found.");
+            throw new GMQLServiceException("Metadata " + meta.toString() + " not found.");
         }
     }
 
@@ -154,17 +146,17 @@ public class MetadataBrowserBasic {
      * @param filekey Key of the experiment/annotation file to be explored
      * @param id Experiment id to be browsed
      * @return A {@code Response} containing the set of metadata
-     * @throws GQLServiceException
+     * @throws GMQLServiceException
      * @throws InvalidKeyException
      */
     @GET
     @Path("/id/{filekey}/{id}")
     public Response browseId(@PathParam("filekey") String filekey,
-            @PathParam("id") String id) throws GQLServiceException, InvalidKeyException {
+            @PathParam("id") String id) throws GMQLServiceException, InvalidKeyException {
 
-        java.nio.file.Path filePath = GQLFileUtils.getPathFromFileKey(filekey);
+        java.nio.file.Path filePath = GMQLFileUtils.getPathFromFileKey(filekey);
 
-        Map<String, Set<Metadata>> id_to_metadata_map = GQLFileUtils.buildIdToMetadataMap(filePath.toString());
+        Map<String, Set<Metadata>> id_to_metadata_map = GMQLFileUtils.buildIdToMetadataMap(filePath.toString());
 
         Set<Metadata> metadataSet = id_to_metadata_map.get(id);
 
@@ -172,7 +164,7 @@ public class MetadataBrowserBasic {
             Experiment metadata_wrapped = new Experiment(new ArrayList<>(metadataSet));
             return Response.ok(metadata_wrapped).build();
         } else {
-            throw new GQLServiceException("Experiment id " + id + " not found.");
+            throw new GMQLServiceException("Experiment id " + id + " not found.");
         }
 
     }
@@ -185,26 +177,26 @@ public class MetadataBrowserBasic {
      * @param value
      * @return
      * @throws InvalidKeyException
-     * @throws GQLServiceException
+     * @throws GMQLServiceException
      */
     @GET
     @Path("/all/{filekey}/{attribute}/{value}")
     public Response getAllExperiments(@PathParam("filekey") String filekey,
             @PathParam("attribute") String attribute,
-            @PathParam("value") String value) throws InvalidKeyException, GQLServiceException {
+            @PathParam("value") String value) throws InvalidKeyException, GMQLServiceException {
 
-        java.nio.file.Path filePath = GQLFileUtils.getPathFromFileKey(filekey);
+        java.nio.file.Path filePath = GMQLFileUtils.getPathFromFileKey(filekey);
 
         //TODO: Unefficient: the file is parsed twice
-        Map<Metadata, Set<String>> metadata_to_id_map = GQLFileUtils.buildMetadataToIdMap(filePath.toString());
-        Map<String, Set<Metadata>> id_to_metadata_map = GQLFileUtils.buildIdToMetadataMap(filePath.toString());
+        Map<Metadata, Set<String>> metadata_to_id_map = GMQLFileUtils.buildMetadataToIdMap(filePath.toString());
+        Map<String, Set<Metadata>> id_to_metadata_map = GMQLFileUtils.buildIdToMetadataMap(filePath.toString());
 
         List<Experiment> experiments = new ArrayList<>();
         Metadata meta = new Metadata(attribute, value);
         //retrieve experiment ids having such metadata
         Set<String> experimentIds = metadata_to_id_map.get(meta);
         if (experimentIds == null) {
-            throw new GQLServiceException("Metadata not found: " + meta.toString());
+            throw new GMQLServiceException("Metadata not found: " + meta.toString());
         }
         //retrieve metadata for each experiment
         for (String id : experimentIds) {

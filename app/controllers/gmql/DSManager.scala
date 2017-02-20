@@ -13,6 +13,7 @@ import it.polimi.genomics.repository.Utilities
 import org.xml.sax.SAXException
 import play.api.Logger
 import play.api.mvc.{Action, Controller}
+import utils.GMQL_Globals
 import wrappers.authanticate.AuthenticatedAction
 
 import scala.collection.JavaConverters._
@@ -80,7 +81,7 @@ class DSManager extends Controller {
 
   def getSampleFile(dataSetName: String, file: String) = AuthenticatedAction { request =>
     val username = request.username.get
-    val directory = DataSetsManager.tempFolderRoot + "2" + File.separator + username + File.separator + dataSetName
+    val directory = GMQL_Globals().ut.getTempDir(username) + "2" + File.separator + username + File.separator + dataSetName
     //    val fullFile = directory + File.separator + file
     Ok.sendFile(new java.io.File(directory, file))
   }
@@ -92,7 +93,7 @@ class DSManager extends Controller {
     val username = request.username.get
     //TODO create temp token
     val token = request.user.get.authToken
-    val directory = DataSetsManager.prepareFile("2", username, dataSetName)
+    val directory = DataSetsManager.prepareFile(/*"2",*/ username, dataSetName)
 
 
     Ok(s"${controllers.gmql.routes.DSManager.getUcscList(dataSetName).absoluteURL()}?auth-token=$token $newLine")
@@ -104,7 +105,7 @@ class DSManager extends Controller {
     // http://genome.ucsc.edu/cgi-bin/hgTracks?org=human&hgt.customText=http://www.bioinformatics.deib.polimi.it/canakoglu/test2.txt
     // val username = request.username.getOrElse("")
     val username = request.username.get
-    val directory = DataSetsManager.prepareFile("2", username, dataSetName)
+    val directory = DataSetsManager.prepareFile(/*"2", */username, dataSetName)
     val fileList = new File(directory).listFiles.filter(file => !file.getName.endsWith(".gmql") && !file.getName.endsWith(".meta") && !file.getName.endsWith(".crc") && !file.getName.endsWith(".schema")).map(_.getName)
 
     val buf = new StringBuilder
@@ -158,7 +159,7 @@ class DSManager extends Controller {
 
   def parseFiles(dataSetName: String, columnName: String) = AuthenticatedAction { implicit request =>
     val username = request.username.getOrElse("")
-    val directory = DataSetsManager.prepareFile("2", username, dataSetName)
+    val directory = DataSetsManager.prepareFile(/*"2", */username, dataSetName)
     import it.polimi.genomics.spark.implementation.loaders._
     val isCount = columnName.startsWith("count_")
 
@@ -437,7 +438,7 @@ class DSManager extends Controller {
     * @return full path to the temporary directory
     */
   private def createEmptyTempDirectory(username: String, dataSetName: String) = {
-    val tempDirPath = DataSetsManager.tempFolderRoot + File.separator + username + File.separator + "upload" + File.separator + dataSetName
+    val tempDirPath = GMQL_Globals().ut.getTempDir(username)+ "upload" + File.separator + dataSetName
     //delete folder if exists
     val regionsDirPath = Path.fromString(tempDirPath)
     regionsDirPath.deleteRecursively(force = true, continueOnFailure = true)

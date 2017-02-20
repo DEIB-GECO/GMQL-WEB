@@ -19,15 +19,8 @@ package gql.services.rest;
 
 import com.google.common.collect.Sets;
 import gmql.services.cache.ExperimentCache;
-import orchestrator.entities.Metadata;
-import orchestrator.entities.AttributeList;
-import orchestrator.entities.ExperimentIdList;
-import orchestrator.entities.Experiment;
-import orchestrator.entities.ValueList;
-import orchestrator.services.GQLServiceException;
-import orchestrator.entities.Attribute;
-import orchestrator.entities.Value;
-import orchestrator.util.GQLFileUtils;
+import gql.services.rest.Orchestrator.*;
+
 import java.security.InvalidKeyException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -61,21 +54,21 @@ public class MetadataBrowserCached {
      *
      * @param filekey Key of the experiment/annotation file to be explored
      * @return A [@code Response} containing a sorted list of unique attributes
-     * @throws GQLServiceException
+     * @throws GMQLServiceException
      * @throws InvalidKeyException
      */
     @GET
     @Path("/{filekey}")
-    public Response browseResourceFile(@PathParam("filekey") String filekey) throws GQLServiceException, InvalidKeyException {
+    public Response browseResourceFile(@PathParam("filekey") String filekey) throws GMQLServiceException, InvalidKeyException {
 
-        java.nio.file.Path filePath = GQLFileUtils.getPathFromFileKey(filekey);
+        java.nio.file.Path filePath = GMQLFileUtils.getPathFromFileKey(filekey);
 
         ExperimentCache cache = ExperimentCache.getInstance();
         List<Attribute> attributesList = new ArrayList<>();
         for (String attr : cache.getAttributes(filePath)) {
             attributesList.add(new Attribute(attr));
         }
-        AttributeList attributes = new AttributeList(attributesList);       
+        AttributeList attributes = new AttributeList(attributesList);
 
         return Response.ok(attributes).build();
     }
@@ -87,15 +80,15 @@ public class MetadataBrowserCached {
      * @param filekey Key of the experiment/annotation file to be explored
      * @param attributeName Name of the attribute to be explored
      * @return A {@code Response} containing a sorted list of unique values
-     * @throws GQLServiceException
+     * @throws GMQLServiceException
      * @throws InvalidKeyException
      */
     @GET
     @Path("/{filekey}/{attributeName}")
     public Response browseAttribute(@PathParam("filekey") String filekey,
-            @PathParam("attributeName") String attributeName) throws GQLServiceException, InvalidKeyException {
+            @PathParam("attributeName") String attributeName) throws GMQLServiceException, InvalidKeyException {
 
-        java.nio.file.Path filePath = GQLFileUtils.getPathFromFileKey(filekey);
+        java.nio.file.Path filePath = GMQLFileUtils.getPathFromFileKey(filekey);
 
         ExperimentCache cache = ExperimentCache.getInstance();
         Set<String> valueSet = cache.getValuesFromAttribute(filePath, attributeName);
@@ -108,7 +101,7 @@ public class MetadataBrowserCached {
             ValueList values = new ValueList(valueList);
             return Response.ok(values).build();
         } else {
-            throw new GQLServiceException("Attribute " + attributeName + " not found.");
+            throw new GMQLServiceException("Attribute " + attributeName + " not found.");
         }
     }
 
@@ -121,16 +114,16 @@ public class MetadataBrowserCached {
      * @param attributeName Name of the attribute to be explored
      * @param valueName Name of the value to be explored
      * @return A {@code Response} containing a sorted list of unique ids
-     * @throws GQLServiceException
+     * @throws GMQLServiceException
      * @throws InvalidKeyException
      */
     @GET
     @Path("/{filekey}/{attribute}/{value}")
     public Response browseAttributeValue(@PathParam("filekey") String filekey,
             @PathParam("attribute") String attributeName,
-            @PathParam("value") String valueName) throws GQLServiceException, InvalidKeyException {
+            @PathParam("value") String valueName) throws GMQLServiceException, InvalidKeyException {
 
-        java.nio.file.Path filePath = GQLFileUtils.getPathFromFileKey(filekey);
+        java.nio.file.Path filePath = GMQLFileUtils.getPathFromFileKey(filekey);
 
         ExperimentCache cache = ExperimentCache.getInstance();
 
@@ -141,7 +134,7 @@ public class MetadataBrowserCached {
             ExperimentIdList ids = new ExperimentIdList(new ArrayList<>(idSet));
             return Response.ok(ids).build();
         } else {
-            throw new GQLServiceException("Metadata " + meta.toString() + " not found.");
+            throw new GMQLServiceException("Metadata " + meta.toString() + " not found.");
         }
     }
 
@@ -152,15 +145,15 @@ public class MetadataBrowserCached {
      * @param filekey Key of the experiment/annotation file to be explored
      * @param id Experiment id to be browsed
      * @return A {@code Response} containing the set of metadata
-     * @throws GQLServiceException
+     * @throws GMQLServiceException
      * @throws InvalidKeyException
      */
     @GET
     @Path("/id/{filekey}/{id}")
     public Response browseId(@PathParam("filekey") String filekey,
-            @PathParam("id") String id) throws GQLServiceException, InvalidKeyException {
+            @PathParam("id") String id) throws GMQLServiceException, InvalidKeyException {
 
-        java.nio.file.Path filePath = GQLFileUtils.getPathFromFileKey(filekey);
+        java.nio.file.Path filePath = GMQLFileUtils.getPathFromFileKey(filekey);
 
         ExperimentCache cache = ExperimentCache.getInstance();
 
@@ -170,7 +163,7 @@ public class MetadataBrowserCached {
             Experiment metadata_wrapped = new Experiment(new ArrayList<>(metadataSet));
             return Response.ok(metadata_wrapped).build();
         } else {
-            throw new GQLServiceException("Experiment id " + id + " not found.");
+            throw new GMQLServiceException("Experiment id " + id + " not found.");
         }
 
     }
@@ -180,9 +173,9 @@ public class MetadataBrowserCached {
     @Path("/id/orderattributes/{filekey}/{id}/{attributes}")
     public Response browseIdAndOrder(@PathParam("filekey") String filekey,
             @PathParam("id") String id,
-            @PathParam("attributes") String attributes) throws GQLServiceException, InvalidKeyException {
+            @PathParam("attributes") String attributes) throws GMQLServiceException, InvalidKeyException {
 
-        java.nio.file.Path filePath = GQLFileUtils.getPathFromFileKey(filekey);
+        java.nio.file.Path filePath = GMQLFileUtils.getPathFromFileKey(filekey);
 
         ExperimentCache cache = ExperimentCache.getInstance();
 
@@ -204,7 +197,7 @@ public class MetadataBrowserCached {
             Experiment metadata_wrapped = new Experiment(new ArrayList<>(metadataSet),attributesList);            
             return Response.ok(metadata_wrapped).build();
         } else {
-            throw new GQLServiceException("Experiment id " + id + " not found.");
+            throw new GMQLServiceException("Experiment id " + id + " not found.");
         }
 
     }
@@ -214,9 +207,9 @@ public class MetadataBrowserCached {
     @Path("/filter")
     public Response filterExperiments(@QueryParam("filekey") String filekey,
             @QueryParam("attribute") String attribute,
-            @QueryParam("values") final List<String> values) throws InvalidKeyException, GQLServiceException {
+            @QueryParam("values") final List<String> values) throws InvalidKeyException, GMQLServiceException {
 
-        java.nio.file.Path filePath = GQLFileUtils.getPathFromFileKey(filekey);
+        java.nio.file.Path filePath = GMQLFileUtils.getPathFromFileKey(filekey);
 
         ExperimentCache cache = ExperimentCache.getInstance();
 
@@ -247,16 +240,16 @@ public class MetadataBrowserCached {
      * an attribute in the attributes list.
      * @return
      * @throws InvalidKeyException
-     * @throws GQLServiceException
+     * @throws GMQLServiceException
      */
     @GET
     @Path("/filtermany")
     public Response filtermanyExperiments(@QueryParam("filekey") String filekey,
             @QueryParam("attributes") final List<String> attributes,
             @QueryParam("values") final List<String> values,
-            @QueryParam("valuesEachAttr") final List<Integer> numbers) throws InvalidKeyException, GQLServiceException {
+            @QueryParam("valuesEachAttr") final List<Integer> numbers) throws InvalidKeyException, GMQLServiceException {
 
-        java.nio.file.Path filePath = GQLFileUtils.getPathFromFileKey(filekey);
+        java.nio.file.Path filePath = GMQLFileUtils.getPathFromFileKey(filekey);
 
         ExperimentCache cache = ExperimentCache.getInstance();
 

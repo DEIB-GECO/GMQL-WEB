@@ -17,8 +17,8 @@
  */
 package gql.services.rest;
 
-import orchestrator.entities.GMQLSchemaCollection;
-import orchestrator.util.GQLFileUtils;
+import gql.services.rest.Orchestrator.GMQLFileUtils;
+import gql.services.rest.Orchestrator.GMQLSchemaCollection;
 import play.api.Logger;
 
 import java.io.FileNotFoundException;
@@ -54,7 +54,7 @@ public class SchemaBrowser {
     @Path("/{filekey}")
     public Response getAvailableSchemas(@PathParam("filekey") String filekey) throws InvalidKeyException, FileNotFoundException, JAXBException {
 
-        java.nio.file.Path schemaFilePath = GQLFileUtils.getPathFromFileKey(filekey);
+        java.nio.file.Path schemaFilePath = GMQLFileUtils.getPathFromFileKey(filekey);
         java.util.logging.Logger.getLogger(DataSetsManager.class.getName()).log(Level.INFO, "schemaFilePath " + schemaFilePath);
         GMQLSchemaCollection schemaList = GMQLSchemaCollection.parseGQLSchemaCollection(schemaFilePath);
         return Response.ok(schemaList).build();

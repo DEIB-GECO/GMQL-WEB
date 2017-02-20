@@ -24,9 +24,8 @@ object RepositoryParser {
 
     val repository = new LFSRepository()
     import scala.collection.JavaConverters._
-    val ds = new IRDataSet(dataset, List[(String,PARSING_TYPE)]().asJava)
 
-    val XMLfile = if (!repository.DSExistsInPublic(ds))
+    val XMLfile = if (!repository.DSExistsInPublic(dataset))
       General_Utilities().getSchemaDir(username) + dataset + ".schema"
     else
       General_Utilities().getSchemaDir("public")  + dataset + ".schema"

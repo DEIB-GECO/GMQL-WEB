@@ -17,9 +17,10 @@
  */
 package gql.services.rest;
 
-import orchestrator.repository.GMQLFileTypes;
-import orchestrator.repository.GMQLRepository;
-import orchestrator.entities.GMQLFile;
+import gql.services.rest.Orchestrator.GMQLFile;
+import gql.services.rest.Orchestrator.GMQLFileTypes;
+import gql.services.rest.Orchestrator.GMQLRepositoryV0;
+
 import java.io.FileNotFoundException;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -29,7 +30,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import orchestrator.entities.GMQLFile;
 
 /**
  * This class contains the resources required to browse the GQL repository. It
@@ -54,7 +54,7 @@ public class RepositoryBrowser {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response browseRepositoryMetadata(@PathParam("username") String sc) throws FileNotFoundException {
         String user = sc;
-        GMQLRepository repository = GMQLRepository.getInstance();
+        GMQLRepositoryV0 repository = GMQLRepositoryV0.getInstance();
         GMQLFile tree = repository.getRepositoryTree(user, GMQLFileTypes.METADATA);
 
         return Response.ok(tree).build();
@@ -73,7 +73,7 @@ public class RepositoryBrowser {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response browseRepositorySchemas(@PathParam("username") String sc) throws FileNotFoundException {
         String user = sc;
-        GMQLRepository repository = GMQLRepository.getInstance();
+        GMQLRepositoryV0 repository = GMQLRepositoryV0.getInstance();
         GMQLFile tree = repository.getRepositoryTree(user, GMQLFileTypes.SCHEMA, true);
 
         return Response.ok(tree).build();
@@ -93,7 +93,7 @@ public class RepositoryBrowser {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response browseRepositoryQueries(@PathParam("username") String sc) throws FileNotFoundException {
         String user = sc;
-        GMQLRepository repository = GMQLRepository.getInstance();
+        GMQLRepositoryV0 repository = GMQLRepositoryV0.getInstance();
         GMQLFile tree = repository.getRepositoryTree(user, GMQLFileTypes.QUERY);
 
         return Response.ok(tree).build();
@@ -112,7 +112,7 @@ public class RepositoryBrowser {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response browseRepositoryAll(@PathParam("username") String sc) throws FileNotFoundException {
         String user = sc;
-        GMQLRepository repository = GMQLRepository.getInstance();
+        GMQLRepositoryV0 repository = GMQLRepositoryV0.getInstance();
         GMQLFile tree = repository.getRepositoryTree(user, GMQLFileTypes.ANY);
 
         return Response.ok(tree).build();

@@ -33,32 +33,20 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.JAXBException;
 
 import it.polimi.genomics.core.DataStructures.IRDataSet;
-import it.polimi.genomics.core.ParsingType;
-import it.polimi.genomics.repository.FSRepository.DFSRepository;
-import it.polimi.genomics.repository.FSRepository.RFSRepository;
 import it.polimi.genomics.repository.GMQLSample;
-import it.polimi.genomics.repository.GMQLSchemaTypes;
-import orchestrator.entities.Attribute;
-import orchestrator.entities.AttributeList;
-import orchestrator.entities.GMQLSchema;
-import orchestrator.entities.GMQLSchemaCollection;
-import orchestrator.entities.GMQLSchemaField;
-import orchestrator.repository.GMQLRepository;
-import orchestrator.repository.RepositoryManagerV1;
-import orchestrator.services.GQLServiceException;
-import orchestrator.util.GQLFileUtils;
-import orchestrator.util.Utilities;
+import gql.services.rest.Orchestrator.Attribute;
+import gql.services.rest.Orchestrator.AttributeList;
+import gql.services.rest.Orchestrator.GMQLSchema;
+import gql.services.rest.Orchestrator.GMQLSchemaCollection;
+import gql.services.rest.Orchestrator.GMQLSchemaField;
+import gql.services.rest.Orchestrator.GMQLServiceException;
+import gql.services.rest.Orchestrator.GMQLFileUtils;
 import org.apache.commons.io.FileUtils;
-import play.libs.Scala;
-import scala.Tuple2;
 import utils.GMQL_Globals$;
 
 /**
@@ -67,17 +55,14 @@ import utils.GMQL_Globals$;
 @Path("/datasets/")
 public class DataSetsManager {
 
-    private static final Utilities ut = Utilities.getInstance();
-
     private static it.polimi.genomics.repository.GMQLRepository repository = GMQL_Globals$.MODULE$.apply().repository();
     //private final String tempFolderRoot = File.separator + "home" + File.separator + "gql_repository" + File.separator + "tmp";
     //private final String dataFolderRoot = File.separator + "home" + File.separator + "gql_repository" + File.separator + "data";
-    public static final String tempFolderRoot = ut.GMQLHOME + File.separator + "tmp";
-    public static final String dataFolderRoot = ut.GMQLHOME + File.separator + "data";
+    public static final String dataFolderRoot = utils.GMQL_Globals.apply().ut().RepoDir();
 
     @GET
     @Path("/listAll/{username}")
-    public Response listAllDataSets(@PathParam("username") String sc) throws GQLServiceException, InvalidKeyException {
+    public Response listAllDataSets(@PathParam("username") String sc) throws GMQLServiceException, InvalidKeyException {
         System.out.println("username: " + sc);
 
         String user = sc;
@@ -100,15 +85,15 @@ public class DataSetsManager {
 
     @GET
     @Path("/listDSSamples/{dataset}/{username}")
-    public Response listDataSetSamples(@PathParam("dataset") String dataset, @PathParam("username") String sc) throws GQLServiceException, InvalidKeyException {
+    public Response listDataSetSamples(@PathParam("dataset") String dataset, @PathParam("username") String sc) throws GMQLServiceException, InvalidKeyException {
 
         String user = sc;
-        RepositoryManagerV1 rm = new RepositoryManagerV1(user);
+//        RepositoryManagerV1 rm = new RepositoryManagerV1(user);
 
         List<Attribute> dataSetList = new ArrayList<>();
-        for (ArrayList<String> temp : rm.ListDSSamples(dataset, user)) {
+        for (GMQLSample temp : repository.ListDSSamples(dataset, user)) {
             Logger.getLogger(DataSetsManager.class.getName()).log(Level.INFO, "ListDSSamples name " + temp);
-            dataSetList.add(new Attribute(temp.get(0), temp.get(1)));
+            dataSetList.add(new Attribute(temp.name(), temp.ID()));
         }
 
         AttributeList datasets = new AttributeList(dataSetList);
@@ -121,24 +106,22 @@ public class DataSetsManager {
 
     @GET
     @Path("/registerUser/{username}")
-    public Response registerUser(@PathParam("username") String sc) throws GQLServiceException, InvalidKeyException {
+    public Response registerUser(@PathParam("username") String sc) throws GMQLServiceException, InvalidKeyException {
 
         String user = sc;
-        RepositoryManagerV1 rm = new RepositoryManagerV1(user);
 
-        if (rm.registerUser(user))
+        if (repository.registerUser(user))
             return Response.ok("Registered").build();
         else return Response.serverError().build();
     }
 
     @GET
     @Path("/unRegisterUser/{username}")
-    public Response unRegisterUser(@PathParam("username") String sc) throws GQLServiceException, InvalidKeyException {
+    public Response unRegisterUser(@PathParam("username") String sc) throws GMQLServiceException, InvalidKeyException {
 
         String user = sc;
-        RepositoryManagerV1 rm = new RepositoryManagerV1(user);
 
-        if (rm.unregisterUser(user)) {
+        if (repository.unregisterUser(user)) {
             return Response.ok("UnRegistered").build();
         } else return Response.ok("UserOld could not be deleted.").build();
 
@@ -149,7 +132,7 @@ public class DataSetsManager {
     @POST
     @Path("/delete/{dataSetName}/{username}")
     public Response deleteDataSet(@PathParam("username") String sc, @PathParam("dataSetName") String dataSetName)
-            throws GQLServiceException, InvalidKeyException, InterruptedException, IOException {
+            throws GMQLServiceException, InvalidKeyException, InterruptedException, IOException {
 
         String user = sc;
         //RepositoryManagerV1 rm = new RepositoryManagerV1(user);
@@ -173,7 +156,7 @@ public class DataSetsManager {
 //        }
 
         //now remove zip files in the tmp folder, and local files if any
-        String directory = tempFolderRoot + File.separator + user + File.separator + dataSetName;
+        String directory = utils.GMQL_Globals.apply().ut().getTempDir(user)  + dataSetName;
         File zipFile = new File(directory + ".zip");
         String localDir = checkOrCreateRegionsDirectory(user) + File.separator + dataSetName;
         File dirTemp = new File(directory);
@@ -192,9 +175,9 @@ public class DataSetsManager {
         return Response.ok("OK").build();
     }
 
-    public static String prepareFile(String id, String user,
+    public static String prepareFile( String user,
                                    String dataSetName) throws IOException, InvalidKeyException, InterruptedException {
-        String directory = tempFolderRoot + id  + File.separator + user + File.separator + dataSetName;
+        String directory = utils.GMQL_Globals.apply().ut().getTempDir(user)+ dataSetName;
         File dir = new File(directory);
         dir.mkdirs();
 
@@ -212,7 +195,7 @@ public class DataSetsManager {
 
         String user = sc;
         checkOrCreateTempDirectory(user);
-        String directory = tempFolderRoot + File.separator + user + File.separator + dataSetName;
+        String directory = utils.GMQL_Globals.apply().ut().getTempDir(user)+ dataSetName;
 
         File dir = new File(directory);
         File zipFile = new File(directory + ".zip");
@@ -230,7 +213,7 @@ public class DataSetsManager {
             return Response.ok("inProgress").build();
         }
 
-        prepareFile("", user, dataSetName);
+        prepareFile( user, dataSetName);
 //        repository.exportDsToLocal(dataSetName, user, directory);
 //        RepositoryManagerV1 rm = new RepositoryManagerV1(user);
 //        rm.CopyDSSamplesToLocal(dataSetName, directory, user);
@@ -264,7 +247,7 @@ public class DataSetsManager {
             }
         }
         if (!vocabulary.isEmpty()) {
-            try (PrintWriter writer = new PrintWriter(tempFolderRoot + File.separator + user + File.separator + dataSetName + File.separator + dataSetName + ".vocabulary.txt", "UTF-8")) {
+            try (PrintWriter writer = new PrintWriter(utils.GMQL_Globals.apply().ut().getTempDir(user) + dataSetName + File.separator + dataSetName + ".vocabulary.txt", "UTF-8")) {
                 //order keys
                 SortedSet<String> names = new TreeSet(vocabulary.keySet());
                 for (String name : names) {
@@ -289,7 +272,7 @@ public class DataSetsManager {
                 _user = "public";
             }
             File schemaOrigin = new File(dataFolderRoot + File.separator + _user + File.separator + "schema" + File.separator + _name + ".schema");
-            File schemaDest = new File(tempFolderRoot + File.separator + user + File.separator + dataSetName + File.separator + _name + ".schema");
+            File schemaDest = new File(utils.GMQL_Globals.apply().ut().getTempDir(user)+ dataSetName + File.separator + _name + ".schema");
             FileUtils.copyFile(schemaOrigin, schemaDest);
         } catch (Exception e) {
         }
@@ -345,7 +328,7 @@ public class DataSetsManager {
                                     @PathParam("dataSetName") String dataSetName) throws FileNotFoundException, IOException, InvalidKeyException, InterruptedException {
         String user = sc;
         checkOrCreateTempDirectory(user);
-        String directory = tempFolderRoot + File.separator + user + File.separator + dataSetName + ".zip";
+        String directory = utils.GMQL_Globals.apply().ut().getTempDir(user)+ dataSetName + ".zip";
         File zipFile = new File(directory);
         Logger.getLogger(DataSetsManager.class.getName()).log(Level.INFO, "ZipFile " + zipFile.getAbsolutePath());
         //Set the header and send the response
@@ -366,7 +349,7 @@ public class DataSetsManager {
         String responce = "ok";
         String user = sc;
         checkOrCreateTempDirectory(user);
-        String tempDirPath = tempFolderRoot + File.separator + user + File.separator + "upload" + File.separator + dataSetName;
+        String tempDirPath = utils.GMQL_Globals.apply().ut().getTempDir(user) + "upload" + File.separator + dataSetName;
         //String localDataSetPath = checkOrCreateRegionsDirectory(user) + File.separator + dataSetName;
         File regionsDir = new File(tempDirPath);
 
@@ -411,12 +394,12 @@ public class DataSetsManager {
                     newFile = new File(tempDirPath + File.separator + fileDetails.getFileName());
                 }
 
-                GQLFileUtils.writeToFile(uploadedInputStream, newFile.toPath());
+                GMQLFileUtils.writeToFile(uploadedInputStream, newFile.toPath());
                 //Runtime.getRuntime().exec("chmod 777 " + newFile.getAbsolutePath()).waitFor();
             } else {
                 //roll back
                 FileUtils.deleteDirectory(regionsDir);
-                throw new GQLServiceException("Uploaded file is not valid!");
+                throw new GMQLServiceException("Uploaded file is not valid!");
             }
 
             return Response.ok(responce).build();
@@ -442,7 +425,7 @@ public class DataSetsManager {
         String responce = "ok";
         String user = sc;
         checkOrCreateTempDirectory(user);
-        String tempDirPath = tempFolderRoot + File.separator + user + File.separator + "upload" + File.separator + dataSetName;
+        String tempDirPath = utils.GMQL_Globals.apply().ut().getTempDir(user)+ "upload" + File.separator + dataSetName;
         File tempDir = new File(tempDirPath);
 
         String _localDataSetPath = checkOrCreateRegionsDirectory(user) + File.separator + dataSetName;
@@ -479,8 +462,8 @@ public class DataSetsManager {
                 if (f.getName().endsWith(".meta")) {
                     continue;
                 }
-                RepositoryManagerV1 rm = new RepositoryManagerV1(user);
-                rm.AddSampleToDS(dataSetName, f.getAbsolutePath(), user);
+//                RepositoryManagerV1 rm = new RepositoryManagerV1(user);
+                repository.AddSampleToDS(dataSetName, user, new GMQLSample( f.getAbsolutePath(), f.getAbsolutePath()+".meta",null));
 
             } catch (Exception ex) {
                 try {
@@ -517,7 +500,7 @@ public class DataSetsManager {
 //        try {
 
             String user = sc;
-            String tempDirPath = tempFolderRoot + File.separator + user + File.separator + "upload" + File.separator + dataSetName;
+            String tempDirPath = utils.GMQL_Globals.apply().ut().getTempDir(user) + "upload" + File.separator + dataSetName;
             checkOrCreateTempDirectory(user);
             //move everything from the temp dir path
             String localDataSetPath = checkOrCreateRegionsDirectory(user) + File.separator + dataSetName;
@@ -616,19 +599,19 @@ public class DataSetsManager {
                     schema = tempDirPath + ".schema";
                     break;
                 case "bed":
-                    schema = ut.GMQLHOME + File.separator + "conf" + File.separator + "BED.schema";
+                    schema = utils.GMQL_Globals.apply().ut().getConfDir() + "BED.schema";
                     break;
                 case "NarrowPeak":
-                    schema = ut.GMQLHOME + File.separator + "conf" + File.separator + "NARROWPEAK.schema";
+                    schema = utils.GMQL_Globals.apply().ut().getConfDir()  + "NARROWPEAK.schema";
                     break;
                 case "BroadPeak":
-                    schema = ut.GMQLHOME + File.separator + "conf" + File.separator + "BROADPEAK.schema";
+                    schema = utils.GMQL_Globals.apply().ut().getConfDir()  + "BROADPEAK.schema";
                     break;
                 case "bedGraph":
-                    schema = ut.GMQLHOME + File.separator + "conf" + File.separator + "BEDGRAPH.schema";
+                    schema = utils.GMQL_Globals.apply().ut().getConfDir()  + "BEDGRAPH.schema";
                     break;
                 case "vcf":
-                    schema = ut.GMQLHOME + File.separator + "conf" + File.separator + "VCF.schema";
+                    schema = utils.GMQL_Globals.apply().ut().getConfDir()  + "VCF.schema";
                     break;
             }
 
@@ -687,7 +670,7 @@ public class DataSetsManager {
     }
 
     private static void checkOrCreateTempDirectory(String user) {
-        String tempUserFolderPath = tempFolderRoot + File.separator + user;
+        String tempUserFolderPath = utils.GMQL_Globals.apply().ut().getTempDir( user);
         File d = new File(tempUserFolderPath);
         if (!d.exists()) {
             d.mkdir();
@@ -695,7 +678,7 @@ public class DataSetsManager {
     }
 
     private String checkOrCreateRegionsDirectory(String user) {
-        String regionsUserFolderPath = ut.GMQLHOME + File.separator + "data" + File.separator + user + File.separator + "regions";
+        String regionsUserFolderPath = utils.GMQL_Globals.apply().ut().getRegionDir(user);
         File d = new File(regionsUserFolderPath);
         if (!d.exists()) {
             d.mkdir();

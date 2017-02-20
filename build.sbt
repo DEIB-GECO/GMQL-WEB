@@ -74,7 +74,7 @@ libraryDependencies += "org.eclipse.persistence" % "eclipselink" % "2.6.3"
 //libraryDependencies += "io.spray" % "spray-json_2.10" % "1.3.2"
 
 
-libraryDependencies += "orchestrator.genomics" % "orchestrator" % "7.1"
+//libraryDependencies += "orchestrator.genomics" % "orchestrator" % "7.1"
 libraryDependencies += "it.polimi.genomics" % "GMQL-Spark" % "4.0"
 libraryDependencies += "it.polimi.genomics" % "GMQL-Server" % "2.0"
 libraryDependencies += "it.polimi.genomics" % "GMQL-Core" % "2.0"

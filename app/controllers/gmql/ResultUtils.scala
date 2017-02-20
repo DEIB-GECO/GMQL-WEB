@@ -6,7 +6,7 @@ import javax.ws.rs.core.{MultivaluedMap, Response}
 import javax.xml.bind.{JAXBContext, JAXBException, Marshaller}
 
 import com.sun.jersey.core.util.StringKeyObjectValueIgnoreCaseMultivaluedMap
-import orchestrator.entities._
+import gql.services.rest.Orchestrator._
 import org.eclipse.persistence.jaxb.MarshallerProperties
 import play.api.Logger
 import play.api.libs.json.{Json, Writes}

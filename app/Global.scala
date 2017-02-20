@@ -23,8 +23,7 @@ object Global extends GlobalSettings {
 
   override def onStart(app: Application) {
     Logger.info("Application has started ")
-    Logger.error( Play.application().getFile("conf/").getAbsolutePath)
-
+    utils.GMQL_Globals.apply
   }
 
   override def onStop(app: Application) {

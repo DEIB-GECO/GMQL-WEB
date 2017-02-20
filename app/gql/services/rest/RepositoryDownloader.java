@@ -17,8 +17,9 @@
  */
 package gql.services.rest;
 
-import orchestrator.services.GQLServiceException;
-import orchestrator.util.GQLFileUtils;
+import gql.services.rest.Orchestrator.GMQLFileUtils;
+import gql.services.rest.Orchestrator.GMQLServiceException;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -51,30 +52,30 @@ public class RepositoryDownloader {
      * Resource to download a file from the repository. The file is requested by
      * an user identified by its own {@code user_id}. If present in the
      * repository, the file with key {@code file_key} is attached to the
-     * {@code Response}. A {@code GQLServiceException} is thrown in case of
+     * {@code Response}. A {@code GMQLServiceException} is thrown in case of
      * missing file or unauthorized access by the user.
      *
      * @param userId
      * @param filekey
      * @return A {@code Response} with the requested file attached
-     * @throws GQLServiceException if the file cannot be found or the user has
+     * @throws GMQLServiceException if the file cannot be found or the user has
      * no grants to access to it
      */
     @GET
     @Path("/{user}/{filekey}")
     @Produces(MediaType.TEXT_PLAIN)
     public Response downloadFile(@PathParam("user") String userId,
-            @PathParam("filekey") String filekey) throws GQLServiceException {
+            @PathParam("filekey") String filekey) throws GMQLServiceException {
         try {
             //TODO Check if the user can accces to the requested file
-            File requestedFile = GQLFileUtils.getPathFromFileKey(filekey).toFile();
+            File requestedFile = GMQLFileUtils.getPathFromFileKey(filekey).toFile();
 
             //Set the header and send the response
             return Response.ok((Object) requestedFile)
                     .header("Content-Disposition", "attachment; filename=" + requestedFile.getName())
                     .build();
         } catch (InvalidKeyException ex) {
-            throw new GQLServiceException(ex.getMessage());
+            throw new GMQLServiceException(ex.getMessage());
         }
     }
 
@@ -103,7 +104,7 @@ public class RepositoryDownloader {
 
             for (String filekey : filekeys) {
                 //TODO Check if the user can accces to the requested file
-                File requestedFile = GQLFileUtils.getPathFromFileKey(filekey).toFile();
+                File requestedFile = GMQLFileUtils.getPathFromFileKey(filekey).toFile();
                 FileInputStream fis = new FileInputStream(requestedFile);
                 ZipEntry zipEntry = new ZipEntry(requestedFile.getName());
 

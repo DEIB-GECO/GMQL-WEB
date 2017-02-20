@@ -20,10 +20,11 @@ package gql.services.rest;
 import com.google.common.io.Files;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
-import orchestrator.services.GQLServiceException;
-import orchestrator.repository.GMQLFileTypes;
-import orchestrator.repository.GMQLRepository;
-import orchestrator.util.GQLFileUtils;
+import gql.services.rest.Orchestrator.GMQLFileTypes;
+import gql.services.rest.Orchestrator.GMQLFileUtils;
+import gql.services.rest.Orchestrator.GMQLRepositoryV0;
+import gql.services.rest.Orchestrator.GMQLServiceException;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
@@ -47,19 +48,19 @@ public class RepositoryUploader {
      * @param uploadedInputStream
      * @param fileDetails
      * @return
-     * @throws GQLServiceException
+     * @throws GMQLServiceException
      */
     @POST
     @Path("/query/{username}")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response uploadQueryFile(@PathParam("username") String sc,
             @FormDataParam("file") InputStream uploadedInputStream,
-            @FormDataParam("file") FormDataContentDisposition fileDetails) throws GQLServiceException {
+            @FormDataParam("file") FormDataContentDisposition fileDetails) throws GMQLServiceException {
         
         String user = sc;
 
         if (checkFile(uploadedInputStream, fileDetails)) {
-            GMQLRepository repository = GMQLRepository.getInstance();
+            GMQLRepositoryV0 repository = GMQLRepositoryV0.getInstance();
             String filename = fileDetails.getFileName();
             
             if(!GMQLFileTypes.QUERY.getExtension().equals(Files.getFileExtension(filename))&&Files.getFileExtension(filename)!=""){
@@ -71,13 +72,13 @@ public class RepositoryUploader {
             try {
                 //write the file to disk
                 java.nio.file.Path uploadedFileLocation = repository.getFilePathFromKey(file_key);
-                GQLFileUtils.writeToFile(uploadedInputStream, uploadedFileLocation);
+                GMQLFileUtils.writeToFile(uploadedInputStream, uploadedFileLocation);
             } catch (InvalidKeyException | IOException ex) {
-                throw new GQLServiceException(ex.getMessage());
+                throw new GMQLServiceException(ex.getMessage());
             }
             return Response.ok().build();
         } else {
-            throw new GQLServiceException("Uploaded file is not valid!");
+            throw new GMQLServiceException("Uploaded file is not valid!");
         }
     }
 

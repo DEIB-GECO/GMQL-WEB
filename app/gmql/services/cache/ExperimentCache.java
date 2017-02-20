@@ -21,8 +21,9 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import orchestrator.entities.Metadata;
-import orchestrator.services.GQLServiceException;
+import gql.services.rest.Orchestrator.GMQLServiceException;
+import gql.services.rest.Orchestrator.Metadata;
+
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -137,14 +138,14 @@ public class ExperimentCache {
      * be used
      * @param experimentId Id of the experiment to extracted
      * @return A set of {@code Metadata} instances related with the experiment
-     * @throws GQLServiceException if the experimentFile or the experimentId
+     * @throws GMQLServiceException if the experimentFile or the experimentId
      * cannot be found
      */
-    public Set<Metadata> getMetadataFromId(Path experimentFilePath, String experimentId) throws GQLServiceException {
+    public Set<Metadata> getMetadataFromId(Path experimentFilePath, String experimentId) throws GMQLServiceException {
         try {
             return id_to_metadata_cache.get(experimentFilePath.toString()).get(experimentId);
         } catch (ExecutionException e) {
-            throw new GQLServiceException(e.getMessage());
+            throw new GMQLServiceException(e.getMessage());
         }
     }
 
@@ -160,17 +161,17 @@ public class ExperimentCache {
      * @param meta Instance of {@code Metadata} to be searched
      * @return Set of unique experiment ids associated with the {@code Metadata}
      * meta
-     * @throws GQLServiceException if the experimenFile or the {@code Metadata}
+     * @throws GMQLServiceException if the experimenFile or the {@code Metadata}
      * cannot be found
      */
-    public Set<String> getIdsFromMetadata(Path experimentFilePath, Metadata meta) throws GQLServiceException {
+    public Set<String> getIdsFromMetadata(Path experimentFilePath, Metadata meta) throws GMQLServiceException {
         try {
             if(meta == null)
                 return id_to_metadata_cache.get(experimentFilePath.toString()).keySet();
             else
                 return metadata_to_id_cache.get(experimentFilePath.toString()).get(meta);
         } catch (ExecutionException e) {
-            throw new GQLServiceException(e.getMessage());
+            throw new GMQLServiceException(e.getMessage());
         }
     }
 
@@ -184,13 +185,13 @@ public class ExperimentCache {
      * @param experimentFilePath {@code Path} instance of the experiment file to
      * be used
      * @return Set of unique attributes conteined into an experiment file
-     * @throws GQLServiceException if the experiementFile cannot be found
+     * @throws GMQLServiceException if the experiementFile cannot be found
      */
-    public Set<String> getAttributes(Path experimentFilePath) throws GQLServiceException {
+    public Set<String> getAttributes(Path experimentFilePath) throws GMQLServiceException {
         try {
             return attr_to_value_cache.get(experimentFilePath.toString()).keySet();
         } catch (ExecutionException e) {
-            throw new GQLServiceException(e.getMessage());
+            throw new GMQLServiceException(e.getMessage());
         }
     }
 
@@ -205,18 +206,18 @@ public class ExperimentCache {
      * be used
      * @param attributeName Name of the attribute to be extracted
      * @return Set of unique values associated with the passed attributeName
-     * @throws GQLServiceException if the experimenFile or the attribute cannot
+     * @throws GMQLServiceException if the experimenFile or the attribute cannot
      * be found
      */
-    public Set<String> getValuesFromAttribute(Path experimentFilePath, String attributeName) throws GQLServiceException {
+    public Set<String> getValuesFromAttribute(Path experimentFilePath, String attributeName) throws GMQLServiceException {
         try {
             return attr_to_value_cache.get(experimentFilePath.toString()).get(attributeName);
         } catch (ExecutionException e) {
-            throw new GQLServiceException(e.getMessage());
+            throw new GMQLServiceException(e.getMessage());
         }
     }
 
-    private Map<String, Set<Metadata>> buildIdToMetadataMap(String experimentFilePath) throws GQLServiceException {
+    private Map<String, Set<Metadata>> buildIdToMetadataMap(String experimentFilePath) throws GMQLServiceException {
 
         Map<String, Set<Metadata>> id_to_metadata = new HashMap<>();
         String line = null;
@@ -243,14 +244,14 @@ public class ExperimentCache {
             }
             br.close();
         } catch (FileNotFoundException e) {
-            throw new GQLServiceException("File " + Paths.get(experimentFilePath).getFileName() + " not found in the repository.");
+            throw new GMQLServiceException("File " + Paths.get(experimentFilePath).getFileName() + " not found in the repository.");
         } catch (NumberFormatException | IOException e) {
-            throw new GQLServiceException("An error has occurred while parsing file " + Paths.get(experimentFilePath).getFileName() + ".");
+            throw new GMQLServiceException("An error has occurred while parsing file " + Paths.get(experimentFilePath).getFileName() + ".");
         }
         return id_to_metadata;
     }
 
-    private Map<Metadata, Set<String>> buildMetadataToIdMap(String experimentFilePath) throws GQLServiceException {
+    private Map<Metadata, Set<String>> buildMetadataToIdMap(String experimentFilePath) throws GMQLServiceException {
 
         Map<Metadata, Set<String>> metadata_to_id = new HashMap<>();
         String line = null;
@@ -277,14 +278,14 @@ public class ExperimentCache {
             }
             br.close();
         } catch (FileNotFoundException e) {
-            throw new GQLServiceException("File " + Paths.get(experimentFilePath).getFileName() + " not found in the repository.");
+            throw new GMQLServiceException("File " + Paths.get(experimentFilePath).getFileName() + " not found in the repository.");
         } catch (NumberFormatException | IOException e) {
-            throw new GQLServiceException("An error has occurred while parsing file " + Paths.get(experimentFilePath).getFileName() + ".");
+            throw new GMQLServiceException("An error has occurred while parsing file " + Paths.get(experimentFilePath).getFileName() + ".");
         }
         return metadata_to_id;
     }
 
-    private Map<String, Set<String>> buildAttributeToValueMap(String experimentFilePath) throws GQLServiceException {
+    private Map<String, Set<String>> buildAttributeToValueMap(String experimentFilePath) throws GMQLServiceException {
 
         Map<String, Set<String>> attr_to_value = new HashMap<>();
         String line = null;
@@ -308,9 +309,9 @@ public class ExperimentCache {
             }
             br.close();
         } catch (FileNotFoundException e) {
-            throw new GQLServiceException("File " + Paths.get(experimentFilePath).getFileName() + " not found in the repository.");
+            throw new GMQLServiceException("File " + Paths.get(experimentFilePath).getFileName() + " not found in the repository.");
         } catch (NumberFormatException | IOException e) {
-            throw new GQLServiceException("An error has occurred while parsing file " + Paths.get(experimentFilePath).getFileName() + ".");
+            throw new GMQLServiceException("An error has occurred while parsing file " + Paths.get(experimentFilePath).getFileName() + ".");
         }
         return attr_to_value;
     }

@@ -56,6 +56,7 @@ public class SchemaBrowser {
 
         java.nio.file.Path schemaFilePath = GMQLFileUtils.getPathFromFileKey(filekey);
         java.util.logging.Logger.getLogger(DataSetsManager.class.getName()).log(Level.INFO, "schemaFilePath " + schemaFilePath);
+
         GMQLSchemaCollection schemaList = GMQLSchemaCollection.parseGQLSchemaCollection(schemaFilePath);
         return Response.ok(schemaList).build();
     }

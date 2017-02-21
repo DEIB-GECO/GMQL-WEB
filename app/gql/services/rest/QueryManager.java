@@ -24,6 +24,7 @@ import gql.services.rest.Orchestrator.*;
 import it.polimi.genomics.manager.Exceptions.NoJobsFoundException;
 import it.polimi.genomics.manager.GMQLContext;
 import it.polimi.genomics.manager.GMQLExecute;
+import it.polimi.genomics.manager.Launchers.GMQLLocalLauncher;
 import it.polimi.genomics.manager.Launchers.GMQLSparkLauncher;
 import java.io.File;
 import java.io.IOException;
@@ -42,6 +43,7 @@ import javax.ws.rs.core.Response;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
 import it.polimi.genomics.core.*;
 import utils.GMQL_Globals$;
@@ -55,7 +57,16 @@ import utils.GMQL_Globals$;
 @Path("/query")
 public class QueryManager {
 
-    private static SparkContext sparkContext;
+    private static SparkConf conf = new SparkConf()
+            .setAppName("GMQL V2.1 web Service")
+            .setMaster("local[*]")
+            .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+            .set("spark.kryoserializer.buffer", "64")
+            .set("spark.driver.allowMultipleContexts","true")
+            .set("spark.sql.tungsten.enabled", "true");
+
+//    private static SparkContext sparkContext = new SparkContext(conf);
+    private static SparkContext emptyContext;
     /**
      * Reads the content of query file and returns it as response to the
      * requester
@@ -209,7 +220,7 @@ public class QueryManager {
 
         GMQLScript gmqlScript = new GMQLScript(script, queryFilePath.toString());
         BinSize binSize = new BinSize(5000,5000,1000);
-        GMQLContext gmqlContext = new GMQLContext (ImplementationPlatform.SPARK(), GMQL_Globals$.MODULE$.apply().repository(),GMQLOutputFormat.apply(outputFormat),binSize,user,sparkContext);
+        GMQLContext gmqlContext = new GMQLContext (ImplementationPlatform.SPARK(), GMQL_Globals$.MODULE$.apply().repository(),GMQLOutputFormat.apply(outputFormat),binSize,user,emptyContext);
 
         it.polimi.genomics.manager.GMQLJob job = server.registerJob(gmqlScript,gmqlContext,"");
         server.execute(job.jobId(),new GMQLSparkLauncher(job));
@@ -237,9 +248,9 @@ public class QueryManager {
         }
 
 
-        GMQLScript gmqlScript = new GMQLScript(queryFilePath.toString(),script);
+        GMQLScript gmqlScript = new GMQLScript(script,queryFilePath.toString());
         BinSize binSize = new BinSize(5000,5000,1000);
-        GMQLContext gmqlContext = new GMQLContext (ImplementationPlatform.SPARK(), GMQL_Globals$.MODULE$.apply().repository(),GMQLOutputFormat.TAB(),binSize,user,sparkContext);
+        GMQLContext gmqlContext = new GMQLContext (ImplementationPlatform.SPARK(), GMQL_Globals$.MODULE$.apply().repository(),GMQLOutputFormat.TAB(),binSize,user,emptyContext);
 
         it.polimi.genomics.manager.GMQLJob job = server.registerJob(gmqlScript,gmqlContext,"");
 

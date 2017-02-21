@@ -198,6 +198,9 @@ public class GMQLRepositoryV0 {
                 "0", true);
         try {
             logger.info("walking the three " + rootPath);
+            logger.info(userId);
+            logger.info(dirType.toString());
+            logger.info(gql_file_root.getFilename());
             Files.walkFileTree(rootPath,
                     new GMQLFileTreeVisitor(gql_file_root, key_to_file, userId, dirType));
             logger.info("done");
@@ -260,6 +263,7 @@ public class GMQLRepositoryV0 {
         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                 throws IOException {
             key_to_file.put(computeFileKey(file), file);
+            System.out.println(file.toString());
             return FileVisitResult.CONTINUE;
         }
     }

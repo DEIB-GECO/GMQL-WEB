@@ -80,8 +80,8 @@ public final class GMQLSchemaCollection {
         JAXBContext jaxbContext = JAXBContext.newInstance(GMQLSchemaCollection.class);
         Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
         //TODO: Schema validation
+        System.out.println(schemaFilePath.toString());
         return (GMQLSchemaCollection) unmarshaller.unmarshal(new FileInputStream(schemaFilePath.toFile()));
-
     }
     /**
      * @throws javax.xml.bind.JAXBException

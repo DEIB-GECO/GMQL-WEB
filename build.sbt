@@ -83,7 +83,6 @@ libraryDependencies += "it.polimi.genomics" % "GMQL-Repository" % "1.0"
 libraryDependencies += "it.polimi.genomics" % "GMQL-Flink" % "3.0"
 libraryDependencies += "it.polimi.genomics" % "GMQL-SManager" % "2.0"
 
-
 //play 2.5.0 will support injected routes as default
 routesGenerator := InjectedRoutesGenerator
 

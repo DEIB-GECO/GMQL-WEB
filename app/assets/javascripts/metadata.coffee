@@ -18,10 +18,17 @@ $ ->
 
 metadataAddButtonClick = ->
   if window.lastSelectedDataSet?
+    metadataSearchDiv = $("#metadata-search-div")
+    metadataSearchDiv.find('.selectpicker').attr('disabled', true).selectpicker('refresh')
+    metadataSearchDiv.find('.del-button').attr('disabled', true)
     row = rowDiv()
-    $("#metadata-search-div").append row
+    metadataSearchDiv.append row
     row.find(".selectpicker").selectpicker('show')
-    $(window).scrollTop($(document).height());
+    # move window till end of metedata division
+    windowBottom = $( window ).scrollTop() + $( window ).height()
+    metadataSearchDivBottom = $( "#metadata-search-div" ).offset().top +  $( "#metadata-search-div" ).height()
+#    $("html, body").animate({ scrollTop: (metadataSearchDivBottom - $( window ).height()) }) if(metadataSearchDivBottom>windowBottom)
+    $( window ).scrollTop(metadataSearchDivBottom - $( window ).height()) if(metadataSearchDivBottom>windowBottom)
   else
     alert('Please select a data set')
 
@@ -34,6 +41,9 @@ rowDiv = () ->
   .append secondDropDown
   .append delButton
   delButton.click ->
+    metadataSearchDiv = div.prev()
+    metadataSearchDiv.find('.selectpicker').attr('disabled', false).selectpicker('refresh')
+    metadataSearchDiv.find('.del-button').attr('disabled', false)
     div.remove()
     generateQuery()
   delButton.tooltip()
@@ -48,19 +58,21 @@ firstDropDown = (dataSet)->
   .attr("data-style", "btn-primary")
   .attr("data-live-search", "true")
   .attr("title", "Choose attribute")
-  call = jsRoutes.controllers.gmql.RepositoryBro.dataSetMeta window.lastSelectedDataSet
+#  call = jsRoutes.controllers.gmql.MetadataBrowser.getKeys window.lastSelectedDataSet
+  call = jsRoutes.controllers.gmql.MetadataBrowser.getFilteredKeys window.lastSelectedDataSet
   $.ajax
     url: call.url
     type: call.type
     method: call.method
     headers: {'X-Auth-Token': window.authToken}
-    contentType: 'json'
+    contentType: 'application/json'
     dataType: 'json'
+    data: getMetadataQuery()
     success: (result, textStatus, jqXHR) ->
       window.lastResult = result
-      list = result.attributeList.attribute
+      list = result.attributes
       for x in list
-        newOption = $("<option/>").text(x.name)
+        newOption = $("<option/>").text("#{x.key} (#{x.valueCount} - #{x.sampleCount})").val(x.key)
         select.append newOption
       $('.selectpicker').selectpicker('refresh')
   select.change firstDropDownOnChange
@@ -92,19 +104,20 @@ firstDropDownOnChange = ->
   selected = $(this).find("option:selected").val()
   select = $(this).parent().next().find("select")
   select.empty()
-  call = jsRoutes.controllers.gmql.RepositoryBro.dataSetMetaAttribute window.lastSelectedDataSet, selected
+  call = jsRoutes.controllers.gmql.MetadataBrowser.getFilteredValues window.lastSelectedDataSet, selected
   $.ajax
     url: call.url
     type: call.type
     method: call.method
     headers: {'X-Auth-Token': window.authToken}
-    contentType: 'json'
+    contentType: 'application/json'
     dataType: 'json'
+    data: getMetadataQuery()
     success: (result, textStatus, jqXHR) ->
       window.lastResult = result
-      list = result.valueList.value
+      list = result.values
       for x in list
-        newOption = $("<option/>").text(x.name)
+        newOption = $("<option/>").text("#{x.text} (#{x.count})").val(x.text)
         select.append newOption
       select.selectpicker({title: "Choose value"}).selectpicker('refresh')
   generateQuery()
@@ -123,11 +136,11 @@ getQuery = ->
   console.log("getQuery-> dataSetMame: #{window.lastSelectedDataSet}")
   metadataDivs = allMetadataDivSelected()
   outer = for div in metadataDivs
-    firstSelectedText = $(div).find(".first-drop-down").find("option:selected").text()
+    firstSelectedText = $(div).find(".first-drop-down").find("option:selected").val()
     secondSelected = $(div).find(".second-drop-down").find("option:selected")
 
     inner = for second in secondSelected
-      "#{firstSelectedText} == '#{second.text}'"
+      "#{firstSelectedText} == '#{second.value}'"
     reduced = if inner.length then inner.reduce (t, s) -> "#{t} OR #{s}" else ""
     if inner.length > 1  then "(#{reduced})" else reduced
   reduced = if outer?.length then outer.reduce (t, s) -> t + (if t.length && s.length then " AND " else "") + s else ""
@@ -160,22 +173,23 @@ Generate query into ACE editor
   console.log "generateQuery: " +  @red
   @red > 0
 
+getMetadataQuery = ->
+  metadataDivs = allMetadataDivSelected()
+  outer =
+    attributes: for div in metadataDivs
+      firstSelectedText = $(div).find(".first-drop-down").find("option:selected").val()
+      secondSelecteds = (text: $(second).val() for second in $(div).find(".second-drop-down").find("option:selected"))
+      key: firstSelectedText
+      values: secondSelecteds
+  input = JSON.stringify(outer, null, "\t")
+  console.log input
+  input
 
 testSelect = ->
   console.log "testSelect"
   console.log("getQuery-> dataSetMame: #{window.lastSelectedDataSet}")
-  metadataDivs = allMetadataDivSelected()
-  outer =
-    attributes: for div in metadataDivs
-      firstSelectedText = $(div).find(".first-drop-down").find("option:selected").text()
-      secondSelecteds = ($(second).text() for second in $(div).find(".second-drop-down").find("option:selected"))
-      name: firstSelectedText
-      values: secondSelecteds
-
-  input = JSON.stringify(outer, null, "\t")
-  console.log input
-
-  call = jsRoutes.controllers.gmql.RepositoryBro.getFilteredSamples window.lastSelectedDataSet
+  
+  call = jsRoutes.controllers.gmql.MetadataBrowser.getFilteredDataset window.lastSelectedDataSet
   $.ajax
     url: call.url
     type: call.type
@@ -183,7 +197,7 @@ testSelect = ->
     headers: {'X-Auth-Token': window.authToken}
     contentType: 'application/json'
     dataType: 'json'
-    data: input
+    data: getMetadataQuery()
     success: (result, textStatus, jqXHR) ->
       window.lastResult = result
       console.log JSON.stringify(result, null, "\t")
@@ -193,13 +207,14 @@ testSelect = ->
       #        select.append newOption
       #      select.selectpicker({title: "Choose value"}).selectpicker('refresh')
 
-      expIdList = result.experimentIdList
-      count = expIdList.count
+      samples = result.samples
+      count = samples.length
 
       if count
-        list = result.experimentIdList.experiementId.slice(0, MAX_SAMPLES).join "_"
-        BootstrapDialog.show
-          size: BootstrapDialog.SIZE_WIDE
+        list = samples.slice(0, MAX_SAMPLES)
+        idList = (second.id for second in list).join "_"
+        bsd = BootstrapDialog.show
+#          size: BootstrapDialog.SIZE_WIDE
           title: (dialog) ->
             dialog.getData('title')
           message: (dialog) ->
@@ -212,8 +227,9 @@ testSelect = ->
 
             changeTab()
           data:
-            pageToLoad: jsRoutes.controllers.Application.sampleMetadata(count, list).url
+            pageToLoad: jsRoutes.controllers.Application.sampleMetadata(count, idList).url
             title: 'Search result for ' + window.lastSelectedDataSet
+        bsd.getModalDialog().addClass("modal-xl")
       else
         BootstrapDialog.alert "No result"
 
@@ -229,10 +245,11 @@ changeTab = ->
     id = href.split "-"
     id = id[1]
     tab = $(href)
+    sampleName = $("#a-sample-#{id}").text()
     #    tab.text("Test: " + id[1])
     if not tab.attr "loaded"
       tab.attr "loaded", true
-      insertMetadataTable(tab, window.lastSelectedDataSet, id)
+      insertMetadataTable(tab, window.lastSelectedDataSet, id, sampleName)
 # active tab
 #    y = $(event.relatedTarget)
 #     previous tab
@@ -241,7 +258,7 @@ changeTab = ->
 
 
 getSamples = (dataSetName) ->
-  call = jsRoutes.controllers.gmql.DSManager.dataSetSamples(dataSetName)
+  call = jsRoutes.controllers.gmql.DSManager.getSamples(dataSetName)
   $.ajax
     url: call.url
     type: call.type
@@ -252,9 +269,9 @@ getSamples = (dataSetName) ->
     success: (result, textStatus, jqXHR) ->
       window.sslastResult = result
       console.log JSON.stringify(result, null, "\t")
-      for attribute in result.attributeList.attribute
-        id = attribute.id
-        name = attribute.name.split("/").pop()
+      for sample in result.samples
+        id = sample.id
+        name = sample.name #.split("/").pop()
         console.log 'id: ' + id
         console.log 'name: ' + name
         $("#a-sample-#{id}").text name
@@ -266,8 +283,8 @@ getSamples = (dataSetName) ->
         Metadata Table
 ###
 
-@insertMetadataTable = (div, dataSet, id) ->
-  call = jsRoutes.controllers.gmql.RepositoryBro.browseId(dataSet, id)
+@insertMetadataTable = (div, dataSet, id,sampleName) ->
+  call = jsRoutes.controllers.gmql.MetadataBrowser.getSampleMetadata(dataSet, sampleName)
   $.ajax
     url: call.url
     type: call.type
@@ -276,7 +293,8 @@ getSamples = (dataSetName) ->
     contentType: 'json'
     dataType: 'json'
     success: (result, textStatus, jqXHR) ->
-      div.append metadataTable(dataSet, id, result.experiment.metadata)
+      window.result = result
+      div.append metadataTable(dataSet, id, result.attributes)
 
 
 metadataTable = (dataSet, id, metadata) ->
@@ -295,8 +313,8 @@ metadataTable = (dataSet, id, metadata) ->
   table.append tbody = $("<tbody>")
   for x in metadata
 #    x.attribute = "https://tcga-data.nci.nih.gov/tcgafiles/ftp_auth/distro_ftpusers/anonymous/tumor/brca/gsc/genome.wustl.edu/illuminaga_dnaseq_curated/mutations/genome.wustl.edu_BRCA.IlluminaGA_DNASeq_curated.Level_2.1.1.0/genome.wustl.edu_brca.illuminaga_dnaseq.level_2.1.1.0.curated.somatic.maf"
-    cell1 = $("<td></td>").html x.attribute.replace(/[\/-]/g, "$&<wbr>")
-    cell2 = $("<td></td>").html x.value.replace(/[\/-]/g, "$&<wbr>")
+    cell1 = $("<td></td>").html x.key.replace(/[\/-]/g, "$&<wbr>")
+    cell2 = $("<td></td>").html x.value.text.replace(/[\/-]/g, "$&<wbr>")
     newRow = $("<tr></tr>").append cell1, cell2
     tbody.append newRow
   div

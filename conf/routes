@@ -1,120 +1,177 @@
-# Routes
-# This file defines all application routes (Higher priority routes first)
-# ~~~~
-
-# Home page
-#GET         /                                                                controllers.Application.index
-#GET         /                                                                controllers.Assets.at(path="/public", file="index.html")
-GET           /                                                                controllers.Application.gmql
-GET           /help                                                            controllers.Application.help
-#GET         /help_inner                                                      controllers.Application.helpInner
-#GET        /help_redirect                                                   controllers.Application.helpRedirect
-GET           /metadata/:totalCount/:list                                      controllers.Application.sampleMetadata(totalCount:Int, list)
-
-GET           /gmqlHelp                                                        controllers.Application.gmqlHelp
+## Routes
+## This file defines all application routes (Higher priority routes first)
+## ~~~~
+#
 
 
+GET           /hello1                                            controllers.Application2.hello1()
+GET           /hello2                                            controllers.Application2.hello2()
+GET           /hello3                                            controllers.Application2.hello3()
+GET           /hello4/:datasetName/:sampleName                   controllers.Application2.hello4(datasetName:String, sampleName: String)
+GET           /hello5                                            controllers.Application2.hello5()
 
-GET           /heatMapTest                                                     controllers.Application.heatMapTest
 
-
-
-#GET         /ajax-call                                                       controllers.Application.ajaxCall
-GET           /javascriptRoutes                                                controllers.JavascriptRoute.javascriptRoutes
-
-# Map static resources from the /public folder to the /assets URL path
-GET           /assets/*file                                                    controllers.Assets.at(path="/public", file)
-
-GET           /webjars/*file                                                   controllers.WebJarAssets.at(file)
+## Home page
+GET           /                                                  controllers.Application.gmql
+## GMQL REST help page
+GET           /help                                              controllers.Application.gmqlRestHelp
+## GMQL help/documantation page
+GET           /gmqlHelp                                          controllers.Application.gmqlHelp
+#
+#
+## java script reverse router, all the javascript ajax call url load from the file below
+## documentation: https://www.playframework.com/documentation/2.4.x/ScalaJavascriptRouting#router-resource
+GET           /javascriptRoutes                                  controllers.JavascriptRoute.javascriptRoutes
+#
+#
+## Map static resources from the /public folder to the /assets URL path
+GET           /assets/*file                                      controllers.Assets.at(path="/public", file)
+## Map web jar resources from the /public folder to the /assets URL path
+GET           /webjars/*file                                     controllers.WebJarAssets.at(file)
+#
+#
+## USER RELATED ROUTES
+## get authanticated user information(
+GET           /user                                              controllers.SecurityController.getUser
+GET           /guest                                             controllers.SecurityController.loginGuest
+GET           /logout                                            controllers.SecurityController.logout
+POST          /login                                             controllers.SecurityController.login
+POST          /register                                          controllers.SecurityController.registerUser
+GET           /recoveryEmail/:username                           controllers.SecurityController.passwordRecoveryEmail(username)
+GET           /recovery                                          controllers.SecurityController.passwordRecovery
+POST          /updatePassword                                    controllers.SecurityController.updatePassword
+#
+#
+#
+##multipart
+#
+##dataSet
+GET           /datasets                                          controllers.gmql.DSManager.getDatasets
+##returns the samples of the dataset
+GET           /datasets/:datasetName                             controllers.gmql.DSManager.getSamples(datasetName)
+##delete dataset
+DELETE        /datasets/:datasetName                             controllers.gmql.DSManager.deleteDataset(datasetName)
+##this could be alternative
+##GET           /datasets/:datasetName/delete                                     controllers.gmql.DSManager.deleteDataset(datasetName)
 
 #
-GET           /user                                                            controllers.SecurityControllerScala.getUser
-GET           /guest                                                           controllers.SecurityControllerScala.loginGuest
-GET           /logout                                                          controllers.SecurityControllerScala.logout
+## get single sample file, region or meta
+#GET           /datasets/:datasetName/:sampleName/:isMeta          controllers.gmql.DSManager.getFile(datasetName, sampleName, isMeta)
+GET           /datasets/:datasetName/:sampleName/region          controllers.gmql.DSManager.getRegionStream(datasetName, sampleName)
+GET           /datasets/:datasetName/:sampleName/metadata        controllers.gmql.DSManager.getMetadataStream(datasetName, sampleName)
 
-POST          /login                                                           controllers.SecurityControllerScala.login
-POST          /register                                                        controllers.SecurityControllerScala.registerUser
-GET           /recoveryEmail/:username                                         controllers.SecurityControllerScala.passwordRecoveryEmail(username)
-GET           /recovery                                                        controllers.SecurityControllerScala.passwordRecovery
-POST          /updatePassword                                                  controllers.SecurityControllerScala.updatePassword
+GET           /datasets/:datasetName/zip                         controllers.gmql.DSManager.zip(datasetName:String)
 
 
+GET           /datasets/:datasetName/getUCSCList                 controllers.gmql.DSManager.getUcscList(datasetName:String)
+#GET           /datasets/:datasetName/getSampleFile/:sample        controllers.gmql.DSManager.getRegionStream(datasetName:String, sample:String)
+GET           /datasets/:datasetName/getUCSCLink                 controllers.gmql.DSManager.getUcscLink(datasetName:String)
 
-#multipart
-
-#dataSet
-GET           /dataSets                                                        controllers.gmql.DSManager.dataSetAll
-
-GET           /dataSets/:dataSetName                                           controllers.gmql.DSManager.dataSetSamples(dataSetName)
-
-DELETE        /dataSets/:dataSetName                                           controllers.gmql.DSManager.dataSetDeletion(dataSetName)
-#GET           /dataSets/delete/:dataSetName                                     controllers.gmql.DSManager.dataSetDeletion(dataSetName)
-
-GET           /dataSets/:dataSetName/preparaZip/:clean                         controllers.gmql.DSManager.zipFilePreparation(dataSetName, clean)
-GET           /dataSets/:dataSetName/downloadZip                               controllers.gmql.DSManager.downloadFileZip(dataSetName:String)
-POST          /dataSets/uploadSample/:dataSetName                              controllers.gmql.DSManager.uploadSample(dataSetName: String, schemaType: Option[String])
-#POST        /dataSet/upload/:dataSetName                                     controllers.gmql.DSManager.upload(dataSetName:String)
-POST          /dataSets/:dataSetName/uploadSampleUrls                          controllers.gmql.DSManager.uploadSamplesFromUrls(dataSetName: String, schemaType: Option[String])
-GET           /dataSets/:dataSetName/parse/:columnName                         controllers.gmql.DSManager.parseFiles(dataSetName:String, columnName: String)
-
-GET           /dataSets/:dataSetName/getUCSCList                               controllers.gmql.DSManager.getUcscList(dataSetName:String)
-GET           /dataSets/:dataSetName/getSampleFile/:sample                     controllers.gmql.DSManager.getSampleFile(dataSetName:String, sample:String)
-GET           /dataSets/:dataSetName/getUCSCLink                               controllers.gmql.DSManager.getUcscLink(dataSetName:String)
-
-#Query
-GET           /queries/read/:fileKey                                           controllers.gmql.QueryMan.readQuery(fileKey:String)
-GET           /queries/delete/:fileKey                                         controllers.gmql.QueryMan.deleteQuery(fileKey:String)
-POST          /queries/save/:fileName/:fileKey                                 controllers.gmql.QueryMan.saveQueryAs(fileName: String, fileKey: String)
-GET           /queries/runv2/:fileKey/:gtfOutput/:execType                     controllers.gmql.QueryMan.runQueryV2File(fileKey: String, gtfOutput: String, execType: String)
-GET           /queries/compilev2/:fileKey/:execType                            controllers.gmql.QueryMan.compileQueryV2File(fileKey: String, execType: String)
-
-#Jobs
-GET           /jobs                                                            controllers.gmql.QueryMan.getJobsV2
-GET           /jobs/:id/trace                                                  controllers.gmql.QueryMan.traceJobV2(id: String)
-GET           /jobs/:id/log                                                    controllers.gmql.QueryMan.getLog(id: String)
-GET           /jobs/:id/stop                                                   controllers.gmql.QueryMan.stopJob(id: String)
+GET           /datasets/:datasetName/schema                      controllers.gmql.DSManager.dataSetSchema(datasetName)
 
 
-##COMPILE
+POST          /datasets/:datasetName/uploadSample                controllers.gmql.DSManager.uploadSample(datasetName: String, schema: Option[String])
+POST          /datasets/:datasetName/uploadSampleUrls            controllers.gmql.DSManager.uploadSamplesFromUrls(datasetName: String, schema: Option[String])
+#TODO change can be problem with upper one
+GET           /datasets/:datasetName/:columnName/parse           controllers.gmql.DSManager.parseFiles(datasetName:String, columnName: String)
 
 
-GET           /metadata/browseResourceFile/:fileKey                            controllers.gmql.MetadataBrowser.browseResourceFile(fileKey:String)
-GET           /metadata/browseAttribute/:fileKey/:attribute                    controllers.gmql.MetadataBrowser.browseAttribute(fileKey:String, attribute:String )
-GET           /metadata/browseAttributeValue/:fileKey/:attribute/:value        controllers.gmql.MetadataBrowser.browseAttributeValue(fileKey:String, attribute:String, value:String)
-GET           /metadata/browseId/:fileKey/:id                                  controllers.gmql.MetadataBrowser.browseId(fileKey:String, id:String)
-GET           /metadata/getAllExperiments/:fileKey/:attribute/:value           controllers.gmql.MetadataBrowser.getAllExperiments(fileKey:String, attribute:String, value:String)
-#?? GET /metadata/XX is it necessery filterExperiments
+GET           /metadata/:datasetName/sample/:sampleName          controllers.gmql.MetadataBrowser.getSampleMetadata(datasetName, sampleName)
+GET           /metadata/:datasetName/all                         controllers.gmql.MetadataBrowser.getKeys(datasetName)
+GET           /metadata/:datasetName/all/:key                    controllers.gmql.MetadataBrowser.getValues(datasetName,key)
+POST          /metadata/:datasetName/dataset/filter              controllers.gmql.MetadataBrowser.getFilteredDataset(datasetName)
+
+POST          /metadata/:datasetName/filter                      controllers.gmql.MetadataBrowser.getFilteredKeys(datasetName)
+POST          /metadata/:datasetName/filter/:key                 controllers.gmql.MetadataBrowser.getFilteredValues(datasetName,key)
 
 
 
+#
+# OLDER IMPLEMENTATION
+## TODO REMOVE these will be changed into direct download, clean part will be remove
+#GET           /datasets/:datasetName/preparaZip/:clean                         controllers.gmql.DSManager.zipFilePreparation(datasetName, clean)
+#GET           /datasets/:datasetName/downloadZip                               controllers.gmql.DSManager.downloadFileZip(datasetName:String)
+#
 
+#
 
-GET           /repo/browse/meta                                                controllers.gmql.RepositoryBro.browseRepositoryMetadata
-GET           /repo/browse/meta-json                                           controllers.gmql.RepositoryBro.browseRepositoryMetadataJson
-GET           /repo/browse/schema                                              controllers.gmql.RepositoryBro.browseRepositorySchemas
-GET           /repo/browse/query                                               controllers.gmql.RepositoryBro.browseRepositoryQueries
-GET           /repo/browse/all                                                 controllers.gmql.RepositoryBro.browseRepositoryAll
+#
+## search metadata
+#POST          /dataSets/:datasetName/samples/meta                              controllers.gmql.RepositoryBro.getFilteredSamples(datasetName)
+#POST          /dataSets/:datasetName/samples/meta                              controllers.gmql.RepositoryBro.getFilteredSamples(datasetName)
+#
+#
+##Query
+POST          /queries/run/:fileName/:gtfOutput                  controllers.gmql.QueryMan.runQuery(fileName: String, gtfOutput: String)
+POST          /queries/compile                                   controllers.gmql.QueryMan.compileQuery
 
-
-#NEW
-GET           /dataSet/:dataSetName/schema                                     controllers.gmql.RepositoryBro.dataSetSchema(dataSetName)
-GET           /dataSet/:dataSetName/meta                                       controllers.gmql.RepositoryBro.dataSetMeta(dataSetName)
-GET           /dataSet/:dataSetName/meta/:attributeName                        controllers.gmql.RepositoryBro.dataSetMetaAttribute(dataSetName, attributeName)
-GET           /dataSet/:dataSetName/meta/:attributeName/:attributeValue        controllers.gmql.RepositoryBro.dataSetMetaAttributeValue(dataSetName, attributeName, attributeValue)
-GET           /dataSet/:dataSetName/sample/meta/:id                            controllers.gmql.RepositoryBro.browseId(dataSetName, id)
-
-POST          /dataSet/:dataSetName/samples/meta                               controllers.gmql.RepositoryBro.getFilteredSamples(dataSetName)
-
-
-
-GET           /query                                                           controllers.gmql.RepositoryBro.getQueries
-GET           /query/:queryName                                                controllers.gmql.RepositoryBro.getQuery(queryName)
-
-
-
-#GET         /repo/download/:fileKey                                          controllers.gmql.RepositoryDown.downloadFile(fileKey)
-#GET         /repo/download/zip                                               controllers.gmql.RepositoryDown.downloadFileZip(filename: Option[String], fileKeys: Option[List[String]])
+#GET           /queries/read/:fileKey                                           controllers.gmql.QueryMan.readQuery(fileKey:String)
+#GET           /queries/delete/:fileKey                                         controllers.gmql.QueryMan.deleteQuery(fileKey:String)
+#POST          /queries/save/:fileName/:fileKey                                 controllers.gmql.QueryMan.saveQueryAs(fileName: String, fileKey: String)
+#GET           /queries/runv2/:fileKey/:gtfOutput/:execType                     controllers.gmql.QueryMan.runQueryV2File(fileKey: String, gtfOutput: String, execType: String)
+#GET           /queries/compilev2/:fileKey/:execType                            controllers.gmql.QueryMan.compileQueryV2File(fileKey: String, execType: String)
+#
+##Jobs
+GET           /jobs                                              controllers.gmql.QueryMan.getJobs
+GET           /jobs/:id/trace                                    controllers.gmql.QueryMan.traceJob(id: String)
+GET           /jobs/:id/log                                      controllers.gmql.QueryMan.getLog(id: String)
+#GET           /jobs/:id/stop                                                   controllers.gmql.QueryMan.stopJob(id: String)
+#
+#
+###COMPILE
 
 
 
 
+
+#
+#
+#GET           /metadata/browseResourceFile/:fileKey                            controllers.gmql.MetadataBrowser.browseResourceFile(fileKey:String)
+#GET           /metadata/browseAttribute/:fileKey/:attribute                    controllers.gmql.MetadataBrowser.browseAttribute(fileKey:String, attribute:String )
+#GET           /metadata/browseAttributeValue/:fileKey/:attribute/:value        controllers.gmql.MetadataBrowser.browseAttributeValue(fileKey:String, attribute:String, value:String)
+#GET           /metadata/browseId/:fileKey/:id                                  controllers.gmql.MetadataBrowser.browseId(fileKey:String, id:String)
+#GET           /metadata/getAllExperiments/:fileKey/:attribute/:value           controllers.gmql.MetadataBrowser.getAllExperiments(fileKey:String, attribute:String, value:String)
+##?? GET /metadata/XX is it necessery filterExperiments
+#
+#
+#
+#
+#
+#GET           /repo/browse/meta                                                controllers.gmql.RepositoryBro.browseRepositoryMetadata
+#GET           /repo/browse/meta-json                                           controllers.gmql.RepositoryBro.browseRepositoryMetadataJson
+#GET           /repo/browse/schema                                              controllers.gmql.RepositoryBro.browseRepositorySchemas
+#GET           /repo/browse/query                                               controllers.gmql.RepositoryBro.browseRepositoryQueries
+#GET           /repo/browse/all                                                 controllers.gmql.RepositoryBro.browseRepositoryAll
+#
+#
+##NEW
+#GET           /dataSet/:datasetName/schema                                     controllers.gmql.RepositoryBro.dataSetSchema(datasetName)
+#GET           /dataSet/:datasetName/meta                                       controllers.gmql.RepositoryBro.dataSetAttributeList(datasetName)
+#GET           /dataSet/:datasetName/meta/:attributeName                        controllers.gmql.RepositoryBro.dataSetMetaAttribute(datasetName, attributeName)
+#GET           /dataSet/:datasetName/meta/:attributeName/:attributeValue        controllers.gmql.RepositoryBro.dataSetMetaAttributeValue(datasetName, attributeName, attributeValue)
+#GET           /dataSet/:datasetName/sample/meta/:id                            controllers.gmql.RepositoryBro.browseId(datasetName, id)
+#
+#
+#
+GET           /query                                             controllers.gmql.QueryBrowser.getQueries
+GET           /query/:queryName                                  controllers.gmql.QueryBrowser.getQuery(queryName)
+POST          /query/:queryName/save                             controllers.gmql.QueryBrowser.saveQuery(queryName)
+
+#
+#
+##GET         /repo/download/:fileKey                                          controllers.gmql.RepositoryDown.downloadFile(fileKey)
+##GET         /repo/download/zip                                               controllers.gmql.RepositoryDown.downloadFileZip(filename: Option[String], fileKeys: Option[List[String]])
+#
+#
+## VIEW CREATION
+## to create metadata result page, this will be obsolete
+GET           /metadata/:totalCount/:list                        controllers.Application.sampleMetadata(totalCount:Int, list)
+#
+## TEST PAGES
+## heatmap test page
+#GET           /heatMapTest                                                     controllers.Application.heatMapTest
+#
+#GET           /zip                                                             controllers.Application.zip
+#
+#
+#GET           /dataSets/:dataSetName/downloadZip2                              controllers.gmql.DSManager.downloadFileZip2(dataSetName:String)

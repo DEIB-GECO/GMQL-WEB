@@ -8,13 +8,17 @@ package wrappers.authanticate
   * http://iankent.uk/blog/action-composition-in-play-framework/
   */
 
-import controllers.{SecurityControllerDefaults, SecurityControllerScala}
-import models.User
+import controllers.{Default, SecurityControllerDefaults}
+import models.{AuthenticationDao, AuthenticationModel, UserModel}
+import play.api.http.MimeTypes
+import play.api.libs.json.Json
 import play.api.mvc.Results.Unauthorized
 import play.api.mvc._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
+
 
 object AuthenticatedAction extends AuthenticatedActionBuilder {
 
@@ -23,32 +27,41 @@ object AuthenticatedAction extends AuthenticatedActionBuilder {
   def invokeBlock[A](request: Request[A], block: (AuthenticatedRequest[A]) => Future[Result]) = {
     val res = getAuthenticatedRequest(request)
     res.user match {
-      case Some(x) => block(res)
-      case None => Future {
-        Unauthorized(UnAuthenticatedRequest) //.discardingCookies(DiscardingCookie(SecurityController.AUTH_TOKEN))
-      }
+      case Some(_) => block(res)
+      case None =>
+        Future {
+          val AcceptsXml = Accepting("application/xml")
+          val AcceptsJson = Accepting(MimeTypes.JSON)
+          println("Hello" + request.acceptedTypes)
+
+          Default.render {
+            case Default.Accepts.Xml() => Unauthorized(<error>{UnAuthenticatedRequest}</error>)
+            case Default.Accepts.Json() => Unauthorized(Json.parse("{\"error\" : \"" + UnAuthenticatedRequest + "\"}"))
+            case _ => Unauthorized(UnAuthenticatedRequest)
+          }(request) //.discardingCookies(DiscardingCookie(SecurityController.AUTH_TOKEN))
+        }
     }
   }
 }
 
-object AuthenticatedActionMultiple extends AuthenticatedActionBuilder {
-  def invokeBlock[A](request: Request[A], block: (AuthenticatedRequest[A]) => Future[Result]) = {
-    val res = getAuthenticatedRequest(request)
-    block(res)
-  }
-}
+//object AuthenticatedActionMultiple extends AuthenticatedActionBuilder {
+//  def invokeBlock[A](request: Request[A], block: (AuthenticatedRequest[A]) => Future[Result]) = {
+//    val res = getAuthenticatedRequest(request)
+//    block(res)
+//  }
+//}
 
 trait AuthenticatedActionBuilder extends ActionBuilder[AuthenticatedRequest] {
-  def getAuthenticatedRequest[A](request: Request[A]) = {
-    val user = getUser(request)
-    user match {
-      case Some(_) => AuthenticatedRequest[A](user, request)
-      case None => AuthenticatedRequest[A](None, request)
+  def getAuthenticatedRequest[A](request: Request[A]): AuthenticatedRequest[A] = {
+    val userAuth = getUserAuthentication(request)
+    userAuth match {
+      case Some((user, authentication)) => AuthenticatedRequest[A](Some(user), Some(authentication), request)
+      case None => AuthenticatedRequest[A](None, None, request)
     }
   }
 
-  def getUser[A](request: Request[A]) = {
-    lazy val fromCookie: String = request.cookies.get(SecurityControllerDefaults.AUTH_TOKEN_COOKIE).getOrElse(new Cookie(name = SecurityControllerDefaults.AUTH_TOKEN_COOKIE, value = null)).value
+  def getUserAuthentication[A](request: Request[A]): Option[(UserModel, AuthenticationModel)] = {
+    lazy val fromCookie: String = request.cookies.get(SecurityControllerDefaults.AUTH_TOKEN_COOKIE).getOrElse(Cookie(name = SecurityControllerDefaults.AUTH_TOKEN_COOKIE, value = null)).value
 
     val token = request.headers.get(SecurityControllerDefaults.AUTH_TOKEN_HEADER) match {
       case Some(token) => token
@@ -58,7 +71,19 @@ trait AuthenticatedActionBuilder extends ActionBuilder[AuthenticatedRequest] {
           case None => fromCookie
         }
     }
-    Option(User.findByAuthToken(token))
+    //    Option(User.findByAuthToken(token))
+    val asd = AuthenticationDao.getByToken(token)
+    Await.result(asd, Duration.Inf)
+    //    Some(User2(1,"","canakoglu","",null,"","",null,null,false))
+    //    val test = asd.value
+    //    var res :Option[User2] = None
+    //    val qwe=asd.onComplete {
+    //      case Success(temp) =>
+    //        res = temp
+    //      case Failure(ex) =>
+    //        throw ex
+    //    }()
+    //    res
   }
 
 }

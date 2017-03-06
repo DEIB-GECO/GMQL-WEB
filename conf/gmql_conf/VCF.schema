@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gmqlSchemaCollection name="GLOBAL_SCHEMAS" xmlns="http://genomic.elet.polimi.it/entities">
+	<gmqlSchema  type="vcf">
+		<field type="STRING">id</field>
+		<field type="STRING">ref</field>
+		<field type="STRING">alt</field>
+		<field type="INTEGER">qual</field>
+		<field type="STRING">filter</field>
+		<field type="STRING">info</field>
+		<field type="STRING">format</field>			
+	</gmqlSchema>
+</gmqlSchemaCollection>

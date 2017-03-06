@@ -25,12 +25,12 @@ initDataSet = ->
 
 $("#data-set").click ->
   console.log("data-set.clicked")
-  call = jsRoutes.controllers.gmql.DSManager.dataSetAll()
+  call = jsRoutes.controllers.gmql.DSManager.getDatasets()
   ajaxCall(call, "data-set-request", "data-set-response", "data-set-result")
 
 $("#data-set-sample").click ->
   console.log("data-set-sample.clicked")
-  call = jsRoutes.controllers.gmql.DSManager.dataSetSamples(dataSetName)
+  call = jsRoutes.controllers.gmql.DSManager.getSamples(dataSetName)
   ajaxCall(call, "data-set-sample-request", "data-set-sample-response", "data-set-sample-result")
 
 
@@ -43,7 +43,7 @@ $("#data-set-upload-url").click ->
 
 $("#data-set-delete").click ->
   console.log("data-set-sample.clicked")
-  call = jsRoutes.controllers.gmql.DSManager.dataSetDeletion(newDataSetName)
+  call = jsRoutes.controllers.gmql.DSManager.deleteDataset(newDataSetName)
   ajaxCall(call, "data-set-delete-request", "data-set-delete-response", "data-set-delete-result")
 
 
@@ -57,36 +57,4 @@ $("#data-set-download-file").click ->
   console.log("data-set-download-file.clicked")
   call = jsRoutes.controllers.gmql.DSManager.downloadFileZip(newDataSetName)
   ajaxCall(call, "data-set-download-file-request", "data-set-download-file-response", "data-set-download-file-result", null, null, true)
-
-
-#  addNewDiv(
-#    "data-set",
-#    jsRoutes.controllers.gmql.DSManager.dataSetAll()
-#  ).appendTo $("#data-set-management")
-
-#addNewDiv = ( groupId, call, input, contentType, isBinary, onComplete) ->
-#  divDescription = $('<div/>', {'id': groupId + "-call-description"})
-#  divDescription.append "URL: "
-#
-#
-#  button = $('<button/>', {'id': groupId + "-button"})
-#  button.html  call.url
-#  button.click ->
-#    console.log(groupId + ".clicked")
-#    ajaxCall(call, groupId + "-request", groupId + "-response", input, contentType, isBinary, onComplete)
-#  divInput = $('<div/>', {'id': groupId + "-input"})
-#  divRequest = $('<div/>', {'id': groupId + "-request"})
-#  divResponse = $('<div/>', {'id': groupId + "-response"})
-#
-#  div = $('<div/>', {'id': groupId + "-div"})
-#  div.append divDescription, button, divInput, divRequest, divResponse
-#  div
-#
-#
-#getTable = (groupId) ->
-#  tbody = $('<table/>', {'id': groupId + "-table"})
-#  trUrl = $('<tr/>', {'id': groupId + "-table-tr-url"})
-#  trUrl.append
-#  tbody.append trUrl
-
 

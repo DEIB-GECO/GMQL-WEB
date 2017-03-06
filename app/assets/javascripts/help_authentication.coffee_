@@ -25,7 +25,7 @@ displayLoggedIn = () ->
 
 
 doGuestLogin = (event) ->
-  call = jsRoutes.controllers.SecurityControllerScala.loginGuest()
+  call = jsRoutes.controllers.SecurityController.loginGuest()
   #  $.get call.url, {asd}, (data) -> doLogin(data), 'json'
 
   $.ajax
@@ -46,7 +46,7 @@ doLogin = (data) ->
 
 
 doLogout = (event) ->
-  call = jsRoutes.controllers.SecurityControllerScala.logout()
+  call = jsRoutes.controllers.SecurityController.logout()
   $.ajax
     url: call.url
     type: call.method

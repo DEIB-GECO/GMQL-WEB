@@ -5,7 +5,7 @@ init = () ->
   console.log "document.cookie: " + document.cookie
   window.authToken = Cookies.get('authToken')
   if (window.authToken?)
-    call = jsRoutes.controllers.SecurityControllerScala.getUser()
+    call = jsRoutes.controllers.SecurityController.getUser()
     $.ajax
       url: call.url
       type: call.type
@@ -17,6 +17,7 @@ init = () ->
       error: (jqXHR, textStatus, errorThrown) ->
         displayGuestButton()
         Cookies.remove('authToken')
+
 #        document.cookie = "authToken" + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT"
   else
     displayGuestButton()
@@ -32,6 +33,8 @@ displayGuestButton = () ->
   $("#login").empty()
   $("#login").append $("<button class='btn btn-default navbar-btn'>").text("Guest Login").click(doGuestLogin)
   $("#signInDropdown").show()
+  $('.registered-user').remove()
+  $('#login-problem').append('<div><h2>Please login before use the GMQL.</h2></div>')
 
 
 displayLoggedIn = (fullName) ->
@@ -43,7 +46,7 @@ displayLoggedIn = (fullName) ->
 
 
 doGuestLogin = (event) ->
-  call = jsRoutes.controllers.SecurityControllerScala.loginGuest()
+  call = jsRoutes.controllers.SecurityController.loginGuest()
   #  $.get call.url, {asd}, (data) -> doLogin(data), 'json'
 
   $.ajax
@@ -72,7 +75,7 @@ doLogin = (data) ->
 
 
 doLogout = (event) ->
-  call = jsRoutes.controllers.SecurityControllerScala.logout()
+  call = jsRoutes.controllers.SecurityController.logout()
   $.ajax
     url: call.url
     type: call.method
@@ -94,7 +97,7 @@ doLogout = (event) ->
 
 loginButtonClick = () ->
   console.log("loginButton.click")
-  call = jsRoutes.controllers.SecurityControllerScala.login()
+  call = jsRoutes.controllers.SecurityController.login()
   input = JSON.stringify(
     username: $("#usernameInput").val()
     password: $("#passwordInput").val(), null, "\t"
@@ -114,7 +117,7 @@ loginButtonClick = () ->
 
 registerButtonClick = () ->
   console.log("loginButton.click")
-  call = jsRoutes.controllers.SecurityControllerScala.registerUser()
+  call = jsRoutes.controllers.SecurityController.registerUser()
   if($("#register-password").val() != $("#register-password-confirmation").val())
     BootstrapDialog.alert("Passwords are not same")
   else
@@ -146,7 +149,7 @@ forgotPassword = () ->
   if not username? or username is ''
     BootstrapDialog.alert "Please fill the username field in the login form"
   else
-    call = jsRoutes.controllers.SecurityControllerScala.passwordRecoveryEmail(username)
+    call = jsRoutes.controllers.SecurityController.passwordRecoveryEmail(username)
     $.ajax
       url: call.url
       type: call.type

@@ -106,9 +106,9 @@ glyph_opts = map:
       dfd = $.Deferred();
       data.result = dfd.promise();
       if /main/.test data.node.data.type
-        call = jsRoutes.controllers.gmql.DSManager.dataSetAll()
+        call = jsRoutes.controllers.gmql.DSManager.getDatasets()
       else
-        call = jsRoutes.controllers.gmql.DSManager.dataSetSamples(data.node.data.value)
+        call = jsRoutes.controllers.gmql.DSManager.getSamples(data.node.data.value)
       console.log {'X-Auth-Token': window.authToken}
       $.ajax
         url: call.url
@@ -121,18 +121,19 @@ glyph_opts = map:
           if "main" == data.node.data.type
             newType = "data-set"
             lazy = true
+            datasets = result.datasets
             if "public-data-set" == data.node.data.value
               console.log "public"
-              list = result.attributeList.attribute.filter (x) -> x.name.startsWith("public")
+              list = datasets.filter (x) -> x.owner == "public"
             else
               console.log "private"
-              list = result.attributeList.attribute.filter (x) -> not (x.name.startsWith("public"))
+              list = datasets.filter (x) -> x.owner != "public"
           else
             newType = "sample"
             lazy = false
             window.list = list
             iconclass = "glyphicon glyphicon-file"
-            list = result.attributeList.attribute
+            list = result.samples
 
           res = for att in list
             hideCheckBox = ("public-data-set" == data.node.data.value) || ("public-data-set" == data.node.parent?.data.value)
@@ -144,7 +145,7 @@ glyph_opts = map:
               hideCheckbox: hideCheckBox
               unselectable: hideCheckBox
               type: newType
-              value: att.name
+              value: (if newType == "data-set" && att.owner == "public" then att.owner + "." else "") +  att.name
               selected: data.node.selected
             }
             temp.iconclass = iconclass if iconclass
@@ -188,12 +189,13 @@ glyph_opts = map:
 setSampleMetadata = (node) ->
   dataSet = node.parent.data.value
   id = node.data.id
+  sampleName = node.data.value
   metadataDiv = $("#metadata-div")
   metadataDiv.empty()
 
   if(node.data.type == "sample")
 #    metadataDiv.append "<h2>Sample metadata #{if node.title?.length then "of " + node.title else "" }</h2>"
-    insertMetadataTable(metadataDiv, dataSet, id)
+    insertMetadataTable(metadataDiv, dataSet, id, sampleName)
 
 
 setDataSetSchema = (node) ->
@@ -207,7 +209,7 @@ setDataSetSchema = (node) ->
 
   if value?
     if window.lastSelectedDataSet != value
-      call = jsRoutes.controllers.gmql.RepositoryBro.dataSetSchema(value)
+      call = jsRoutes.controllers.gmql.DSManager.dataSetSchema(value)
       $.ajax
         url: call.url
         type: call.type
@@ -236,13 +238,12 @@ setDataSetSchema = (node) ->
 
 
 schemaTables = (result)->
-  schemas = result.gmqlSchemaCollection.gmqlSchema
+  schema = result
   schemaDiv = $("#schema-div")
   #  schemaDiv.show()
   schemaDiv.empty()
   #  schemaDiv.append "<h2>DataSet schemas #{if result.gmqlSchemaCollection.name?.length then "of " + result.gmqlSchemaCollection.name else "" }</h2>"
-  for schema in schemas
-    schemaDiv.append schemaTable(schema)
+  schemaDiv.append schemaTable(schema)
 
 schemaTable = (schema) ->
   div = $("<div id='schema-table-div-#{schema.name}'>")
@@ -260,11 +261,11 @@ schemaTable = (schema) ->
             </table>")
 
   table.append tbody = $("<tbody>")
-  for x in schema.field
-    newRow = $("<tr>").append($("<td>").text(x.value)).append($("<td>").text(x.type))
-    if x.value not in ["seqname", "feature", "start", "end"] and x.type not in ["STRING",
+  for x in schema.fields
+    newRow = $("<tr>").append($("<td>").text(x.name)).append($("<td>").text(x.fieldType))
+    if x.name not in ["seqname", "feature", "start", "end"] and x.fieldType not in ["STRING",
       "CHAR"] and not /^public\./.test window.lastSelectedDataSet
-      link = jsRoutes.controllers.gmql.DSManager.parseFiles(window.lastSelectedDataSet, x.value).url
+      link = jsRoutes.controllers.gmql.DSManager.parseFiles(window.lastSelectedDataSet, x.name).url
       button = $("<a target='_blank' href='#{link}' class='btn btn-default btn-xs'>View</a>")
       newRow.append($("<td>").append(button))
     else
@@ -338,7 +339,7 @@ startDelete = (selectedNodes) ->
 
 deleteDataset = (node) ->
   console.log("data-set-sample.clicked")
-  call = jsRoutes.controllers.gmql.DSManager.dataSetDeletion(node.title)
+  call = jsRoutes.controllers.gmql.DSManager.deleteDataset(node.title)
   $.ajax
     url: call.url
     type: call.type
@@ -371,25 +372,26 @@ downloadDataset = () ->
   if window.lastSelectedDataSet.startsWith("public.")
     BootstrapDialog.alert "Public dataset is not available to download"
   else
-    dialog = BootstrapDialog.alert "Download file is preparing, please wait"
-    window.lastDownloadDataSet = window.lastSelectedDataSet
-    call = jsRoutes.controllers.gmql.DSManager.zipFilePreparation window.lastSelectedDataSet, false
-    $.ajax
-      url: call.url
-      type: call.type
-      method: call.method
-      dataType: 'binary'
-      headers: {'X-Auth-Token': window.authToken}
-      success: (result, textStatus, jqXHR) ->
-        if(result != "inProgress")
-          callUrl = jsRoutes.controllers.gmql.DSManager.downloadFileZip window.lastDownloadDataSet
-          window.location = callUrl.url
-          dialog.close()
-        else
-          BootstrapDialog.alert "Download preparation is still in preparation"
-          dialog.close()
-      error: (jqXHR, textStatus, errorThrown) ->
-        console.log("error222" + textStatus)
+#    dialog = BootstrapDialog.alert "Download file is preparing, please wait"
+#    window.lastDownloadDataSet = window.lastSelectedDataSet
+    call = jsRoutes.controllers.gmql.DSManager.zip window.lastSelectedDataSet
+    window.location = call.url
+#    $.ajax
+#      url: call.url
+#      type: call.type
+#      method: call.method
+#      dataType: 'binary'
+#      headers: {'X-Auth-Token': window.authToken}
+#      success: (result, textStatus, jqXHR) ->
+#        if(result != "inProgress")
+#          callUrl = jsRoutes.controllers.gmql.DSManager.downloadFileZip window.lastDownloadDataSet
+#          window.location = callUrl.url
+#          dialog.close()
+#        else
+#          BootstrapDialog.alert "Download preparation is still in preparation"
+#          dialog.close()
+#      error: (jqXHR, textStatus, errorThrown) ->
+#        console.log("error222" + textStatus)
 
 
 #    call = jsRoutes.controllers.gmql.DSManager.downloadFileZip window.lastSelectedDataSet
@@ -411,8 +413,8 @@ downloadDataset = () ->
 
 # expand the tree
 $ ->
-  setTimeout expandPublic, 1000
-  setTimeout selectFirstPublic, 3000
+  setTimeout expandPublic, 2000
+  setTimeout selectFirstPublic, 4000
 
 expandPublic = ->
   $("#tree").fancytree("getRootNode").children[1].setExpanded(true)

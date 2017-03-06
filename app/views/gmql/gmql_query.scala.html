@@ -55,12 +55,23 @@
     <div class="clearfix"></div>
 </div>
 <script>
+        ace.require("ace/src/ext/language_tools");
+
         editor = ace.edit("main-query-editor");
-        editor.getSession().setMode("ace/mode/gmql");
+        window.editorTest =  editor;
+
         editor.setOptions({
             minLines: 10,
-            maxLines: 50
+            maxLines: 50,
+            enableBasicAutocompletion: true,
+            enableSnippets: true
         });
+        editor.getSession().setMode("ace/mode/gmql");
+//        editor.setOptions({
+//
+//        });
+
+
         // editorSetValue(editor, "Query window")
 </script>
 

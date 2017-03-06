@@ -51,13 +51,14 @@ insertTable = (dialog) ->
 
 
 loadTable = (dialog,tbody) ->
-  call = jsRoutes.controllers.gmql.QueryMan.getJobsV2()
+  call = jsRoutes.controllers.gmql.QueryMan.getJobs()
   $.ajax
     url: call.url
     type: call.type
     method: call.method
     headers: {'X-Auth-Token': window.authToken}
-    contentType: 'application/json'
+    contentType: 'json'
+    dataType: 'json'
     success: (result, textStatus, jqXHR) ->
       console.log "showLogModal-success"
       window.lastResult = result
@@ -68,12 +69,12 @@ loadTable = (dialog,tbody) ->
       #        select.append newOption
       #      select.selectpicker({title: "Choose value"}).selectpicker('refresh')
 
-      jobs = result.jobList.jobs
+      jobs = result.jobs
       length = jobs.length
 
       if length
         for jobId in jobs
-          a = $("<a href='#' data-job-id='#{jobId}'>#{jobId}</a>")
+          a = $("<a href='#' data-job-id='#{jobId.id}'>#{jobId.id}</a>")
           a.click ->
             jobLog($(this).data('jobId'))
           a.attr("data-toggle", "tooltip")
@@ -81,7 +82,7 @@ loadTable = (dialog,tbody) ->
           .attr("title", "Click to see log")
           a.tooltip()
 
-          buttonStop = $("<button class='btn btn-danger btn-xs' data-job-id='#{jobId}'><span class='glyphicon glyphicon-stop'/></button>")
+          buttonStop = $("<button class='btn btn-danger btn-xs' data-job-id='#{jobId.id}'><span class='glyphicon glyphicon-stop'/></button>")
           buttonStop.click -> stopJob($(this).data('jobId'))
           buttonStop.attr("data-toggle", "tooltip")
           .attr("data-placement", "bottom")
@@ -99,7 +100,7 @@ loadTable = (dialog,tbody) ->
           cell5 = $("<td ></td>")#.html jobId + " ET"
           newRow = $("<tr></tr>").append cell1, cell2, cell3, cell4, cell5
           tbody.append newRow
-          fillTable(jobId,cell1, cell2, cell3, cell4, cell5, true)
+          fillTable(jobId.id,cell1, cell2, cell3, cell4, cell5, true)
       else
         dialog.setMessage "No job"
     error: (jqXHR, textStatus, errorThrown) ->
@@ -111,23 +112,25 @@ loadTable = (dialog,tbody) ->
 
 
 fillTable = (jobId,cell1, cell2, cell3, cell4, cell5, firstTime) ->
-  call = jsRoutes.controllers.gmql.QueryMan.traceJobV2 jobId
+  call = jsRoutes.controllers.gmql.QueryMan.traceJob jobId
   $.ajax
     url: call.url
     type: call.type
     method: call.method
     headers: {'X-Auth-Token': window.authToken}
-    contentType: 'application/json'
+    contentType: 'json'
+    dataType: 'json'
     success: (result, textStatus, jqXHR) ->
-      jobStatus = result.gmqlJobStatusXML
+      window.lastResult = result
+      jobStatus = result
 #      if /compile/i.test(jobStatus.status)
 #        cell1.html jobId
       cell2.html jobStatus.status
       cell3.html jobStatus.message
 
-      cell4.html getDatasetList(jobStatus.datasetNames)
+      cell4.html getDatasetList(jobStatus.datasets)
 
-      execTime = jobStatus.execTime.replace /Execution Time: /, ""
+      execTime = jobStatus.executionTime.replace /Execution Time: /, ""
       if execTime == "Execution Under Progress"
         execTime = ""
       cell5.html execTime
@@ -152,6 +155,7 @@ selectNode = (title) ->
     BootstrapDialog.alert("There is no dataset available in the tree")
 
 @stopJob = (jobId) ->
+  BootstrapDialog.alert "Stop button is disactivated"
   call = jsRoutes.controllers.gmql.QueryMan.stopJob jobId
   $.ajax
     url: call.url

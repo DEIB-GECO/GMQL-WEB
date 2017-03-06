@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gmqlSchemaCollection name="GLOBAL_SCHEMAS" xmlns="http://genomic.elet.polimi.it/entities">
+<gmqlSchema  type="narrowPeak">
+                <field type="STRING">name</field>
+		<field type="INTEGER">score</field>
+		<field type="FLOAT">signal</field>
+		<field type="FLOAT">pvalue</field>
+		<field type="FLOAT">qvalue</field>
+		<field type="INTEGER">peak</field>
+	</gmqlSchema>
+</gmqlSchemaCollection>

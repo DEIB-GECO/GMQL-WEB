@@ -6,10 +6,10 @@ import javax.ws.rs.core.{MultivaluedMap, Response}
 import javax.xml.bind.{JAXBContext, JAXBException, Marshaller}
 
 import com.sun.jersey.core.util.StringKeyObjectValueIgnoreCaseMultivaluedMap
-import orchestrator.entities._
+//import orchestrator.entities._
 import org.eclipse.persistence.jaxb.MarshallerProperties
 import play.api.Logger
-import play.api.libs.json.{Json, Writes}
+import play.api.libs.json.{JsObject, JsString, Json, Writes}
 import play.api.mvc.{Controller, RequestHeader, Result, Results}
 
 import scala.collection.JavaConverters._
@@ -22,22 +22,56 @@ object ResultUtils extends Controller {
 
 
   {
-    System.setProperty("javax.xml.bind.context.factory","org.eclipse.persistence.jaxb.JAXBContextFactory")
+    System.setProperty("javax.xml.bind.context.factory", "org.eclipse.persistence.jaxb.JAXBContextFactory")
     Logger.info("System property set: javax.xml.bind.context.factory=org.eclipse.persistence.jaxb.JAXBContextFactory")
   }
 
 
-  implicit val attributeWrites = new Writes[Attribute] {
-    def writes(attribute: Attribute) = Json.obj(
-      "name" -> attribute.getName
-    )
-  }
+  lazy val NA = MethodNotAllowed("Result cannot be shown, please select 'Accept' header 'application/json' or 'application/xml'")
 
-  implicit val attributeListWrites = new Writes[AttributeList] {
-    def writes(attributeList: AttributeList) = Json.obj(
-      "attributes" -> attributeList.getAttributes.asScala
-    )
-  }
+  def renderedError(statusFunction: Results.Status, error: String = "Error")(implicit request: RequestHeader): Result =
+    render {
+      case Accepts.Xml() => statusFunction(<error>{error}</error>)
+      case Accepts.Json() => statusFunction(JsObject(Seq("error" -> JsString(error))))
+      case _ => statusFunction(s"Error: $error")
+    }
+
+
+  def renderedError(statusId: Int, error: String)(implicit request: RequestHeader): Result = renderedError(new Results.Status(statusId), error)
+
+
+
+//  /**
+//    * returns unauthorized error with the input string
+//    *
+//    * @param error Error string to return to the user. [[scala.collection.immutable.List]]
+//    * @return rendered result by using Accept header by using [[render]]
+//    *
+//    */
+//  def unauthorizedError(error: String)(implicit request: RequestHeader) = renderedError(Results.Unauthorized, error)
+//
+//
+//  /**
+//    * returns not found error with the input string
+//    *
+//    * @param error Error string to return to the user. [[scala.collection.immutable.List]]
+//    * @return rendered result by using Accept header by using [[render]]
+//    *
+//    */
+//  def notFoundError(error: String)(implicit request: RequestHeader) = renderedError(Results.NotFound, error)
+
+
+//  implicit val attributeWrites = new Writes[Attribute] {
+//    def writes(attribute: Attribute) = Json.obj(
+//      "name" -> attribute.getName
+//    )
+//  }
+//
+//  implicit val attributeListWrites = new Writes[AttributeList] {
+//    def writes(attributeList: AttributeList) = Json.obj(
+//      "attributes" -> attributeList.getAttributes.asScala
+//    )
+//  }
 
 
   //helper class
@@ -190,68 +224,67 @@ object ResultUtils extends Controller {
   //    }
   //  }
 
-  def findFileKey(file: GMQLFile, fileList: List[Option[String]]): List[String] = {
-    var isResult = false
-    if (file.getFilename == fileList.last.get) {
-      var tempFile = file
-      isResult = true
-      for (el <- fileList.reverse) {
-        if (el.isDefined && el.get != tempFile.getFilename) {
-          isResult = false
-        }
-        tempFile = tempFile.getParent
-        if (tempFile == null) {
-          isResult = false
-        }
-      }
-    }
-
-    if (isResult)
-      file.getKey :: file.getChildren.asScala.toList.flatMap(x => findFileKey(x, fileList))
-    else
-      file.getChildren.asScala.toList.flatMap(x => findFileKey(x, fileList))
-  }
+//  def findFileKey(file: GMQLFile, fileList: List[Option[String]]): List[String] = {
+//    var isResult = false
+//    if (file.getFilename == fileList.last.get) {
+//      var tempFile = file
+//      isResult = true
+//      for (el <- fileList.reverse) {
+//        if (el.isDefined && el.get != tempFile.getFilename) {
+//          isResult = false
+//        }
+//        tempFile = tempFile.getParent
+//        if (tempFile == null) {
+//          isResult = false
+//        }
+//      }
+//    }
+//
+//    if (isResult)
+//      file.getKey :: file.getChildren.asScala.toList.flatMap(x => findFileKey(x, fileList))
+//    else
+//      file.getChildren.asScala.toList.flatMap(x => findFileKey(x, fileList))
+//  }
 
 }
 
-
-object AttributeListHelper {
-  implicit val attributeWrites = new Writes[Attribute] {
-    def writes(element: Attribute) = Json.obj(
-      "name" -> element.getName
-    )
-  }
-
-  implicit val attributeListWrites = new Writes[AttributeList] {
-    def writes(element: AttributeList) = Json.obj(
-      "attributes" -> element.getAttributes.asScala
-    )
-  }
-}
-
-
-object GMQLSchemaCollectionHelper {
-  implicit val SchemaFieldWrites = new Writes[GMQLSchemaField] {
-    def writes(element: GMQLSchemaField) = Json.obj(
-      "name" -> element.getFieldName,
-      "type" -> element.getFieldType
-    )
-  }
+//object AttributeListHelper {
+//  implicit val attributeWrites = new Writes[Attribute] {
+//    def writes(element: Attribute) = Json.obj(
+//      "name" -> element.getName
+//    )
+//  }
+//
+//  implicit val attributeListWrites = new Writes[AttributeList] {
+//    def writes(element: AttributeList) = Json.obj(
+//      "attributes" -> element.getAttributes.asScala
+//    )
+//  }
+//}
 
 
-  implicit val schemaWrites = new Writes[GMQLSchema] {
-    def writes(element: GMQLSchema) = Json.obj(
-      "name" -> element.getSchemaName,
-      "type" -> element.getSchemaType,
-      "fields" -> element.getFields.asScala
-    )
-  }
-
-  implicit val schemaCollectionWrites = new Writes[GMQLSchemaCollection] {
-    def writes(element: GMQLSchemaCollection) = Json.obj(
-      "name" -> element.getCollectionName,
-      "schemas" -> element.getSchemaList.asScala
-    )
-  }
-}
+//object GMQLSchemaCollectionHelper {
+//  implicit val SchemaFieldWrites = new Writes[GMQLSchemaField] {
+//    def writes(element: GMQLSchemaField) = Json.obj(
+//      "name" -> element.getFieldName,
+//      "type" -> element.getFieldType
+//    )
+//  }
+//
+//
+//  implicit val schemaWrites = new Writes[GMQLSchema] {
+//    def writes(element: GMQLSchema) = Json.obj(
+//      "name" -> element.getSchemaName,
+//      "type" -> element.getSchemaType,
+//      "fields" -> element.getFields.asScala
+//    )
+//  }
+//
+//  implicit val schemaCollectionWrites = new Writes[GMQLSchemaCollection] {
+//    def writes(element: GMQLSchemaCollection) = Json.obj(
+//      "name" -> element.getCollectionName,
+//      "schemas" -> element.getSchemaList.asScala
+//    )
+//  }
+//}
 

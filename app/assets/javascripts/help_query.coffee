@@ -15,7 +15,7 @@ initQuery = () ->
 
 $("#query-save").click ->
   console.log("query-save.clicked")
-  call = jsRoutes.controllers.gmql.QueryMan.saveQueryAs("fileName2.gmql", null)
+  call = jsRoutes.controllers.gmql.QueryBrowser.saveQuery("fileName2.gmql")
   ajaxCall(call, "query-save-request", "query-save-response", "query-save-result", inputScript, "text/plain", false, runQuery)
 
   $("#query-save-header").text "Save result"
@@ -23,7 +23,7 @@ $("#query-save").click ->
 
 runQuery = (fileKey) ->
   console.log("runQuery")
-  call = jsRoutes.controllers.gmql.QueryMan.runQueryV2File(fileKey, true, "spark")
+  call = jsRoutes.controllers.gmql.QueryMan.runQuery(fileKey, true)
   ajaxCall(call, "query-run-request", "query-run-response", "query-run-result", null, null, null, ((result) -> window.lastJobId = result))
 
   $("#query-run-header").text "Run result"
@@ -31,7 +31,7 @@ runQuery = (fileKey) ->
 
 $("#query-status").click ->
   console.log("query-status.clicked")
-  call = jsRoutes.controllers.gmql.QueryMan.traceJobV2(window.lastJobId)
+  call = jsRoutes.controllers.gmql.QueryMan.traceJob(window.lastJobId)
   ajaxCall(call, "query-status-request", "query-status-response", "query-status-result")
 
 

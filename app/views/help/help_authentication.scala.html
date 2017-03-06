@@ -1,26 +1,26 @@
-@import views.html.help.help_table
-@()(implicit request: play.api.mvc.Request[Any])
+@*@import views.html.help.help_table*@
+@*@()(implicit request: play.api.mvc.Request[Any])*@
 
 
 
-<div id="authentication-operations">
-    <h2>Authentication Operations</h2>
-    <h3>Login as guest user</h3>
-    In this API, all the calls are authenticated by a token authentication.
-    In each authentication call, user has to send HTTP header with the field name <i>
-    "X&#8209;Auth&#8209;Token"</i>.
+@*<div id="authentication-operations">*@
+    @*<h2>Authentication Operations</h2>*@
+    @*<h3>Login as guest user</h3>*@
+    @*In this API, all the calls are authenticated by a token authentication.*@
+    @*In each authentication call, user has to send HTTP header with the field name <i>*@
+    @*"X&#8209;Auth&#8209;Token"</i>.*@
 
-    In order to get a new token, user has to call Guest login API.
+    @*In order to get a new token, user has to call Guest login API.*@
 
-    @help_table(controllers.routes.SecurityControllerScala.loginGuest, null, Map("application/json"->"token for authentication with the name \"authToken\""))
+    @*@help_table(controllers.routes.SecurityController.loginGuest, null, Map("application/json"->"token for authentication with the name \"authToken\""))*@
 
-    In the help_main page, the authentication has been done by using the <i>"Guest Login"</i> button.
+    @*In the help_main page, the authentication has been done by using the <i>"Guest Login"</i> button.*@
 
-    <h3>Logout user</h3>
-    Logout user service removes the guest user from the system.
-    @help_table(controllers.routes.SecurityControllerScala.logout,
-        null,
-        Map("text/plain" -> "The result of the logout operation"))
-</div>
+    @*<h3>Logout user</h3>*@
+    @*Logout user service removes the guest user from the system.*@
+    @*@help_table(controllers.routes.SecurityController.logout,*@
+        @*null,*@
+        @*Map("text/plain" -> "The result of the logout operation"))*@
+@*</div>*@
 
 

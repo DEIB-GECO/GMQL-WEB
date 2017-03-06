@@ -1,0 +1,9 @@
+<?xml version = "1.0" encoding="UTF-8" standalone="yes"?>
+<gmqlProperties xmlns = "http://genomic.elet.polimi.it/impl">
+  <property name = "SPARK_HOME">/usr/local/spark/</property>
+  <property name = "CLI_JAR_NAME">GMQL-Cli-2.0-jar-with-dependencies.jar</property>
+  <property name = "CLI_CLASS">it.polimi.genomics.cli.GMQLExecuteCommand</property>
+  <property name = "LAUNCHER_MODE">CLUSTER</property>
+  <property name = "LIB_DIR_LOCAL">/home/canakoglu/.m2/repository/it/polimi/genomics/GMQL-Cli/2.0/</property>
+  <property name = "LIB_DIR_HDFS">/user/repository/lib/</property>
+</gmqlProperties>

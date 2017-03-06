@@ -29,7 +29,7 @@ saveQuery = (type) ->
   if(fileName == "")
     BootstrapDialog.alert "Filename cannot be empty"
   else
-    call = jsRoutes.controllers.gmql.QueryMan.saveQueryAs("#{fileName}", "JOBID")
+    call = jsRoutes.controllers.gmql.QueryBrowser.saveQuery("#{fileName}")
     $("#result_pane").append "\n" + call.url + "\n"
     console.log(code)
     $.ajax
@@ -53,30 +53,38 @@ saveQuery = (type) ->
 runQuery = (fileKey, type) ->
   outputType = $('input:radio[name=optionsRadios]:checked').val()
   gtfOutput = outputType == "gtf"
-  if type == "execute"
-    call = jsRoutes.controllers.gmql.QueryMan.runQueryV2File(fileKey, gtfOutput, "spark")
+  editor = ace.edit("main-query-editor");
+  code = editor.getValue();
+
+  fileName = $('#file-name').val()
+  if(fileName == "")
+    BootstrapDialog.alert "Filename cannot be empty"
   else
-    call = jsRoutes.controllers.gmql.QueryMan.compileQueryV2File(fileKey, "spark")
-  $.ajax
-    url: call.url
-    type: call.type
-    method: call.method
-#    dataType: "json"
-#    contentType: "text/plain"
-    headers: {"X-Auth-Token": window.authToken}
-#    data: inputExampleScript
-    success: (result, textStatus, jqXHR) ->
-      $("#query-status").show()
-      console.log("runQuery result:" + result)
-      #      $("#result_pane").append "\n" + inputExampleScript + "\n"
-      $("#result_pane").append "\n" + result + "\n"
-      window.lastJobId = result
-      checkLastJob()
-      BootstrapDialog.alert("Execution started with ID: #{result}") if type == "execute"
-    error: (jqXHR, textStatus, errorThrown) ->
-      console.log("error:" + "runQuery: " + jqXHR + "&" + textStatus + "&" + errorThrown)
-      displayError("runQuery: " + jqXHR + "&" + textStatus + "&" + errorThrown)
-  #TODO reload only if it is not in the list
+    if type == "execute"
+      call = jsRoutes.controllers.gmql.QueryMan.runQuery(fileName, gtfOutput)
+    else
+      call = jsRoutes.controllers.gmql.QueryMan.compileQuery()
+    $.ajax
+      url: call.url
+      type: call.type
+      method: call.method
+      dataType: "json"
+      contentType: "text/plain"
+      headers: {"X-Auth-Token": window.authToken}
+      data: code
+      success: (result, textStatus, jqXHR) ->
+        jobId = result.job.id
+        $("#query-status").show()
+        console.log("runQuery jobId:" + jobId)
+        #      $("#result_pane").append "\n" + inputExampleScript + "\n"
+        $("#result_pane").append "\n" + jobId + "\n"
+        window.lastJobId = jobId
+        checkLastJob()
+        BootstrapDialog.alert("Execution started with ID: #{jobId}") if type == "execute"
+      error: (jqXHR, textStatus, errorThrown) ->
+        console.log("error:" + "runQuery: " + jqXHR + "&" + textStatus + "&" + errorThrown)
+        displayError("runQuery: " + jqXHR + "&" + textStatus + "&" + errorThrown)
+    #TODO reload only if it is not in the list
 
 
 
@@ -84,19 +92,20 @@ runQuery = (fileKey, type) ->
 
 @checkLastJob = () ->
   jobId = window.lastJobId
-  call = jsRoutes.controllers.gmql.QueryMan.traceJobV2(jobId)
+  call = jsRoutes.controllers.gmql.QueryMan.traceJob(jobId)
   $.ajax
     url: call.url
     type: call.type
     method: call.method
-    contentType: "text/plain"
-    headers: {"X-Auth-Token": window.authToken}
-    accept: "json"
+    headers: {'X-Auth-Token': window.authToken}
+    contentType: 'json'
+    dataType: 'json'
     success: (result, textStatus, jqXHR) ->
       console.log result
       window.result = result
-      $("#query-status").val result.gmqlJobStatusXML.status
-      switch result.gmqlJobStatusXML.status
+      status = result.status
+      $("#query-status").val status
+      switch status
         when "PENDING", "RUNNING", "EXEC_SUCCESS", "COMPILING", "DS_CREATION_RUNNING", "DS_CREATION_SUCCESS"
           setTimeout checkLastJob, 5000
           $("#query-stop").show()
@@ -153,15 +162,16 @@ lastJobLog = () ->
 
 @jobLog = (jobId) ->
   console.log jobId
-  call = jsRoutes.controllers.gmql.QueryMan.traceJobV2 jobId
+  call = jsRoutes.controllers.gmql.QueryMan.traceJob jobId
   $.ajax
     url: call.url
     type: call.type
     method: call.method
     headers: {'X-Auth-Token': window.authToken}
-    contentType: 'application/json'
+    contentType: 'json'
+    dataType: 'json'
     success: (result, textStatus, jqXHR) ->
-      jobStatus = result.gmqlJobStatusXML
+      jobStatus = result
       console.log jobStatus
       BootstrapDialog.show
         size: BootstrapDialog.SIZE_WIDE
@@ -190,11 +200,11 @@ lastJobLog = () ->
             <div class='form-group'>
                 <label class='col-xs-2 control-label'>Execution time</label>
                 <div class='col-xs-10'>
-                  <p class='form-control-static'>#{jobStatus.execTime.replace /Execution Time: /, ""}</p>
+                  <p class='form-control-static'>#{jobStatus.executionTime.replace /Execution Time: /, ""}</p>
                 </div>
             </div>
           </div>")
-          divs.find("#datasetNames").html getDatasetList(jobStatus.datasetNames)
+          divs.find("#datasetNames").html getDatasetList(jobStatus.datasets)
           divs
 
         onshow: (dialog) ->
@@ -206,12 +216,13 @@ lastJobLog = () ->
             method: call.method
             contentType: "text/plain"
             headers: {"X-Auth-Token": window.authToken}
-            accept: "json"
+            dataType: 'json'
             success: (result, textStatus, jqXHR) ->
               console.log result
               window.result = result
               # there are two consecutive paranthesis after get message, because get message returns a function
-              dialog.setMessage(dialog.getMessage()().append(result.jobList.jobs.join('<br>')))
+              dialog.setMessage(dialog.getMessage()().append(result.log.join('<br>')))
+        onshown: (dialog) ->
         onshown: (dialog) ->
 
         data:
@@ -240,7 +251,7 @@ lastJobLog = () ->
 
 
 loadQueries =  ->
-  call = jsRoutes.controllers.gmql.RepositoryBro.getQueries()
+  call = jsRoutes.controllers.gmql.QueryBrowser.getQueries()
   $.ajax
     url: call.url
     type: call.type
@@ -265,19 +276,19 @@ selectQuery = () ->
   selected = $(this).val()
   console.log "Query selected value: " + selected
 
-  call = jsRoutes.controllers.gmql.RepositoryBro.getQuery(selected)
+  call = jsRoutes.controllers.gmql.QueryBrowser.getQuery(selected)
   $.ajax
     url: call.url
     type: call.type
     method: call.method
-    contentType: "text/plain"
     headers: {"X-Auth-Token": window.authToken}
-    accept: "json"
+    contentType: 'json'
+    dataType: 'json'
     success: (result, textStatus, jqXHR) ->
       console.log result
       window.result =
       $("#file-name").val result.name
-      ace.edit("main-query-editor").session.setValue(result.value);
+      ace.edit("main-query-editor").session.setValue(result.text);
     error: (jqXHR, textStatus, errorThrown)->
       console.log("error checkLastJob:" + "runQuery: " + jqXHR + "&" + textStatus + "&" + errorThrown)
 

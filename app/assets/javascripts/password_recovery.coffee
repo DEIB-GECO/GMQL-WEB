@@ -7,7 +7,7 @@ init = () ->
 
 updatePassword = () ->
   console.log("updatePassword.click")
-  call = jsRoutes.controllers.SecurityControllerScala.updatePassword()
+  call = jsRoutes.controllers.SecurityController.updatePassword()
   console.log $("#recovery-password").val()
   console.log $("#recovery-password-confirmation").val()
   if($("#recovery-password").val() != $("#recovery-password-confirmation").val())

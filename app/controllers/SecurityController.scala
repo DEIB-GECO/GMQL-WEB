@@ -1,22 +1,23 @@
 package controllers
 
+import java.security.MessageDigest
+import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.{Inject, Singleton}
 
-import gql.services.rest.DataSetsManager
-import models.User
-import play.api.Logger
-import play.api.data._
-import play.api.data.Forms._
-import play.api.data.validation._
+import it.polimi.genomics.repository.GMQLRepository
+import models.{AuthenticationDao, AuthenticationModel, UserDao, UserModel}
+import play.api.Play.current
 import play.api.libs.json._
 import play.api.libs.mailer._
 import play.api.mvc._
+import play.api.{Logger, Play}
+import utils.GmqlGlobal
 import wrappers.authanticate.AuthenticatedAction
 
 import scala.collection.mutable.ListBuffer
-import scala.util.Try
-
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 object SecurityControllerDefaults {
 
@@ -31,12 +32,13 @@ object SecurityControllerDefaults {
   * Created by canakoglu on 6/13/16.
   */
 @Singleton
-class SecurityControllerScala @Inject()(mailerClient: MailerClient) extends Controller {
-
+class SecurityController @Inject()(mailerClient: MailerClient) extends Controller {
+  val repository: GMQLRepository = GmqlGlobal.repository
+  val ut = GmqlGlobal.ut
 
   private val guestCounter: AtomicInteger = new AtomicInteger
 
-  case class UserData(username: String, password: String, email:String, firstName:String, lastName:String)
+  case class UserData(username: String, password: String, email: String, firstName: String, lastName: String)
 
   def registerUser = Action(parse.json) { implicit request =>
 
@@ -77,19 +79,21 @@ class SecurityControllerScala @Inject()(mailerClient: MailerClient) extends Cont
     errorList += Validation.nonEmpty(lastName, "Last name")
 
     val flattenErrorList = errorList.flatten.mkString("\n")
-    if(!flattenErrorList.isEmpty)
+    if (!flattenErrorList.isEmpty)
       BadRequest(flattenErrorList)
-    else{
-      try{
-      val user: User = new User(username, email, password, firstName, lastName)
-      user.save
-      new DataSetsManager().registerUser(username)
-      loginResult(Some(user.createToken), Some(user))
-      }catch {
-        case _ => BadRequest("Duplicate user name or email")
+    else {
+      try {
+        val user: UserModel = UserModel(username, email, getSha512(password), firstName, lastName)
+        val userId = Await.result(UserDao.add(user), Duration.Inf)
+        repository.registerUser(username)
+        val token = createToken(userId)
+        loginResult(token, Some(user))
+      } catch {
+        case _: Throwable => BadRequest("Duplicate user name or email")
       }
     }
   }
+
 
   def getUser = AuthenticatedAction { implicit request =>
     val user = request.user
@@ -100,16 +104,18 @@ class SecurityControllerScala @Inject()(mailerClient: MailerClient) extends Cont
     val username = (request.body \ "username").asOpt[String].getOrElse("")
     Logger.debug("play.Play.isProd: " + play.Play.isProd)
     Logger.debug("play.Play.isDev: " + play.Play.isDev)
-    if (play.Play.isProd && username.startsWith(SecurityControllerDefaults.GUEST_USER))
+    if (Play.isProd && username.startsWith(SecurityControllerDefaults.GUEST_USER))
       BadRequest(s"Username is not acceptable, it is forbidden to start with ${SecurityControllerDefaults.GUEST_USER}")
     else {
       val password = (request.body \ "password").asOpt[String].getOrElse("")
-      val userOption = Option(User.findByUsernameAndPassword(username, password));
+      val userFuture = UserDao.getByUsername(username)
+      val userOption = Await.result(userFuture, Duration.Inf).filter(_.shaPassword.deep == getSha512(password).deep)
+
       userOption match {
         case Some(user) =>
-          loginResult(Some(user.createToken()), userOption)
+          loginResult(createToken(user.id), userOption)
         case None =>
-          val result = "The username or password you entered don't match." + (if (play.Play.isDev) username + "-" + password else "")
+          val result = "The username or password you entered don't match." + (if (Play.isDev) username + "-" + password else "")
           errorResult(result, Some(UNAUTHORIZED))
       }
     }
@@ -117,35 +123,38 @@ class SecurityControllerScala @Inject()(mailerClient: MailerClient) extends Cont
 
   def loginGuest = Action { implicit request =>
     var username = SecurityControllerDefaults.GUEST_USER + guestCounter.incrementAndGet
-    while (User.existsByUsername(username)) {
+    while (Await.result(UserDao.getByUsername(username), Duration.Inf).nonEmpty) {
       username = SecurityControllerDefaults.GUEST_USER + guestCounter.incrementAndGet
     }
-    val user: User = new User(username, username + "@demo.com", "password", "Guest", "")
-    user.save
-    new DataSetsManager().registerUser(username)
-    if (play.Play.isDev())
-      loginResult(Some(user.createToken), Some(user))
+    val user: UserModel = UserModel(username, username + "@demo.com", getSha512("password"), "Guest", "")
+    val userId = Await.result(UserDao.add(user), Duration.Inf)
+    repository.registerUser(username)
+    val token = createToken(userId)
+    if (Play.isDev)
+      loginResult(token, Some(user))
     else
-      loginResult(Some(user.createToken), user = None)
-
+      loginResult(token, user = None)
   }
 
   def logout = AuthenticatedAction { request =>
-    val user = request.user.get
-    if (user != null) {
-      user.deleteAuthToken
-      if (user.getUsername.startsWith("guest"))
-        new DataSetsManager().unRegisterUser(user.getUsername)
-      Ok("Logout")
+    val username = request.username.get
+    val user = request.user
+    val authentication = request.authentication
+    authentication match {
+      case Some(authentication) =>
+        invalidateToken(authentication.id)
+        if (username.startsWith("guest"))
+          repository.unregisterUser(username)
+        Ok("Logout")
+      case None =>
+        NotFound("User not found")
     }
-    else
-      NotFound("User not found")
   }
 
-  def loginResult(authToken: Option[String], user: Option[User])(implicit request: RequestHeader): Result = {
+  def loginResult(authToken: Option[String], user: Option[UserModel])(implicit request: RequestHeader): Result = {
     loginResult(authToken,
       user match {
-        case Some(u) if u.getUsername.startsWith(SecurityControllerDefaults.GUEST_USER) => Some(u.getUsername)
+        case Some(u) if !u.username.startsWith(SecurityControllerDefaults.GUEST_USER) => Some(u.username)
         case _ => None
       },
       user match {
@@ -160,13 +169,13 @@ class SecurityControllerScala @Inject()(mailerClient: MailerClient) extends Cont
       case Accepts.Xml() =>
         val xmlResult =
           <user>
-            {if (authToken isDefined)
+            {if (authToken.isDefined)
             <authToken>{authToken}</authToken>
             }
-            {if (username isDefined)
+            {if (username.isDefined)
             <username>{username.get}</username>
             }
-            {if (username isDefined)
+            {if (fullName.isDefined)
             <fullName>{fullName.get}</fullName>
             }
           </user>
@@ -213,7 +222,7 @@ class SecurityControllerScala @Inject()(mailerClient: MailerClient) extends Cont
 
   def passwordRecoveryEmail(username: String) = Action { implicit request =>
 
-    if(sendRecoveryEmail(username))
+    if (sendRecoveryEmail(username))
       Ok("Ok")
     else
       BadRequest(s"There is no user with this username($username), please check username and try again")
@@ -239,46 +248,64 @@ class SecurityControllerScala @Inject()(mailerClient: MailerClient) extends Cont
 
     val flattenErrorList = errorList.flatten.mkString("\n")
 
-    if(!flattenErrorList.isEmpty)
+    if (!flattenErrorList.isEmpty)
       BadRequest(flattenErrorList)
-    else{
-        user.setPassword(password)
-        user.createToken()
-        Ok("OK").withCookies(Cookie(SecurityControllerDefaults.AUTH_TOKEN_COOKIE, "",Some(0)))
-
+    else {
+      UserDao.updateShaPassword(user.id.get, getSha512(password))
+      //      createToken(Some(user.id))
+      Ok("OK").withCookies(Cookie(SecurityControllerDefaults.AUTH_TOKEN_COOKIE, "", Some(0)))
     }
-
-
   }
 
-  def sendRecoveryEmail(username: String)(implicit request:Request[Any]) = {
-    val user = User.findByUsername(username)
-    if (user != null) {
-      val passwordRecovery = user.createToken()
-      val link = routes.SecurityControllerScala.passwordRecovery.absoluteURL() + "?auth-token=" + passwordRecovery
-      val userEmail = user.getEmailAddress
-      val email = Email(
-        subject = "GMQL password recovery"
-        , from = "Polimi bioinformatics group <bioinformatics.polimi.it@gmail.com>"
-        , to = Seq(userEmail)
-        // adds attachment
-        //      attachments = Seq(
-        //        AttachmentFile("attachment.pdf", new File("/some/path/attachment.pdf")),
-        // adds inline attachment from byte array
-        //        AttachmentData("data.txt", "data".getBytes, "text/plain", Some("Simple data"), Some(EmailAttachment.INLINE)),
-        // adds cid attachment
-        //        AttachmentFile("image.jpg", new File("/some/path/image.jpg"), contentId = Some(cid))
-        //      ),
-        // sends text, HTML or both...
-        , bodyText = Some(s"""Please open the recovery page:\n$link""")
-//        , bodyHtml = Some(s"""  """)
-        , replyTo = Some("NO-REPLY@polimi.it")
-      )
-      mailerClient.send(email)
-      true
+  def sendRecoveryEmail(username: String)(implicit request: Request[Any]) = {
+    val userOption: Option[UserModel] = Await.result(UserDao.getByUsername(username), Duration.Inf)
+    userOption match {
+      case Some(user) =>
+        val passwordRecovery = createToken(user.id)
+        val link = routes.SecurityController.passwordRecovery.absoluteURL() + "?auth-token=" + passwordRecovery
+        val userEmail = user.emailAddress
+        val email = Email(
+          subject = "GMQL password recovery"
+          , from = "Polimi bioinformatics group <bioinformatics.polimi.it@gmail.com>"
+          , to = Seq(userEmail)
+          // adds attachment
+          //      attachments = Seq(
+          //        AttachmentFile("attachment.pdf", new File("/some/path/attachment.pdf")),
+          // adds inline attachment from byte array
+          //        AttachmentData("data.txt", "data".getBytes, "text/plain", Some("Simple data"), Some(EmailAttachment.INLINE)),
+          // adds cid attachment
+          //        AttachmentFile("image.jpg", new File("/some/path/image.jpg"), contentId = Some(cid))
+          //      ),
+          // sends text, HTML or both...
+          , bodyText = Some(s"""Please open the recovery page:\n$link""")
+          //        , bodyHtml = Some(s"""  """)
+          , replyTo = Some("NO-REPLY@polimi.it")
+        )
+        mailerClient.send(email)
+        true
+      case None =>
+        false
     }
-    else
-      false
+  }
+
+
+  def getSha512(value: String): Array[Byte] = MessageDigest.getInstance("SHA-512").digest(value.getBytes("UTF-8"))
+
+  def createToken(id: Option[Long] = None): Some[String] = {
+    val authToken = UUID.randomUUID().toString
+    if (id.nonEmpty) {
+      val future = AuthenticationDao.add(AuthenticationModel(id.get, None, authToken))
+      Await.result(future, Duration.Inf)
+    }
+    Some(authToken)
+  }
+
+
+  def invalidateToken(tokenId: Option[Long] = None): Unit = {
+    if (tokenId.nonEmpty) {
+      val future = AuthenticationDao.delete(tokenId.get)
+      Await.result(future, Duration.Inf)
+    }
   }
 
 }

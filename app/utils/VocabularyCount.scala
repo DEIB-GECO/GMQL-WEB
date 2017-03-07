@@ -16,10 +16,10 @@ class VocabularyCount {
 
   //key value count
   def addVocabulary(stream: InputStream): InputStream = {
-    val pis = new PipedInputStream()
+    val pis = new PipedInputStream(1024*1024)
     val pos = new PipedOutputStream(pis)
 
-    val pis2 = new PipedInputStream()
+    val pis2 = new PipedInputStream(1024*1024)
     val pos2 = new PipedOutputStream(pis2)
 
     Future {
@@ -36,7 +36,7 @@ class VocabularyCount {
       //          .foreach(zos.write(buffer, 0, _))
       pos2.close
       pos.close
-      println("FUTURE1 closed")
+//      println("FUTURE1 closed")
     }
     Future {
       val br = new BufferedReader(new InputStreamReader(pis2))
@@ -51,7 +51,7 @@ class VocabularyCount {
           Logger.warn(s"Cannot parse $temp -> $list")
       }
       Logger.debug(s"Map: $vocabularyMap")
-      println("FUTURE2 closed")
+//      println("FUTURE2 closed")
     }
     pis
   }

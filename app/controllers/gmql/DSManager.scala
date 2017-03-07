@@ -10,7 +10,7 @@ import it.polimi.genomics.core.DataStructures.IRDataSet
 import it.polimi.genomics.core.{GNull, _}
 import it.polimi.genomics.repository.FSRepository.FS_Utilities
 import it.polimi.genomics.repository.GMQLExceptions.{GMQLDSNotFound, GMQLSampleNotFound}
-import it.polimi.genomics.repository.{Utilities, _}
+import it.polimi.genomics.repository._
 import it.polimi.genomics.spark.implementation.loaders.CustomParser
 import org.xml.sax.SAXException
 import play.api.Play.current
@@ -25,7 +25,6 @@ import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
-import scala.io.Source
 import scala.sys.process._
 import scala.xml.Elem
 
@@ -185,12 +184,26 @@ class DSManager extends Controller {
     val sources = sampleNames.flatMap { sampleName =>
       lazy val streams = repository.sampleStreams(datasetName, username, sampleName._1)
       List(
-        ZipEnumerator.Source(datasetName + "/" + "files" + "/" + sampleName._2, { () => Future(Some(streams._1)) }),
-        ZipEnumerator.Source(datasetName + "/" + "files" + "/" + sampleName._2 + ".meta", { () => Future(Some(vocabularyCount.addVocabulary(streams._2))) })
+        ZipEnumerator.Source(s"$datasetName/files/${sampleName._2}", { () => Future(Some(streams._1)) }),
+        ZipEnumerator.Source(s"$datasetName/files/${sampleName._2}.meta", { () => Future(Some(vocabularyCount.addVocabulary(streams._2))) })
       )
     }
+    lazy val schemaStream = repository.getSchemaStream(datasetName, username)
+    sources += ZipEnumerator.Source(s"$datasetName/files/${datasetName}.schema", { () => Future(Some(schemaStream)) })
 
-    sources += ZipEnumerator.Source(datasetName + "/" + "vocabulary.txt", { () => Future(Some(vocabularyCount.getStream)) })
+
+    val scriptStreamTest = try {
+      Some(repository.getScriptStream(datasetName, username).close())
+    } catch {
+      case _: Throwable => None
+    }
+
+    if (scriptStreamTest.isDefined) {
+      lazy val scriptStream = repository.getScriptStream(datasetName, username)
+      sources += ZipEnumerator.Source(s"$datasetName/$datasetName.gmql", { () => Future(Some(scriptStream)) })
+    }
+
+    sources += ZipEnumerator.Source(s"$datasetName/vocabulary.txt", { () => Future(Some(vocabularyCount.getStream)) })
 
     Logger.debug(s"Before zip enumerator: $username->$datasetName")
     Ok.chunked(ZipEnumerator(sources))(play.api.http.Writeable.wBytes).withHeaders(
@@ -479,6 +492,8 @@ class DSManager extends Controller {
     var returnVal = List.empty[(String, GValue)].iterator
 
     import resource._
+
+    import scala.io.Source
 
 
     //    http://jsuereth.com/scala-arm/usage.html

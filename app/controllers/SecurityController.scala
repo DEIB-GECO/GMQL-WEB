@@ -24,7 +24,7 @@ object SecurityControllerDefaults {
   val AUTH_TOKEN_HEADER: String = "X-Auth-Token"
   val AUTH_TOKEN_COOKIE: String = "authToken"
   val QUERY_AUTH_TOKEN: String = "auth-token"
-  val GUEST_USER: String = "guest"
+  val GUEST_USER: String = "guest_new"
   val PUBLIC_USER: String = "public"
 }
 
@@ -143,7 +143,7 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
     authentication match {
       case Some(authentication) =>
         invalidateToken(authentication.id)
-        if (username.startsWith("guest"))
+        if (username.startsWith(SecurityControllerDefaults.GUEST_USER))
           repository.unregisterUser(username)
         Ok("Logout")
       case None =>

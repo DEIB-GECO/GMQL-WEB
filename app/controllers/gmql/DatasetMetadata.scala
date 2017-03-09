@@ -2,6 +2,9 @@ package controllers.gmql
 
 import it.polimi.genomics.repository.GMQLExceptions.GMQLSampleNotFound
 import it.polimi.genomics.repository.{GMQLRepository, Utilities}
+import net.sf.ehcache.CacheManager
+import play.api.Logger
+import play.api.cache.Cache
 import utils.GmqlGlobal
 
 import scala.collection.JavaConversions._
@@ -15,10 +18,11 @@ import scala.collection.JavaConversions._
 case class Meta(id: String, key: String, value: String)
 
 class DatasetMetadata(username: String, datasetName: String) {
+  Logger.debug(s"DatasetMetadata is creating: $username -> $datasetName")
   val repository: GMQLRepository = GmqlGlobal.repository
   val ut: Utilities = GmqlGlobal.ut
 
-  lazy val (nameToId, idToName) = {
+  val (nameToId, idToName) = {
     var user: String = username
     var dsName = datasetName
     // if public then user name is public and get the correct dataset name
@@ -32,35 +36,30 @@ class DatasetMetadata(username: String, datasetName: String) {
     val idToName = temp.map(t => (t._2, t._1)).toMap
     (nameToId, idToName)
   }
+  val ids: Set[String] = idToName.keySet
 
-  lazy val fullFile = repository.getMeta(datasetName, username).split("\n").map(_.split("\t")).flatMap({
-    case Array(id: String, key: String, value: String) => Some(Meta(id, key, value))
-    case _ => None
-  }).toSet //if there are duplication
 
   //KEY VALUE -> Meta
-  lazy val keyBased: Map[String, Map[String, Set[Meta]]] = generateKeyBased(fullFile)
   //    fullFile.groupBy(_.key).map(x => (x._1, x._2.groupBy(_.value) /*.map(x => (x._1, x._2.map(_.id)))*/ ))
 
-  private def generateKeyBased(full: Set[Meta]) = full.groupBy(_.key).map(x => (x._1, x._2.groupBy(_.value) /*.map(x => (x._1, x._2.map(_.id)))*/ ))
-
-  //change last element to id(String)   key-> value -> id
-  //  lazy val keyBased2: Map[String, Map[String, Set[String]]] = keyBased.map(t1 => (t1._1, t1._2.map(t2 => (t2._1, t2._2.map(_.id)))))
 
   //KEY VALUE -> Meta
-  lazy val idBased: Map[String, Map[String, Set[Meta]]] = fullFile.groupBy(_.id).map(x => (x._1, x._2.groupBy(_.key) /*.map(x => (x._1, x._2.map(_.id)))*/ ))
 
 
-  //change last element to id(String)   key-> value -> id
-  //  lazy val idBased2: Map[String, Map[String, Set[String]]] = keyBased.map(t1 => (t1._1, t1._2.map(t2 => (t2._1, t2._2.map(_.value)))))
+  val (keyBased, idBased) = {
+    val fullFile = repository.getMeta(datasetName, username).split("\n").map(_.split("\t")).flatMap({
+      case Array(id: String, key: String, value: String) => Some(Meta(id, key, value))
+      case _ => None
+    }).toSet
+    //if there are duplication
+    val keyBased: Map[String, Map[String, Set[Meta]]] = generateKeyBased(fullFile)
+    val idBased: Map[String, Map[String, Set[Meta]]] = fullFile.groupBy(_.id).map(x => (x._1, x._2.groupBy(_.key) /*.map(x => (x._1, x._2.map(_.id)))*/ ))
+    Logger.debug(s"Dataset loaded: $username->$datasetName")
+    (keyBased, idBased)
+  }
 
 
-  // (key,value) - > Set(id)
-  //  lazy val keyValueBased2: Map[(String, String), Set[String]] = fullFile.groupBy(x => (x.key, x.value)).map(x => (x._1, x._2.map(_.id).toSet))
-
-
-  lazy val ids: Set[String] = idToName.keySet
-
+  private def generateKeyBased(full: Set[Meta]) = full.groupBy(_.key).map(x => (x._1, x._2.groupBy(_.value) /*.map(x => (x._1, x._2.map(_.id)))*/ ))
 
   def getSampleMetadata(sampleName: String): AttributeList = {
     val idOption = nameToId.get(sampleName)
@@ -81,12 +80,14 @@ class DatasetMetadata(username: String, datasetName: String) {
     //      .toSeq
     //      .sorted
     //    //      .distinct.sorted.map(Attribute(_))\
+    Logger.debug(s"getAllKeys pre $username->$datasetName")
+
     val attributeList = keyBased.map { case (key: String, valueMap: Map[String, Seq[Meta]]) =>
       val valueCount = valueMap.size
       val sampleCount = valueMap.values.flatten.size
       Attribute(key, valueCount = Some(valueCount), sampleCount = Some(sampleCount))
     }.toSeq.sorted
-
+    Logger.debug(s"getAllKeys post $username->$datasetName")
     AttributeList(attributeList)
   }
 
@@ -100,11 +101,14 @@ class DatasetMetadata(username: String, datasetName: String) {
     //      .map(valueCount => Value(valueCount._1, count = Some(valueCount._2)))
     //      .toSeq
     //      .sorted
+    Logger.debug(s"getAllValues pre $username->$datasetName")
+
     val values: Seq[Value] = keyBased
       .getOrDefault(key, Map.empty)
       .map(value => Value(value._1, count = Some(value._2.size)))
       .toSeq
       .sorted
+    Logger.debug(s"getAllValues post $username->$datasetName")
 
     Attribute(key, values = Some(values))
   }
@@ -117,39 +121,42 @@ class DatasetMetadata(username: String, datasetName: String) {
 
 
   def getFilteredKeys(attributeListInput: AttributeList): AttributeList = {
-    val filteredKeyBased= getFilteredKeyBased(attributeListInput)
+    Logger.debug(s"getFilteredKeys pre $username->$datasetName")
+
+    val filteredKeyBased = getFilteredKeyBased(attributeListInput)
 
     val attributeList = filteredKeyBased.map { case (key: String, valueMap: Map[String, Seq[Meta]]) =>
       val valueCount = valueMap.size
       val sampleCount = valueMap.values.flatten.size
       Attribute(key, valueCount = Some(valueCount), sampleCount = Some(sampleCount))
     }.toSeq.sorted
+    Logger.debug(s"getFilteredKeys post $username->$datasetName")
 
     AttributeList(attributeList)
   }
 
 
-
-
   def getFilteredValues(attributeListInput: AttributeList, key: String): Attribute = {
-    val filteredKeyBased= getFilteredKeyBased(attributeListInput)
+    Logger.debug(s"getFilteredValues pre $username->$datasetName")
+
+    val filteredKeyBased = getFilteredKeyBased(attributeListInput)
 
     val values: Seq[Value] = filteredKeyBased
       .getOrDefault(key, Map.empty)
       .map(value => Value(value._1, count = Some(value._2.size)))
       .toSeq
       .sorted
+    Logger.debug(s"getFilteredValues post $username->$datasetName")
 
     Attribute(key, values = Some(values))
   }
 
 
-  def getFilteredKeyBased(attributeListInput: AttributeList) ={
+  private def getFilteredKeyBased(attributeListInput: AttributeList) = {
     val samples = getIds(attributeListInput)
     val filtered: Set[Meta] = idBased.filterKeys(samples.contains).values.flatMap(_.values.flatten).toSet
     generateKeyBased(filtered)
   }
-
 
 
   /**
@@ -175,5 +182,32 @@ class DatasetMetadata(username: String, datasetName: String) {
 }
 
 object DatasetMetadata {
-  def apply(username: String, datasetName: String) = new DatasetMetadata(username: String, datasetName: String)
+
+  import play.api.Play.current
+
+  // use for preloading dataset of the user, default is public
+  def loadCache(username: String = "public") = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+    import scala.concurrent.Future
+    for (ds <- utils.GmqlGlobal.repository.listAllDSs(username)) {
+      Future {
+        DatasetMetadata("public", ds.position)
+      }
+    }
+  }
+
+  def clearCache() = {
+    val singletonManager = CacheManager.create
+    Logger.debug(singletonManager.getCacheNames.toList.toString)
+    singletonManager.getCache("play").removeAll()
+    singletonManager.clearAll()
+  }
+
+
+  def apply(username: String, datasetName: String): DatasetMetadata =
+    if (username == "public")
+      Cache.getOrElse(s"$username->$datasetName")(new DatasetMetadata(username: String, datasetName: String))
+    else
+      Cache.getOrElse(s"$username->$datasetName", 120)(new DatasetMetadata(username: String, datasetName: String))
 }
+

@@ -3,21 +3,21 @@
   */
 
 
+import controllers.gmql.DatasetMetadata
 import play.api._
-
 
 object Global extends GlobalSettings {
 
 
   override def beforeStart(app: Application) {
     Logger.info("Global.beforeStart")
-    //    System.setProperty("javax.xml.bind.context.factory","org.eclipse.persistence.jaxb.JAXBContextFactory")
-    Logger.info("Global System property set: javax.xml.bind.context.factory=org.eclipse.persistence.jaxb.JAXBContextFactory")
   }
 
   override def onStart(app: Application) {
     Logger.info("Application has started ")
-//    utils.GmqlGlobal()
+    //load all public user metadata into cache.
+    if (play.Play.isProd)
+      DatasetMetadata.loadCache()
   }
 
   override def onStop(app: Application) {

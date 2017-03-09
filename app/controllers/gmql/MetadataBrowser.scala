@@ -166,7 +166,7 @@ class MetadataBrowser extends Controller {
     }
     try {
       val attributeList = request.body
-      lazy val result = DatasetMetadata(username, dsName).getFilteredKeys(attributeList)
+      lazy val result = if (attributeList.attributes.isEmpty) DatasetMetadata(username, dsName).getAllKeys else DatasetMetadata(username, dsName).getFilteredKeys(attributeList)
       render {
         case Accepts.Xml() => Ok(scala.xml.Utility.trim(result.getXml))
         case Accepts.Json() => Ok(Json.toJson(result))
@@ -189,7 +189,7 @@ class MetadataBrowser extends Controller {
     }
     try {
       val attributeList = request.body
-      lazy val result = DatasetMetadata(username, dsName).getFilteredValues(attributeList, key)
+      lazy val result = if (attributeList.attributes.isEmpty) DatasetMetadata(username, dsName).getAllValues(key) else DatasetMetadata(username, dsName).getFilteredValues(attributeList, key)
 
       render {
         case Accepts.Xml() => Ok(scala.xml.Utility.trim(result.getXml))

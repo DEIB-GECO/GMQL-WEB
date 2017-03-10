@@ -3,7 +3,7 @@ package controllers.gmql
 import javax.inject.Singleton
 
 import controllers.gmql.ResultUtils.NA
-import it.polimi.genomics.core.{BinSize, GMQLOutputFormat, GMQLScript, ImplementationPlatform}
+import it.polimi.genomics.core.{BinSize, GMQLSchemaFormat, GMQLScript, ImplementationPlatform}
 import it.polimi.genomics.manager.Exceptions.NoJobsFoundException
 import it.polimi.genomics.manager.Launchers.GMQLSparkLauncher
 import it.polimi.genomics.manager.{GMQLContext, GMQLExecute, GMQLJob}
@@ -58,7 +58,7 @@ class QueryMan extends Controller {
 
   def runQuery(queryName: String, outputType: String) = AuthenticatedAction { implicit request =>
     val username = request.username.getOrElse("")
-    val outputFormat = if (outputType.trim.equals("true")) GMQLOutputFormat.GTF else GMQLOutputFormat.TAB
+    val outputFormat = if (outputType.trim.equals("true")) GMQLSchemaFormat.GTF else GMQLSchemaFormat.TAB
 
     val queryOption = request.body.asText
 
@@ -91,7 +91,7 @@ class QueryMan extends Controller {
     }
   }
 
-  private def registerJob(username: String, query: String, queryName: String, outputFormat: GMQLOutputFormat.Value) = {
+  private def registerJob(username: String, query: String, queryName: String, outputFormat: GMQLSchemaFormat.Value) = {
     val server = GMQLExecute()
     val gmqlScript = new GMQLScript(query, queryName)
     val binSize = new BinSize(5000, 5000, 1000)
@@ -103,7 +103,7 @@ class QueryMan extends Controller {
   def compileQuery() = AuthenticatedAction { implicit request =>
     val username = request.username.getOrElse("")
     val queryOption = request.body.asText
-    val outputFormat = GMQLOutputFormat.TAB
+    val outputFormat = GMQLSchemaFormat.TAB
     val queryName = "only_compile"
 
     lazy val queryResult: QueryResult = queryOption match {

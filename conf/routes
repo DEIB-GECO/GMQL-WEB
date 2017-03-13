@@ -115,7 +115,7 @@ POST          /queries/compile                                   controllers.gmq
 GET           /jobs                                              controllers.gmql.QueryMan.getJobs
 GET           /jobs/:id/trace                                    controllers.gmql.QueryMan.traceJob(id: String)
 GET           /jobs/:id/log                                      controllers.gmql.QueryMan.getLog(id: String)
-#GET           /jobs/:id/stop                                                   controllers.gmql.QueryMan.stopJob(id: String)
+GET           /jobs/:id/stop                                     controllers.gmql.QueryMan.stopJob(id: String)
 #
 #
 ###COMPILE

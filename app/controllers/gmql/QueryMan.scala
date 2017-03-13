@@ -4,7 +4,7 @@ import javax.inject.Singleton
 
 import controllers.gmql.ResultUtils.NA
 import it.polimi.genomics.core.{BinSize, GMQLSchemaFormat, GMQLScript, ImplementationPlatform}
-import it.polimi.genomics.manager.Exceptions.NoJobsFoundException
+import it.polimi.genomics.manager.Exceptions.{InvalidGMQLJobException, NoJobsFoundException}
 import it.polimi.genomics.manager.Launchers.GMQLSparkLauncher
 import it.polimi.genomics.manager.{GMQLContext, GMQLExecute, GMQLJob}
 import it.polimi.genomics.repository.GMQLRepository
@@ -267,24 +267,24 @@ class QueryMan extends Controller {
   }
 
 
-//    /**
-//      * In order to stop the job this service should be called.
-//      *
-//      * @param jobId the id of the job.
-//      * @return Ok(HTTP 200) with a message that stops the job if the stop execution done correctly,
-//      *         Forbidden(HTTP 403) message if otherwise(if the job is not exists or the job id is not related to the user)
-//      */
-//    def stopJob(jobId: String) = AuthenticatedAction { implicit request =>
-//      val username = request.username.getOrElse("")
-//      val server = GMQLExecute()
-//      try {
-//        val job: GMQLJob = server.getGMQLJob(username, jobId)
-//        job.submitHandle.killJob()
-//        Ok("Job is stopping.")
-//      } catch {
-//        case e: InvalidGMQLJobException => Forbidden(e.getMessage)
-//      }
-//    }
+    /**
+      * In order to stop the job this service should be called.
+      *
+      * @param jobId the id of the job.
+      * @return Ok(HTTP 200) with a message that stops the job if the stop execution done correctly,
+      *         Forbidden(HTTP 403) message if otherwise(if the job is not exists or the job id is not related to the user)
+      */
+    def stopJob(jobId: String) = AuthenticatedAction { implicit request =>
+      val username = request.username.getOrElse("")
+      val server = GMQLExecute()
+      try {
+        val job: GMQLJob = server.getGMQLJob(username, jobId)
+        job.submitHandle.killJob()
+        Ok("Job is stopping.")
+      } catch {
+        case e: InvalidGMQLJobException => Forbidden(e.getMessage)
+      }
+    }
 
 
 }

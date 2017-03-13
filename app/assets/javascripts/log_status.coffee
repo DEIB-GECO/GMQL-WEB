@@ -155,7 +155,7 @@ selectNode = (title) ->
     BootstrapDialog.alert("There is no dataset available in the tree")
 
 @stopJob = (jobId) ->
-  BootstrapDialog.alert "Stop button is disactivated"
+#  BootstrapDialog.alert "Stop button is deactivated"
   call = jsRoutes.controllers.gmql.QueryMan.stopJob jobId
   $.ajax
     url: call.url

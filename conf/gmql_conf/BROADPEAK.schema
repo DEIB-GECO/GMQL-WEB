@@ -1,10 +1,14 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<gmqlSchemaCollection name="GLOBAL_SCHEMAS" xmlns="http://genomic.elet.polimi.it/entities">
-<gmqlSchema  type="broadPeak">
-		<field type="STRING">name</field>
-		<field type="INTEGER">score</field>
-		<field type="FLOAT">signal</field>
-		<field type="FLOAT">pvalue</field>
-		<field type="FLOAT">qvalue</field>
-	</gmqlSchema>	
+<?xml version='1.0' encoding='UTF-8'?>
+<gmqlSchemaCollection name="BROAD_PEAKs" xmlns="http://genomic.elet.polimi.it/entities">
+        <gmqlSchema type="DEL">
+           <field type="STRING">chr</field>
+           <field type="LONG">start</field>
+           <field type="LONG">stop</field>
+           <field type="STRING">name</field>
+           <field type="DOUBLE">score</field>
+           <field type="STRAND">STRAND</field>
+           <field type="DOUBLE">signal</field>
+           <field type="DOUBLE">pvalue</field>
+           <field type="DOUBLE">qvalue</field>
+        </gmqlSchema>
 </gmqlSchemaCollection>

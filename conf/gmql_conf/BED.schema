@@ -1,7 +1,12 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<gmqlSchemaCollection name="GLOBAL_SCHEMAS" xmlns="http://genomic.elet.polimi.it/entities">
-	<gmqlSchema  type="bed">
-		<field type="STRING">name</field>
-		<field type="FLOAT">score</field>
-	</gmqlSchema>
+<?xml version='1.0' encoding='UTF-8'?>
+<gmqlSchemaCollection name="HG19_ENCODE_BED" xmlns="http://genomic.elet.polimi.it/entities">
+        <gmqlSchema type="DEL">
+           <field type="STRING">chrom</field>
+           <field type="LONG">start</field>
+           <field type="LONG">stop</field>
+           <field type="STRING">name</field>
+           <field type="DOUBLE">score</field>
+           <field type="CHAR">strand</field>
+        </gmqlSchema>
 </gmqlSchemaCollection>
+

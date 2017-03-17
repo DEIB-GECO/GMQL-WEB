@@ -3,16 +3,15 @@ package controllers.gmql
 import javax.inject.Singleton
 
 import controllers.gmql.ResultUtils.NA
+import io.swagger.annotations._
 import it.polimi.genomics.core.{BinSize, GMQLSchemaFormat, GMQLScript, ImplementationPlatform}
 import it.polimi.genomics.manager.Exceptions.{InvalidGMQLJobException, NoJobsFoundException}
 import it.polimi.genomics.manager.Launchers.GMQLSparkLauncher
 import it.polimi.genomics.manager.{GMQLContext, GMQLExecute, GMQLJob}
-import it.polimi.genomics.repository.GMQLRepository
 import org.apache.spark.SparkContext
 import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc.Controller
-import utils.GmqlGlobal
 import wrappers.authanticate.AuthenticatedAction
 
 import scala.collection.JavaConversions._
@@ -22,43 +21,15 @@ import scala.collection.JavaConversions._
   * Created by canakoglu on 4/11/16.
   */
 @Singleton
+@Api(value = SwaggerUtils.swaggerQueryManager, produces = "application/json, application/xml")
 class QueryMan extends Controller {
-  val repository: GMQLRepository = GmqlGlobal.repository
-  val ut = GmqlGlobal.ut
 
-  //  def readQuery(fileKey: String) = AuthenticatedAction { request =>
-  //    val username = request.username.getOrElse("")
-  //    val response = new QueryManager().readQuery(username, fileKey)
-  //    val resAsString = ResultUtils.unMarshall(response, false)
-  //    Ok(resAsString).as("text/xml")
-  //  }
-  //
-  //  def deleteQuery(fileKey: String) = AuthenticatedAction { request =>
-  //    val username = request.username.getOrElse("")
-  //    val response = new QueryManager().deleteQuery(username, fileKey)
-  //    val resAsString = ResultUtils.unMarshall(response, false)
-  //    Ok(resAsString).as("text/xml")
-  //  }
-  //
-  //
-  //  def saveQueryAs(fileName: String, fileKey: String) = AuthenticatedAction { request =>
-  //    val username = request.username.getOrElse("")
-  //    val errorList = ListBuffer.empty[Option[String]]
-  //
-  //    errorList += Validation.validateFilename(fileName)
-  //    val flattenErrorList = errorList.flatten.mkString("\n")
-  //    if (!flattenErrorList.isEmpty)
-  //      BadRequest(flattenErrorList)
-  //    else {
-  //      val query = request.body.asText
-  //      val response = new QueryManager().saveQueryAs(query.getOrElse(""), username, fileName, fileKey)
-  //      ResultUtils.resultHelper(response)
-  //    }
-  //  }
+  import utils.GmqlGlobal._
 
-  def runQuery(queryName: String, outputType: String) = AuthenticatedAction { implicit request =>
+  def runQuery(queryName: String,
+               @ApiParam(allowableValues = "tab, gtf") outputType: String) = AuthenticatedAction { implicit request =>
     val username = request.username.getOrElse("")
-    val outputFormat = if (outputType.trim.equals("true")) GMQLSchemaFormat.GTF else GMQLSchemaFormat.TAB
+    val outputFormat = GMQLSchemaFormat.getType(outputType)
 
     val queryOption = request.body.asText
 
@@ -130,36 +101,6 @@ class QueryMan extends Controller {
       case _ => NA
     }
   }
-
-
-  //        //TODO think about this
-  //        try {
-  //          new GMQLJob(gmqlContext, gmqlScript, username)
-  //          val job2 = new GMQLJob(gmqlContext, gmqlScript, username)
-  //          //          val server2 = new GmqlServer(gmqlContext.implementation, Some(gmqlContext.binSize.Map))
-  //          //          val translator = new Translator(server2, "")
-  //          //          translator.phase1(query)
-  //          //          translator.phase2(operators)
-  //          job2.compile()
-  //          Ok("Compile without error")
-  //
-  //        } catch {
-  //          case e: CompilerException => Ok("Compile Failed" + e.getMessage)
-  //          case e: Exception => Ok("Compile Failed" + e.getMessage)
-  //        }
-
-
-  //    } catch {
-  //      case e: CompilerException => status = Status.COMPILE_FAILED; logError(e.getMessage); e.printStackTrace()
-  //      case ex: Exception => status = Status.COMPILE_FAILED; logError(ex.getMessage); ex.printStackTrace()
-  //    }
-  //
-  //        try{
-  //        val job = server.registerJob(gmqlScript, gmqlContext, "")
-  //
-  //        }catch {
-  //          case _ => Ok("ERRRORR2")
-  //        }
 
 
   def getJobs = AuthenticatedAction { implicit request =>
@@ -267,24 +208,24 @@ class QueryMan extends Controller {
   }
 
 
-    /**
-      * In order to stop the job this service should be called.
-      *
-      * @param jobId the id of the job.
-      * @return Ok(HTTP 200) with a message that stops the job if the stop execution done correctly,
-      *         Forbidden(HTTP 403) message if otherwise(if the job is not exists or the job id is not related to the user)
-      */
-    def stopJob(jobId: String) = AuthenticatedAction { implicit request =>
-      val username = request.username.getOrElse("")
-      val server = GMQLExecute()
-      try {
-        val job: GMQLJob = server.getGMQLJob(username, jobId)
-        job.submitHandle.killJob()
-        Ok("Job is stopping.")
-      } catch {
-        case e: InvalidGMQLJobException => Forbidden(e.getMessage)
-      }
+  /**
+    * In order to stop the job this service should be called.
+    *
+    * @param jobId the id of the job.
+    * @return Ok(HTTP 200) with a message that stops the job if the stop execution done correctly,
+    *         Forbidden(HTTP 403) message if otherwise(if the job is not exists or the job id is not related to the user)
+    */
+  def stopJob(jobId: String) = AuthenticatedAction { implicit request =>
+    val username = request.username.getOrElse("")
+    val server = GMQLExecute()
+    try {
+      val job: GMQLJob = server.getGMQLJob(username, jobId)
+      job.submitHandle.killJob()
+      Ok("Job is stopping.")
+    } catch {
+      case e: InvalidGMQLJobException => Forbidden(e.getMessage)
     }
+  }
 
 
 }

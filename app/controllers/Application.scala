@@ -2,8 +2,14 @@ package controllers
 
 import javax.inject.{Inject, Singleton}
 
+import controllers.gmql.ResultUtils.{NA, renderedError}
+import controllers.gmql.{Dataset, DatasetUtils}
 import play.api.libs.ws.WSClient
 import play.api.mvc._
+import io.swagger.annotations._
+import it.polimi.genomics.repository.GMQLExceptions.GMQLDSNotFound
+import play.api.libs.json.Json
+import wrappers.authanticate.AuthenticatedAction
 
 
 @Singleton
@@ -115,6 +121,22 @@ class Application @Inject()(ws: WSClient) extends Controller {
   //
   //
   //  }
+
+  @ApiResponses(Array(
+    new ApiResponse(code = 400, message = "Invalid ID supplied"),
+    new ApiResponse(code = 404, message = "Pet not found")))
+  def getPetById(
+                  @ApiParam(value = "ID of the pet to fetch") id: String) = Action {
+    implicit request =>
+      Ok("hello - " + id)
+  }
+
+
+  @ApiModelProperty(hidden = true)
+  def swagger = Action {
+    request =>
+      Ok(views.html.swagger())
+  }
 
 
 }

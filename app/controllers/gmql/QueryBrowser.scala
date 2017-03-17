@@ -2,6 +2,7 @@ package controllers.gmql
 
 import javax.inject.Singleton
 
+import io.swagger.annotations._
 import models.{QueryDao, QueryModel}
 import play.api.libs.json.Json
 import play.api.mvc.Controller
@@ -11,10 +12,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
+
 /**
   * Created by canakoglu on 3/1/17.
   */
 @Singleton
+@Api(value = SwaggerUtils.swaggerQueryBrowser, produces = "application/json, application/xml")
 class QueryBrowser extends Controller {
 
   def getQueries() = AuthenticatedAction.async { implicit request =>

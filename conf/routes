@@ -2,16 +2,15 @@
 ## This file defines all application routes (Higher priority routes first)
 ## ~~~~
 #
+GET           /swagger.json                                      controllers.ApiHelpController.getResources
 
+GET           /swagger                                           controllers.Application.swagger
 
-GET           /hello1                                            controllers.Application2.hello1()
-GET           /hello2                                            controllers.Application2.hello2()
-GET           /hello3                                            controllers.Application2.hello3()
-GET           /hello4/:datasetName/:sampleName                   controllers.Application2.hello4(datasetName:String, sampleName: String)
-GET           /hello5                                            controllers.Application2.hello5()
-
-
-## Home page
+#
+#
+#
+#
+### Home page
 GET           /                                                  controllers.Application.gmql
 ## GMQL REST help page
 GET           /help                                              controllers.Application.gmqlRestHelp
@@ -70,8 +69,8 @@ GET           /datasets/:datasetName/getUCSCLink                 controllers.gmq
 GET           /datasets/:datasetName/schema                      controllers.gmql.DSManager.dataSetSchema(datasetName)
 
 
-POST          /datasets/:datasetName/uploadSample                controllers.gmql.DSManager.uploadSample(datasetName: String, schema: Option[String])
-POST          /datasets/:datasetName/uploadSampleUrls            controllers.gmql.DSManager.uploadSamplesFromUrls(datasetName: String, schema: Option[String])
+POST          /datasets/:datasetName/uploadSample                controllers.gmql.DSManager.uploadSample(datasetName: String)
+POST          /datasets/:datasetName/uploadSampleUrls            controllers.gmql.DSManager.uploadSamplesFromUrls(datasetName: String)
 #TODO change can be problem with upper one
 GET           /datasets/:datasetName/:columnName/parse           controllers.gmql.DSManager.parseFiles(datasetName:String, columnName: String)
 

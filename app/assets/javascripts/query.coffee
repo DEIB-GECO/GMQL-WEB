@@ -52,7 +52,7 @@ saveQuery = (type) ->
 
 runQuery = (fileKey, type) ->
   outputType = $('input:radio[name=optionsRadios]:checked').val()
-  gtfOutput = outputType == "gtf"
+#   gtfOutput = outputType == "gtf"
   editor = ace.edit("main-query-editor");
   code = editor.getValue();
 
@@ -61,7 +61,7 @@ runQuery = (fileKey, type) ->
     BootstrapDialog.alert "Filename cannot be empty"
   else
     if type == "execute"
-      call = jsRoutes.controllers.gmql.QueryMan.runQuery(fileName, gtfOutput)
+      call = jsRoutes.controllers.gmql.QueryMan.runQuery(fileName, outputType)
     else
       call = jsRoutes.controllers.gmql.QueryMan.compileQuery()
     $.ajax

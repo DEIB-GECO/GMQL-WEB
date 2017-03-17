@@ -5,6 +5,7 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.{Inject, Singleton}
 
+import controllers.gmql.SwaggerUtils
 import it.polimi.genomics.repository.GMQLRepository
 import models.{AuthenticationDao, AuthenticationModel, UserDao, UserModel}
 import play.api.Play.current
@@ -18,6 +19,8 @@ import wrappers.authanticate.AuthenticatedAction
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import io.swagger.annotations._
+
 
 object SecurityControllerDefaults {
 
@@ -32,9 +35,9 @@ object SecurityControllerDefaults {
   * Created by canakoglu on 6/13/16.
   */
 @Singleton
+@Api(value = SwaggerUtils.swaggerSecurityController, produces = "application/json, application/xml")
 class SecurityController @Inject()(mailerClient: MailerClient) extends Controller {
-  val repository: GMQLRepository = GmqlGlobal.repository
-  val ut = GmqlGlobal.ut
+  import utils.GmqlGlobal._
 
   private val guestCounter: AtomicInteger = new AtomicInteger
 

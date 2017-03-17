@@ -6,6 +6,7 @@ import java.util
 import javax.inject.Singleton
 
 import controllers.gmql.ResultUtils._
+import io.swagger.annotations._
 import it.polimi.genomics.core.DataStructures.IRDataSet
 import it.polimi.genomics.core.{GNull, _}
 import it.polimi.genomics.repository.FSRepository.FS_Utilities
@@ -18,7 +19,7 @@ import play.api.libs.iteratee.Enumerator
 import play.api.libs.json._
 import play.api.mvc._
 import play.api.{Logger, Play}
-import utils.{GmqlGlobal, VocabularyCount, ZipEnumerator}
+import utils.{VocabularyCount, ZipEnumerator}
 import wrappers.authanticate.AuthenticatedAction
 
 import scala.collection.JavaConversions._
@@ -33,9 +34,12 @@ import scala.xml.Elem
   * Created by Canakoglu on 15-Mar-16.
   */
 @Singleton
+@Api(value = SwaggerUtils.swaggerRepository, produces = "application/json, application/xml")
 class DSManager extends Controller {
-  val repository: GMQLRepository = GmqlGlobal.repository
-  val ut = GmqlGlobal.ut
+  final val swaggerValue = "Repository"
+
+  import utils.GmqlGlobal._
+
   val newLine = sys.props("line.separator")
 
 
@@ -45,6 +49,10 @@ class DSManager extends Controller {
     *
     * @return the list of the dataset of the user and also public user
     */
+  @ApiOperation(value = "Get all datasets",
+    notes = "Get the list of the dataset of the user and public user",
+    response = classOf[Datasets])
+  @ApiResponses(value = Array(new ApiResponse(code = 401, message = "User is not authenticated")))
   def getDatasets = AuthenticatedAction { implicit request =>
     val username: String = request.username.get
 
@@ -70,6 +78,12 @@ class DSManager extends Controller {
     *                    If starts with <i>"public."</i> then it retrieves from public user dataset.
     * @return
     */
+  @ApiOperation(value = "Get all samples of the dataset",
+    notes = "Get the list of the samples of the input dataset",
+    response = classOf[Dataset])
+  @ApiResponses(value = Array(
+    new ApiResponse(code = 401, message = "User is not authenticated"),
+    new ApiResponse(code = 404, message = "Dataset is not found for the user")))
   def getSamples(datasetName: String) = AuthenticatedAction { implicit request =>
     var username: String = request.username.get
     var dsName = datasetName
@@ -99,10 +113,16 @@ class DSManager extends Controller {
     *                    If starts with <i>"public."</i> then it is about public dataset, which is forbidden to delete.
     * @return
     */
+  @ApiOperation(value = "Delete the dataset",
+    notes = "Delete the input dataset")
+  @ApiResponses(value = Array(
+    new ApiResponse(code = 401, message = "User is not authenticated"),
+    new ApiResponse(code = 403, message = "Public datasets cannot be deleted by user"),
+    new ApiResponse(code = 404, message = "Dataset is not found for the user")))
   def deleteDataset(datasetName: String) = AuthenticatedAction { implicit request =>
     val username: String = request.username.get
     if (datasetName.startsWith("public."))
-      renderedError(UNAUTHORIZED, "Public dataset cannot be deleted")
+      renderedError(FORBIDDEN, "Public dataset cannot be deleted")
     else {
       //TODO add also DSExists after its implementation
       try {
@@ -135,24 +155,28 @@ class DSManager extends Controller {
   private def getStream(datasetName: String, sampleName: String, isMeta: Boolean) = AuthenticatedAction { implicit request =>
     import scala.concurrent.ExecutionContext.Implicits.global
     val username: String = request.username.get
-    try {
-      //TODO use ARM solution, if it is possible
-      val (streamRegion, streamMeta) = repository.sampleStreams(datasetName, username, sampleName)
-      val stream = if (isMeta) {
-        streamRegion.close
-        streamMeta
-      } else {
-        streamMeta.close
-        streamRegion
+    if (datasetName.startsWith("public."))
+      renderedError(FORBIDDEN, "Public dataset cannot be deleted")
+    else {
+      try {
+        //TODO use ARM solution, if it is possible
+        val (streamRegion, streamMeta) = repository.sampleStreams(datasetName, username, sampleName)
+        val stream = if (isMeta) {
+          streamRegion.close
+          streamMeta
+        } else {
+          streamMeta.close
+          streamRegion
+        }
+        val fileContent: Enumerator[Array[Byte]] = Enumerator.fromStream(stream)
+        Ok.chunked(fileContent).withHeaders(
+          "Content-Type" -> "text/plain",
+          "Content-Disposition" -> s"attachment; filename=$datasetName-$sampleName"
+        )
+      } catch {
+        case _: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found: $datasetName")
+        case _: GMQLSampleNotFound => renderedError(NOT_FOUND, s"Sample not found: $datasetName-$sampleName")
       }
-      val fileContent: Enumerator[Array[Byte]] = Enumerator.fromStream(stream)
-      Ok.chunked(fileContent).withHeaders(
-        "Content-Type" -> "text/plain",
-        "Content-Disposition" -> s"attachment; filename=$datasetName-$sampleName"
-      )
-    } catch {
-      case _: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found: $datasetName")
-      case _: GMQLSampleNotFound => renderedError(NOT_FOUND, s"Sample not found: $datasetName->$sampleName")
     }
   }
 
@@ -162,8 +186,24 @@ class DSManager extends Controller {
     * @param sampleName
     * @return
     */
+  @ApiOperation(value = "Download sample region",
+    notes = "Download region data as stream",
+    produces = "file",
+    tags = Array("Download repository", SwaggerUtils.swaggerRepository))
+  @ApiResponses(value = Array(
+    new ApiResponse(code = 401, message = "User is not authenticated"),
+    new ApiResponse(code = 403, message = "Public datasets cannot be downloaded by user"),
+    new ApiResponse(code = 404, message = "Dataset or its sample is not found for the user")))
   def getRegionStream(datasetName: String, sampleName: String) = getStream(datasetName, sampleName, isMeta = false)
 
+  @ApiOperation(value = "Download sample metadata",
+    notes = "Download metadata data as stream",
+    produces = "file",
+    tags = Array("Download repository", SwaggerUtils.swaggerRepository))
+  @ApiResponses(value = Array(
+    new ApiResponse(code = 401, message = "User is not authenticated"),
+    new ApiResponse(code = 403, message = "Public datasets cannot be downloaded by user"),
+    new ApiResponse(code = 404, message = "Dataset or its sample is not found for the user")))
   def getMetadataStream(datasetName: String, sampleName: String) = getStream(datasetName, sampleName, isMeta = true)
 
   /**
@@ -172,47 +212,70 @@ class DSManager extends Controller {
     * @param datasetName
     * @return
     */
+  @ApiOperation(value = "Download dataset as zip file",
+    notes = "Download dataset as zip stream",
+    produces = "file",
+    tags = Array("Download repository", SwaggerUtils.swaggerRepository))
+  @ApiResponses(value = Array(
+    new ApiResponse(code = 401, message = "User is not authenticated"),
+    new ApiResponse(code = 403, message = "Public datasets cannot be downloaded by user"),
+    new ApiResponse(code = 404, message = "Dataset is not found for the user")))
   def zip(datasetName: String) = AuthenticatedAction { implicit request =>
+
     import play.api.libs.concurrent.Execution.Implicits.defaultContext
     val username: String = request.username.get
-    val sampleNames = repository.listDSSamples(datasetName, username).map(temp => (temp.name.split("/").last.split("\\.").head, temp.name.split("/").last))
-    Logger.debug("sampleNames" + sampleNames)
 
-    val vocabularyCount = new VocabularyCount
-    //TODO add schema
+    try {
+      if (datasetName.startsWith("public."))
+        renderedError(FORBIDDEN, "Public dataset cannot be deleted")
+      else {
+        val sampleNames = repository.listDSSamples(datasetName, username).map(temp => (temp.name.split("/").last.split("\\.").head, temp.name.split("/").last))
+        Logger.debug("sampleNames" + sampleNames)
 
-    val sources = sampleNames.flatMap { sampleName =>
-      lazy val streams = repository.sampleStreams(datasetName, username, sampleName._1)
-      List(
-        ZipEnumerator.Source(s"$datasetName/files/${sampleName._2}", { () => Future(Some(streams._1)) }),
-        ZipEnumerator.Source(s"$datasetName/files/${sampleName._2}.meta", { () => Future(Some(vocabularyCount.addVocabulary(streams._2))) })
-      )
-    }
-    lazy val schemaStream = repository.getSchemaStream(datasetName, username)
-    sources += ZipEnumerator.Source(s"$datasetName/files/${datasetName}.schema", { () => Future(Some(schemaStream)) })
+        val vocabularyCount = new VocabularyCount
+        //TODO add schema
+
+        val sources = sampleNames.flatMap { sampleName =>
+          lazy val streams = repository.sampleStreams(datasetName, username, sampleName._1)
+          List(
+            ZipEnumerator.Source(s"$datasetName/files/${sampleName._2}", { () => Future(Some(streams._1)) }),
+            ZipEnumerator.Source(s"$datasetName/files/${sampleName._2}.meta", { () => Future(Some(vocabularyCount.addVocabulary(streams._2))) })
+          )
+        }
+        lazy val schemaStream = repository.getSchemaStream(datasetName, username)
+        sources += ZipEnumerator.Source(s"$datasetName/files/${datasetName}.schema", { () => Future(Some(schemaStream)) })
 
 
-    val scriptStreamTest = try {
-      Some(repository.getScriptStream(datasetName, username).close())
+        val scriptStreamTest = try {
+          Some(repository.getScriptStream(datasetName, username).close())
+        } catch {
+          case _: Throwable => None
+        }
+
+        if (scriptStreamTest.isDefined) {
+          lazy val scriptStream = repository.getScriptStream(datasetName, username)
+          sources += ZipEnumerator.Source(s"$datasetName/$datasetName.gmql", { () => Future(Some(scriptStream)) })
+        }
+
+        sources += ZipEnumerator.Source(s"$datasetName/vocabulary.txt", { () => Future(Some(vocabularyCount.getStream)) })
+
+        Logger.debug(s"Before zip enumerator: $username->$datasetName")
+        Ok.chunked(ZipEnumerator(sources))(play.api.http.Writeable.wBytes).withHeaders(
+          CONTENT_TYPE -> "application/zip",
+          CONTENT_DISPOSITION -> s"attachment; filename=$datasetName.zip"
+        )
+      }
     } catch {
-      case _: Throwable => None
+      case _: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found: $datasetName")
     }
-
-    if (scriptStreamTest.isDefined) {
-      lazy val scriptStream = repository.getScriptStream(datasetName, username)
-      sources += ZipEnumerator.Source(s"$datasetName/$datasetName.gmql", { () => Future(Some(scriptStream)) })
-    }
-
-    sources += ZipEnumerator.Source(s"$datasetName/vocabulary.txt", { () => Future(Some(vocabularyCount.getStream)) })
-
-    Logger.debug(s"Before zip enumerator: $username->$datasetName")
-    Ok.chunked(ZipEnumerator(sources))(play.api.http.Writeable.wBytes).withHeaders(
-      CONTENT_TYPE -> "application/zip",
-      CONTENT_DISPOSITION -> s"attachment; filename=$datasetName.zip"
-    )
   }
 
-
+  @ApiOperation(value = "Get shema of the dataset",
+    notes = "Get the schema field of the input dataset",
+    response = classOf[GMQLSchema])
+  @ApiResponses(value = Array(
+    new ApiResponse(code = 401, message = "User is not authenticated"),
+    new ApiResponse(code = 404, message = "Dataset is not found for the user")))
   def dataSetSchema(datasetName: String) = AuthenticatedAction { implicit request =>
     var username = request.username.getOrElse("")
     var dsName = datasetName
@@ -252,65 +315,7 @@ class DSManager extends Controller {
   }
 
 
-  //  def zipFilePreparation(dataSetName: String, clean: String) = AuthenticatedAction {
-  //    request =>
-  //      val username = request.username.getOrElse("")
-  //      val response = new DataSetsManager().prepareFileZip(username, dataSetName, clean)
-  //      resultHelper(response)
-  //  }
-
-
-  //  def downloadFileZip(dataSetName: String) = AuthenticatedAction {
-  //    request =>
-  //      val username = request.username.getOrElse("")
-  //      new DataSetsManager().prepareFileZip(username, dataSetName, "false")
-  //      val response = new DataSetsManager().downloadFileZip(username, dataSetName)
-  //      val res = resultHelper(response)
-  //      res
-  //  }
-
-  //  def downloadFileZip2(dataSetName: String) = AuthenticatedAction {
-  //    request =>
-  //      val username = request.username.getOrElse("")
-  //      //    val directory = DataSetsManager.prepareFile("",username, dataSetName)
-  //
-  //      //    val resultInputStream = new PipedInputStream()
-  //      //    val zos = new ZipOutputStream(new PipedOutputStream(resultInputStream))
-  //
-  //      val dsList: util.List[GMQLSample] = DataSetsManager.repository.ListDSSamples(dataSetName, username)
-  //
-  //
-  //      //    val pos2 = new PipedOutputStream()
-  //      //    val pis2 = new PipedInputStream(pos2)
-  //
-  //      val resultStream = new PipedInputStream()
-  //      val outStream = new PrintWriter(new PipedOutputStream(resultStream))
-  //
-  //      Future {
-  //        dsList.asScala.foreach(sample => outStream.println(sample.name))
-  //        outStream.close()
-  //      }
-  //
-  //      val dataContent: Enumerator[Array[Byte]] = Enumerator.fromStream(resultStream)
-  //      //    val dataContent = Enumerator("asd","qwe")
-  //      Ok.chunked(dataContent.andThen(Enumerator.eof)).withHeaders(
-  //        //      http://localhost:8000/gmql-rest/dataSets/asd/downloadZip2
-  //        //      CONTENT_TYPE -> "application/zip",
-  //        //      CONTENT_DISPOSITION -> s"attachment; filename=MyBasket2.zip; filename*=UTF-8''MyBasket2.zip"
-  //      )
-  //  }
-
-
-  //  def getSampleFile(dataSetName: String, file: String) = AuthenticatedAction {
-  //    request =>
-  //      val username = request.username.get
-  //      ut.getTempDir(username)
-  //      val directory = ut.getTempDir(username) + "2" + File.separator + dataSetName
-  //      //    val fullFile = directory + File.separator + file
-  //      Ok.sendFile(new java.io.File(directory, file))
-  //  }
-
-
+  @ApiOperation(value = "getUcscLink", hidden = true)
   def getUcscLink(datasetName: String) = AuthenticatedAction { implicit request =>
     val username = request.username.get
     //TODO create temp token
@@ -322,7 +327,7 @@ class DSManager extends Controller {
       Ok(s"${controllers.gmql.routes.DSManager.getUcscList(datasetName).absoluteURL()}?auth-token=$token")
   }
 
-
+  @ApiOperation(value = "getUcscList", hidden = true)
   def getUcscList(datasetName: String) = AuthenticatedAction { implicit request =>
     // http://genome.ucsc.edu/cgi-bin/hgTracks?org=human&hgt.customText=http://genomic.elet.polimi.it/gmql-rest/dataSet/heatmap/parse2?auth-token=test-best-token
     // http://genome.ucsc.edu/cgi-bin/hgTracks?org=human&hgt.customText=http://www.bioinformatics.deib.polimi.it/canakoglu/test2.txt
@@ -355,7 +360,7 @@ class DSManager extends Controller {
     }
   }
 
-  def getMetadata2(fileName: String) = {
+  private def getMetadata2(fileName: String) = {
     val columnNames = Map(
       "S_-8820234713312881879" -> "Leukaemia",
       "S_-8750901162148023240" -> "Breast cancer",
@@ -387,7 +392,7 @@ class DSManager extends Controller {
     columnNames.get(fileName).getOrElse(fileName)
   }
 
-  //TODO correct temporary directory
+  @ApiOperation(value = "parseFiles", hidden = true)
   def parseFiles(datasetName: String, columnName: String) = AuthenticatedAction { implicit request =>
     import org.apache.hadoop.fs.{FileSystem, Path}
     val username = request.username.getOrElse("")
@@ -434,7 +439,7 @@ class DSManager extends Controller {
     val wholeListBuffer = samples.map { sample: Sample =>
       Logger.debug("Sample:" + sample)
       val tempList: ListBuffer[GValue] = ListBuffer[GValue]()
-      for (tuple <- parse2(username, datasetName, parser, sample, optionColumn, 20)) {
+      for (tuple <- parseHelper(username, datasetName, parser, sample, optionColumn, 20)) {
         val colId = cachedF(tuple._1)
         while (colId > tempList.length)
           tempList += {
@@ -485,7 +490,7 @@ class DSManager extends Controller {
     Ok(views.html.heat_map(result.toList, rowLength, columnLength, rowNames, columnNames))
   }
 
-  def parse2(username: String, datasetName: String, parser: CustomParser, sample: Sample, column: Int, maxRow: Int): Iterator[(String, GValue)] = {
+  private def parseHelper(username: String, datasetName: String, parser: CustomParser, sample: Sample, column: Int, maxRow: Int): Iterator[(String, GValue)] = {
     Logger.info(sample.toString)
 
 
@@ -554,36 +559,60 @@ class DSManager extends Controller {
     //    res
   }
 
+  @ApiOperation(value = "Upload dataset",
+    notes = "Upload dataset with samples. In this example interface, user can upload up to 4 files",
+    consumes = "application/x-www-form-urlencoded",
+    produces = "text/plain")
+  @ApiResponses(value = Array(
+    new ApiResponse(code = 200, message = "test"),
+    new ApiResponse(code = 401, message = "User is not authenticated"),
+    new ApiResponse(code = 404, message = "Dataset is not found for the user")
+  ))
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "schema", dataType = "file", paramType = "form"),
+    new ApiImplicitParam(name = "file1", dataType = "file", paramType = "form"),
+    new ApiImplicitParam(name = "file2", dataType = "file", paramType = "form"),
+    new ApiImplicitParam(name = "file3", dataType = "file", paramType = "form"),
+    new ApiImplicitParam(name = "file4", dataType = "file", paramType = "form")))
+  def uploadSample(dataSetName: String) = AuthenticatedAction(parse.multipartFormData) { request =>
+    val schemaNameOption = request.getQueryString("schemaName")
 
-  def uploadSample(dataSetName: String, schemaName: Option[String]) = AuthenticatedAction(parse.multipartFormData) { request =>
     val username = request.username.get
     Logger.debug("uploadSample => username: " + username)
     //TODO move create empty directory to utils
     val tempDirPath = DatasetUtils.createEmptyTempDirectory(username, dataSetName)
 
-
+    var isSchemaUploaded = false
     Logger.debug("uploadSample=>tempDirPath: " + tempDirPath)
     try {
       val files = mutable.Set.empty[String]
       request.body.files.foreach {
         file =>
           val newFile =
-            if (file.key == "schema")
+            if (file.key == "schema") {
+              isSchemaUploaded = true
               new File(tempDirPath + ".schema")
-            else {
+            } else {
               files += tempDirPath + File.separator + file.filename
               new File(tempDirPath + File.separator + file.filename)
             }
           file.ref.moveTo(newFile)
           Logger.info("File: " + file.filename)
       }
-      Logger.info("Schema name: " + schemaName.getOrElse("NO INPUT"))
+      Logger.info("Schema name: " + schemaNameOption.getOrElse("NO INPUT"))
+      val schemaPathOption = schemaNameOption match {
+        case Some(schemaName) => Some(s"${ut.GMQL_CONF_DIR}/${schemaName.toUpperCase}.schema")
+        case None => if (isSchemaUploaded) Some(tempDirPath + ".schema") else None
+      }
 
-      val schemaPath = tempDirPath + ".schema"
-      //      val dataset = IRDataSet(dataSetName, repository.readSchemaFile(schemaPath).fields.map(field => (field.name, field.fieldType)))
-      val samples: util.List[GMQLSample] = files.toList.filter(fileName => files.contains(fileName + ".meta")).map(fileName => GMQLSample(fileName, fileName + ".meta"))
-      repository.importDs(dataSetName, username, samples, schemaPath)
-      Ok("Done")
+      schemaPathOption match {
+        case Some(schemaPath) =>
+          //      val dataset = IRDataSet(dataSetName, repository.readSchemaFile(schemaPath).fields.map(field => (field.name, field.fieldType)))
+          val samples: util.List[GMQLSample] = files.toList.filter(fileName => files.contains(fileName + ".meta")).map(fileName => GMQLSample(fileName, fileName + ".meta"))
+          repository.importDs(dataSetName, username, samples, schemaPath)
+          Ok("Done")
+        case None => NotAcceptable("Schema is not defined correctly")
+      }
     }
     catch {
       case e: SAXException =>
@@ -602,34 +631,27 @@ class DSManager extends Controller {
     }
   }
 
-  //  def uploadSample2(dataSetName: String, schemaName: Option[String]) = AuthenticatedAction {
-  //    request =>
-  //      val body = request.body
-  //      Logger.debug("body: " + request.body)
-  //
-  //      Ok("Got: ")
-  //  }
-
-  //  def uploadSamplesFromUrls2(dataSetName: String, schemaName: Option[String]) = AuthenticatedAction {
-  //    request =>
-  //      val body = request.body
-  //      Logger.debug("body: " + request.body)
-  //      val jsonBody = body.asJson
-  //
-  //      Logger.debug(body.asJson.getOrElse("YOK").toString)
-  //
-  //      // Expecting json body
-  //      jsonBody.map {
-  //        json =>
-  //          Ok("Got: " + json.as[String])
-  //      }.getOrElse {
-  //        BadRequest("Expecting application/json request body")
-  //      }
-  //
-  //  }
-
-  def uploadSamplesFromUrls(dataSetName: String, schemaName: Option[String]) = AuthenticatedAction(parse.json) {
+  @ApiOperation(value = "Upload dataset from URL",
+    notes = "Upload dataset from another server.",
+    consumes = "application/json"
+//    ,
+//    produces = "text/plain"
+  )
+  @ApiResponses(value = Array(
+    new ApiResponse(code = 200, message = "test"),
+    new ApiResponse(code = 401, message = "User is not authenticated"),
+    new ApiResponse(code = 404, message = "Dataset is not found for the user")
+  ))
+  @ApiImplicitParams(Array(new ApiImplicitParam(
+    name = "body",
+    dataType = "body", paramType = "body"
+    ,
+    examples = new Example(Array(new ExampleProperty(value = "{\n\t\"schema_file\": \"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/HG19_ANN.schema\",\n\t\"data_files\": [\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/RefSeqGenesExons_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/RefSeqGenesExons_hg19.bed.meta\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/TSS_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/TSS_hg19.bed.meta\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/VistaEnhancers_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/VistaEnhancers_hg19.bed.meta\"\n\t]\n}")))
+  )))
+  def uploadSamplesFromUrls(dataSetName: String) = AuthenticatedAction(parse.json) {
     request =>
+      val schemaName = request.getQueryString("schemaName")
+
       val username = request.username.get
       val dataFilePaths = (request.body \ "data_files").asOpt[Seq[String]].getOrElse(Seq.empty[String])
       val schemaFileOpt = (request.body \ "schema_file").asOpt[String]
@@ -676,8 +698,8 @@ class DSManager extends Controller {
 
   }
 
-
-  def downloadFile(tempDirPath: String, filePath: String): String = {
+  //TODO move to utils
+  private def downloadFile(tempDirPath: String, filePath: String): String = {
     val urlObj = new URL(filePath)
 
     val fileName = urlObj.getPath.split("/").last
@@ -685,7 +707,8 @@ class DSManager extends Controller {
     downloadFile(newFile, filePath)
   }
 
-  def downloadFile(newFile: File, filePath: String): String = {
+  //TODO move to utils
+  private def downloadFile(newFile: File, filePath: String): String = {
     val urlObj = new URL(filePath)
 
     //This for getting correct try catch
@@ -697,101 +720,5 @@ class DSManager extends Controller {
     Logger.debug("result1:" + result)
     newFile.getAbsolutePath
   }
-
-
-  //  /**
-  //    * call function to copy files from temporary folder to data set folder.
-  //    *
-  //    * @param username    name of the user
-  //    * @param dataSetName name of the data set
-  //    * @param schemaName  type of the schema.
-  //    */
-  //  private def createDataSetFromTemp(username: String, dataSetName: String, schemaName: Option[String]) = {
-  //    new DataSetsManager().createDataSet(username, dataSetName, schemaName.getOrElse("UPLOAD"), List.empty.asJava, List.empty.asJava)
-  //    //TODO ARIF THIS SHOULD BE DONE IN OTHER PART
-  //    //    schemaFilePath.deleteIfExists()
-  //  }
-
-
-  //TODO ARIF remove examples
-  def upload1 = Action(parse.multipartFormData) {
-    request =>
-      //      println("Test" + request.body.files.head.key)
-      request.body.file("test").map {
-        picture =>
-
-          import java.io.File
-
-          val filename = picture.filename
-          //      val contentType = picture.contentType
-          picture.ref.moveTo(new File(s"/home/canakoglu/gmql_repository/delete/$filename"))
-          Ok("File uploaded")
-      }.getOrElse {
-        Ok("ERROR")
-      }
-  }
-
-
-  ///////////////////////////// TODO DELETE THE FUNCTIONS BELOW
-
-  //TODO ARIF remove
-  // DIRECT FILE UPLOAD
-  def upload2 = Action(parse.temporaryFile) {
-    request =>
-      request.body.moveTo(new File("/tmp/picture/uploaded"))
-      Ok("File uploaded")
-  }
-
-
-  //TODO ARIF remove
-  def upload(dataSetName: String) = Action(parse.multipartFormData) { request =>
-    import scalax.file.Path
-    Logger.debug("Test " + request.body.files.head.key)
-    val path = Path.fromString(s"/home/canakoglu/gmql_repository/delete/$dataSetName/")
-    path.deleteRecursively(force = true, continueOnFailure = true)
-    path.doCreateParents()
-    path.doCreateDirectory()
-
-
-    request.body.files.foreach {
-      file =>
-        val filename = file.filename
-        val contentType = file.contentType
-        val key = file.key
-        println(filename + "<==>" + contentType + "<==>" + key)
-
-
-        file.ref.moveTo(new File(path.path, s"$filename"))
-        file.ref.file.delete()
-        Ok("File uploaded")
-    }
-
-    Ok("finished")
-  }
-
-
-  //TODO
-  def addSamples(dataSetName: String) = TODO
-
-  //  /**
-  //    * Create temp directory if not exists and returns the directory
-  //    *
-  //    * @param user username
-  //    */
-  //  //TODO check if it is using
-  //  def checkOrCreateTempDirectory(user: String) {
-  //    val tempUserFolderPath = tempFolderRoot + File.separator + user
-  //    val d = new File(tempUserFolderPath)
-  //    if (!d.exists) d.mkdirs
-  //    tempUserFolderPath
-  //  }
-
-  //  def prepareFile(id: String, user: String, dataSetName: String) = {
-  //    val directory = ut.getTempDir(user) + id + File.separator + dataSetName
-  //    val dir = new File(directory)
-  //    dir.mkdirs
-  //    if (dir.list != null) repository.exportDsToLocal(dataSetName, user, directory)
-  //    directory
-  //  }
 }
 

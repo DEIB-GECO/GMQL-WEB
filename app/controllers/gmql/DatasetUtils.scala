@@ -2,6 +2,7 @@ package controllers.gmql
 
 import java.io.File
 
+import io.swagger.annotations.ApiModelProperty
 import it.polimi.genomics.repository.GMQLRepository
 import play.api.libs.json._
 import play.api.mvc.BodyParsers.parse
@@ -68,9 +69,13 @@ object DatasetUtils {
 }
 
 
-case class Sample(id: String, name: String, path: Option[String] = None, dataset: Option[String] = None) extends Ordered[Sample] {
+case class Sample(id: String,
+                  name: String,
+                  @ApiModelProperty(dataType = "String", required = false) path: Option[String] = None,
+                  @ApiModelProperty(dataType = "String", required = false) dataset: Option[String] = None) extends Ordered[Sample] {
   def compare(that: Sample): Int = this.name.toLowerCase compare that.name.toLowerCase
 
+  @ApiModelProperty(hidden = true)
   def getXml =
       <sample>
         <id>{id}</id>
@@ -84,9 +89,13 @@ object Sample {
   implicit val writer = Json.writes[Sample]
 }
 
-case class Dataset(var name: String, owner: Option[String] = None, group: Option[String] = None, samples: Option[Seq[Sample]] = None) extends Ordered[Dataset] {
+case class Dataset(var name: String,
+                   @ApiModelProperty(dataType = "String", required = false) owner: Option[String] = None,
+                   @ApiModelProperty(dataType = "String", required = false) group: Option[String] = None,
+                   @ApiModelProperty(dataType = "List[controllers.gmql.Sample]", required = false) samples: Option[Seq[Sample]] = None) extends Ordered[Dataset] {
   def compare(that: Dataset): Int = Ordering.Tuple2[Option[String], String].compare((this.owner, this.name.toLowerCase), (that.owner, that.name.toLowerCase))
 
+  @ApiModelProperty(hidden = true)
   def getXml =
       <dataset>
         <name>{name}</name>
@@ -101,6 +110,7 @@ object Dataset {
 }
 
 case class Datasets(datasets: Seq[Dataset]) {
+  @ApiModelProperty(hidden = true)
   def getXml = <datasets>{datasets.map(_.getXml)}</datasets>
 }
 
@@ -110,7 +120,12 @@ object Datasets {
 
 
 // job id,
-case class Job(id: String, status: Option[String] = None, message: Option[String] = None, datasets: Option[Seq[Dataset]] = None, executionTime: Option[String] = None) {
+case class Job(id: String,
+               @ApiModelProperty(dataType = "String", required = false) status: Option[String] = None,
+               @ApiModelProperty(dataType = "String", required = false) message: Option[String] = None,
+               @ApiModelProperty(dataType = "List[controllers.gmql.Dataset]", required = false) datasets: Option[Seq[Dataset]] = None,
+               @ApiModelProperty(dataType = "String", required = false) executionTime: Option[String] = None) {
+  @ApiModelProperty(hidden = true)
   def getXml =
     <job>
       <id>{id}</id>
@@ -128,6 +143,7 @@ object Job {
 
 // job id,
 case class JobList(jobs: Seq[Job]) {
+  @ApiModelProperty(hidden = true)
   def getXml =
     <job_list>
        jobs.map(_.getXml)
@@ -138,7 +154,8 @@ object JobList {
   implicit val writer = Json.writes[JobList]
 }
 
-case class QueryResult(job: Option[Job]) {
+case class QueryResult(@ApiModelProperty(dataType = "controllers.gmql.Job", required = false) job: Option[Job]) {
+  @ApiModelProperty(hidden = true)
   def getXml =
     <query_result>
       {if (job.isDefined) job.get.getXml}
@@ -149,7 +166,9 @@ object QueryResult {
   implicit val writer = Json.writes[QueryResult]
 }
 
-case class Query(name: String, text: Option[String] = None) {
+case class Query(name: String,
+                 @ApiModelProperty(dataType = "String", required = false) text: Option[String] = None) {
+  @ApiModelProperty(hidden = true)
   def getXml =
         <query>
           <name>{name}</name>
@@ -163,6 +182,7 @@ object Query {
 }
 
 case class Queries(queries: Seq[Query]) {
+  @ApiModelProperty(hidden = true)
   def getXml =  <queries>{queries.map(x => x.getXml)}</queries>
 }
 
@@ -180,6 +200,7 @@ object Queries {
 //}
 
 case class Log(log: Seq[String]) {
+  @ApiModelProperty(hidden = true)
   def getXml =  <log>{log.map(x => <line>x</line>)}</log>
 }
 
@@ -188,9 +209,11 @@ object Log {
 }
 
 
-case class Value(text: String, count: Option[Int] = None) extends Ordered[Value] {
+case class Value(text: String,
+                 @ApiModelProperty(dataType = "Int", required = false) count: Option[Int] = None) extends Ordered[Value] {
   def compare(that: Value): Int = this.text.toLowerCase compare that.text.toLowerCase
 
+  @ApiModelProperty(hidden = true)
   def getXml: Elem =
     if (count.isEmpty)
       <value>{text}</value>
@@ -205,8 +228,12 @@ object Value {
 
 }
 
-case class Attribute(key: String, value: Option[Value] = None, var values: Option[Seq[Value]] = None, valueCount: Option[Int] = None, sampleCount: Option[Int] = None) extends Ordered[Attribute] {
-  def compare(that: Attribute): Int = Ordering.Tuple2[String, Option[Value]].compare((this.key.toLowerCase, this.value), (that.key.toLowerCase, that.value))
+case class Attribute(key: String,
+                     @ApiModelProperty(dataType = "controllers.gmql.Value", required = false) value: Option[Value] = None,
+                     @ApiModelProperty(dataType = "List[controllers.gmql.Value]", required = false) var values: Option[Seq[Value]] = None,
+                     @ApiModelProperty(dataType = "Int", required = false) valueCount: Option[Int] = None,
+                     @ApiModelProperty(dataType = "Int", required = false) sampleCount: Option[Int] = None) extends Ordered[Attribute] {
+  def compare(that: Attribute): Int = 1 // Ordering.Tuple2[String, Option[Value]].compare((this.key.toLowerCase, this.value), (that.key.toLowerCase, that.value))
 
   values = values.map(_.sorted)
 
@@ -218,6 +245,7 @@ case class Attribute(key: String, value: Option[Value] = None, var values: Optio
     result
   }
 
+  @ApiModelProperty(hidden = true)
   def getXml =
     <attribute>
       <key>{key}</key>
@@ -236,10 +264,19 @@ object Attribute {
 }
 
 case class AttributeList(attributes: Seq[Attribute]) {
+  @ApiModelProperty(hidden = true)
   def getXml = <attributes>{attributes.map(_.getXml)}</attributes>
 }
 
 object AttributeList {
   implicit val reader = Json.reads[AttributeList]
   implicit val writer = Json.writes[AttributeList]
+}
+
+object SwaggerUtils{
+  final val swaggerRepository = "Repository"
+  final val swaggerMetadata = "Metadata"
+  final val swaggerQueryBrowser = "Query Browser"
+  final val swaggerQueryManager = "Query Execution"
+  final val swaggerSecurityController = "Security controller"
 }

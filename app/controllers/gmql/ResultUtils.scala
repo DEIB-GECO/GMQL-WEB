@@ -75,26 +75,26 @@ object ResultUtils extends Controller {
 
 
   //helper class
-  def resultHelper(response: Response): Result =
-    resultHelper(response.getStatus, Option(response.getEntity).getOrElse(""), Option(response.getMetadata).getOrElse(new StringKeyObjectValueIgnoreCaseMultivaluedMap()))
-
-
-  def resultHelper(httpStatus: Int, body: AnyRef = "Ok", headers: MultivaluedMap[String, AnyRef]): Result = httpStatus match {
-    case play.api.http.Status.OK =>
-      var res = body match {
-        case file: File => Results.Ok.sendFile(file, true)
-        case _ => Results.Ok(body.toString)
-      }
-
-      println("body: " + body)
-      val headersMulti: mutable.Map[String, util.List[AnyRef]] = headers.asScala
-      for ((key, values) <- headersMulti; value <- values.asScala) {
-        println("header:" + key + value.toString)
-        res = res.withHeaders(key -> value.toString)
-      }
-      res
-    case _ => Results.Status(httpStatus)("Error code: " + httpStatus + ", body: " + body)
-  }
+//  def resultHelper(response: Response): Result =
+//    resultHelper(response.getStatus, Option(response.getEntity).getOrElse(""), Option(response.getMetadata).getOrElse(new StringKeyObjectValueIgnoreCaseMultivaluedMap()))
+//
+//
+//  def resultHelper(httpStatus: Int, body: AnyRef = "Ok", headers: MultivaluedMap[String, AnyRef]): Result = httpStatus match {
+//    case play.api.http.Status.OK =>
+//      var res = body match {
+//        case file: File => Results.Ok.sendFile(file, true)
+//        case _ => Results.Ok(body.toString)
+//      }
+//
+//      println("body: " + body)
+//      val headersMulti: mutable.Map[String, util.List[AnyRef]] = headers.asScala
+//      for ((key, values) <- headersMulti; value <- values.asScala) {
+//        println("header:" + key + value.toString)
+//        res = res.withHeaders(key -> value.toString)
+//      }
+//      res
+//    case _ => Results.Status(httpStatus)("Error code: " + httpStatus + ", body: " + body)
+//  }
 
   /**
     * Convert result from other function to this one
@@ -117,10 +117,10 @@ object ResultUtils extends Controller {
   //    }
   //    sw.toString
   //  }
-  def unMarshall(res: Response, isJson: Boolean) = {
-    //    unMarshallClass(res, classOf[AttributeList])
-    unMarshallClass(res, res.getEntity.getClass, isJson)
-  }
+//  def unMarshall(res: Response, isJson: Boolean) = {
+//    //    unMarshallClass(res, classOf[AttributeList])
+//    unMarshallClass(res, res.getEntity.getClass, isJson)
+//  }
 
   //  {
   //        var jc: JAXBContext = null
@@ -154,35 +154,35 @@ object ResultUtils extends Controller {
   //    sw.toString
   //  }
 
-  def unMarshallClass(res: Response, classType: Class[_], isJson: Boolean) = {
-    Logger.info("res.getEntity: " + res.getEntity.toString)
-    Logger.info("classType: " + classType)
-    var jc: JAXBContext = null
-    val sw: StringWriter = new StringWriter
-    try {
-      jc = JAXBContext.newInstance(classType)
-      val marshaller: Marshaller = jc.createMarshaller
-      marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true)
-      if (isJson) {
-        marshaller.setProperty(MarshallerProperties.MEDIA_TYPE, "application/json")
-        //        marshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, true);
-      }
-      marshaller.marshal(res.getEntity, sw)
-    }
+//  def unMarshallClass(res: Response, classType: Class[_], isJson: Boolean) = {
+//    Logger.info("res.getEntity: " + res.getEntity.toString)
+//    Logger.info("classType: " + classType)
+//    var jc: JAXBContext = null
+//    val sw: StringWriter = new StringWriter
+//    try {
+//      jc = JAXBContext.newInstance(classType)
+//      val marshaller: Marshaller = jc.createMarshaller
+//      marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true)
+//      if (isJson) {
+//        marshaller.setProperty(MarshallerProperties.MEDIA_TYPE, "application/json")
+//        //        marshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, true);
+//      }
+//      marshaller.marshal(res.getEntity, sw)
+//    }
+//
+//    catch {
+//      case e: JAXBException =>
+//        e.printStackTrace()
+//    }
+//    sw.toString
+//  }
 
-    catch {
-      case e: JAXBException =>
-        e.printStackTrace()
-    }
-    sw.toString
-  }
-
-  def renderJaxb(response: Response)(implicit request: RequestHeader) = {
-    render {
-      case Accepts.Json() => Ok(ResultUtils.unMarshall(response, true)).as("application/json")
-      case Accepts.Xml() => Ok(ResultUtils.unMarshall(response, false)).as("application/xml")
-    }
-  }
+//  def renderJaxb(response: Response)(implicit request: RequestHeader) = {
+//    render {
+//      case Accepts.Json() => Ok(ResultUtils.unMarshall(response, true)).as("application/json")
+//      case Accepts.Xml() => Ok(ResultUtils.unMarshall(response, false)).as("application/xml")
+//    }
+//  }
 
   //  def renderAttributeList(response: Response)(implicit request: RequestHeader) = {
   //    implicit val attributeListWrites = AttributeListHelper.attributeListWrites

@@ -26,10 +26,9 @@ buttonClick = ->
   if($("#file-upload-type").val() == "UPLOAD" )
     for file in  $('#file-upload-schema')[0].files
       formData.append "schema", file;
+  call = jsRoutes.controllers.gmql.DSManager.uploadSample $("#file-upload-name").val()
   if $("#file-upload-type").val()?.length
-    call = jsRoutes.controllers.gmql.DSManager.uploadSample $("#file-upload-name").val(), $("#file-upload-type").val()
-  else
-    call = jsRoutes.controllers.gmql.DSManager.uploadSample $("#file-upload-name").val()
+    call.url = call.url + "?schemaName=" + $("#file-upload-type").val()
   console.log call
   $("#file-upload-progress").removeClass("progress-bar-danger progress-bar-success")
   $('#file-upload-progress-div').show()

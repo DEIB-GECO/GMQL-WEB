@@ -72,8 +72,12 @@ trait AuthenticatedActionBuilder extends ActionBuilder[AuthenticatedRequest] {
         }
     }
     //    Option(User.findByAuthToken(token))
-    val asd = AuthenticationDao.getByToken(token)
-    Await.result(asd, Duration.Inf)
+    if (token == null)
+      None
+    else {
+      val asd = AuthenticationDao.getByToken(token)
+      Await.result(asd, Duration.Inf)
+    }
     //    Some(User2(1,"","canakoglu","",null,"","",null,null,false))
     //    val test = asd.value
     //    var res :Option[User2] = None

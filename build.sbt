@@ -5,7 +5,7 @@ version := "1.1"
 lazy val `GMQL-REST` = (project in file(".")).enablePlugins(PlayScala, SbtWeb)
 //lazy val `gmql_rest2` = (project in file(".")).enablePlugins(PlayScala, PlayEbean, PlayJava)
 
-scalaVersion := "2.10.6"
+scalaVersion := "2.11.8"
 //scalacOptions += "-feature"
 
 //updated to last version of h2
@@ -83,6 +83,7 @@ libraryDependencies += "com.sun.jersey" % "jersey-core" % "1.9"
 libraryDependencies += "org.eclipse.persistence" % "eclipselink" % "2.6.3"
 
 
+
 // http://mvnrepository.com/artifact/io.spray/spray-json_2.10
 //libraryDependencies += "io.spray" % "spray-json_2.10" % "1.3.2"
 
@@ -108,10 +109,20 @@ libraryDependencies += "it.polimi.genomics" % "GMQL-SManager" % "2.0"
 libraryDependencies += "it.polimi.genomics" % "GMQL-Spark" % "4.0"
 
 
+//  [error]    com.typesafe.play:play-ws _2.11, _2.10
+
+
 //play 2.5.0 will support injected routes as default
 routesGenerator := InjectedRoutesGenerator
 
+conflictWarning := ConflictWarning.disable
 
 
-//libraryDependencies +=    "io.swagger" %% "swagger-play2" % "1.5.1"
+libraryDependencies +=    "io.swagger" %% "swagger-play2" % "1.5.1"
+libraryDependencies += "io.swagger" % "swagger-core" % "1.5.10"
 
+
+//libraryDependencies += "com.wordnik" %% "swagger-play2" % "1.3.12"
+
+
+//libraryDependencies ~= { _.map(_.exclude("org.slf4j", "slf4j-log4j12")) }

@@ -56,7 +56,7 @@ loadTable = (dialog,tbody) ->
     url: call.url
     type: call.type
     method: call.method
-    headers: {'X-Auth-Token': window.authToken}
+    headers: {'X-AUTH-TOKEN': window.authToken}
     contentType: 'json'
     dataType: 'json'
     success: (result, textStatus, jqXHR) ->
@@ -117,7 +117,7 @@ fillTable = (jobId,cell1, cell2, cell3, cell4, cell5, firstTime) ->
     url: call.url
     type: call.type
     method: call.method
-    headers: {'X-Auth-Token': window.authToken}
+    headers: {'X-AUTH-TOKEN': window.authToken}
     contentType: 'json'
     dataType: 'json'
     success: (result, textStatus, jqXHR) ->
@@ -161,7 +161,7 @@ selectNode = (title) ->
     url: call.url
     type: call.type
     method: call.method
-    headers: {'X-Auth-Token': window.authToken}
+    headers: {'X-AUTH-TOKEN': window.authToken}
     success: (result, textStatus, jqXHR) ->
       BootstrapDialog.alert
         message: result

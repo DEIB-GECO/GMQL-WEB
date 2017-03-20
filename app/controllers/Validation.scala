@@ -1,4 +1,6 @@
 package controllers
+import controllers.gmql.SecurityControllerDefaults._
+
 import scala.util.matching.Regex
 
 /**
@@ -10,10 +12,10 @@ object Validation {
   private val emailRegex: Regex = """^[a-zA-Z0-9\.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$""".r
 
   def validateUsername(username: String) = {
-    if (username.startsWith(SecurityControllerDefaults.GUEST_USER))
-      Some(s"${preUsername}It is forbidden to start with ${SecurityControllerDefaults.GUEST_USER}")
-    else if (username.startsWith(SecurityControllerDefaults.PUBLIC_USER) && !play.Play.isDev)
-      Some(s"${preUsername}It is forbidden to start with ${SecurityControllerDefaults.PUBLIC_USER}")
+    if (username.startsWith(GUEST_USER))
+      Some(s"${preUsername}It is forbidden to start with ${GUEST_USER}")
+    else if (username.startsWith(PUBLIC_USER) && !play.Play.isDev)
+      Some(s"${preUsername}It is forbidden to start with ${PUBLIC_USER}")
     else
       alphaNumerical(username, preUsername)
   }

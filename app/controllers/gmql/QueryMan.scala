@@ -3,7 +3,7 @@ package controllers.gmql
 import javax.inject.Singleton
 
 import controllers.gmql.ResultUtils.NA
-import io.swagger.annotations._
+import io.swagger.annotations.{ApiImplicitParams, ApiOperation, _}
 import it.polimi.genomics.core.{BinSize, GMQLSchemaFormat, GMQLScript, ImplementationPlatform}
 import it.polimi.genomics.manager.Exceptions.{InvalidGMQLJobException, NoJobsFoundException}
 import it.polimi.genomics.manager.Launchers.GMQLSparkLauncher
@@ -26,6 +26,15 @@ class QueryMan extends Controller {
 
   import utils.GmqlGlobal._
 
+  @ApiOperation(value = "Execute the query",
+    notes = "Execute query and for the result user needs to check trace the job.",
+    consumes = "text/plain"
+  )
+  @ApiImplicitParams(Array(new ApiImplicitParam(
+    name = "body",
+    dataType = "String", paramType = "body"
+    //    , examples = new Example(Array(new ExampleProperty(value = "{\n\t\"schema_file\": \"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/HG19_ANN.schema\",\n\t\"data_files\": [\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/RefSeqGenesExons_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/RefSeqGenesExons_hg19.bed.meta\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/TSS_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/TSS_hg19.bed.meta\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/VistaEnhancers_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/VistaEnhancers_hg19.bed.meta\"\n\t]\n}")))
+  ),new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   def runQuery(queryName: String,
                @ApiParam(allowableValues = "tab, gtf") outputType: String) = AuthenticatedAction { implicit request =>
     val username = request.username.getOrElse("")
@@ -62,6 +71,7 @@ class QueryMan extends Controller {
     }
   }
 
+
   private def registerJob(username: String, query: String, queryName: String, outputFormat: GMQLSchemaFormat.Value) = {
     val server = GMQLExecute()
     val gmqlScript = new GMQLScript(query, queryName)
@@ -71,6 +81,15 @@ class QueryMan extends Controller {
     server.registerJob(gmqlScript, gmqlContext, "")
   }
 
+  @ApiOperation(value = "Compile query",
+    notes = "Compile query and for the result user needs to check trace the job.",
+    consumes = "text/plain"
+  )
+  @ApiImplicitParams(Array(new ApiImplicitParam(
+    name = "body",
+    dataType = "String", paramType = "body"
+    //    , examples = new Example(Array(new ExampleProperty(value = "{\n\t\"schema_file\": \"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/HG19_ANN.schema\",\n\t\"data_files\": [\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/RefSeqGenesExons_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/RefSeqGenesExons_hg19.bed.meta\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/TSS_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/TSS_hg19.bed.meta\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/VistaEnhancers_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/VistaEnhancers_hg19.bed.meta\"\n\t]\n}")))
+  ),new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   def compileQuery() = AuthenticatedAction { implicit request =>
     val username = request.username.getOrElse("")
     val queryOption = request.body.asText
@@ -83,8 +102,14 @@ class QueryMan extends Controller {
         ResultUtils.renderedError(NOT_ACCEPTABLE, "Query must be send in the request body")
         QueryResult(None)
       case Some(query) =>
+//        val gmqlScript = new GMQLScript(query, queryName)
+//        val binSize = new BinSize(5000, 5000, 1000)
+//        val emptyContext: SparkContext = null
+//        val gmqlContext = new GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat, binSize, username, emptyContext)
+//        val job: GMQLJob = new GMQLJob(gmqlContext,gmqlScript,gmqlContext.username)
+//        job.compile()
         val job = registerJob(username, query, queryName, outputFormat)
-        QueryResult(Some(Job(job.jobId, Some(job.getJobStatus.toString))))
+        QueryResult(Some(Job(job.jobId, Some(job.getJobStatus.toString), Some(job.jobOutputMessages.toString()))))
     }
 
     render {
@@ -102,7 +127,8 @@ class QueryMan extends Controller {
     }
   }
 
-
+  @ApiOperation(value = "Get the jobs", notes = "Get the list of the jobs of the current user")
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   def getJobs = AuthenticatedAction { implicit request =>
     val username = request.username.getOrElse("")
 
@@ -121,7 +147,8 @@ class QueryMan extends Controller {
     }
   }
 
-
+  @ApiOperation(value = "Trace the job", notes = "Trace the job with the id")
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   def traceJob(jobId: String) = AuthenticatedAction { implicit request =>
     val username = request.username.getOrElse("")
 
@@ -195,7 +222,8 @@ class QueryMan extends Controller {
     //      ResultUtils.renderJaxb(response)
   }
 
-
+  @ApiOperation(value = "Get the log of the job", notes = "Returns the log of the job with job id")
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   def getLog(jobId: String) = AuthenticatedAction { implicit request =>
     val username = request.username.getOrElse("")
     lazy val jobLog = Log(GMQLExecute.getJobLog(username, jobId))
@@ -215,7 +243,9 @@ class QueryMan extends Controller {
     * @return Ok(HTTP 200) with a message that stops the job if the stop execution done correctly,
     *         Forbidden(HTTP 403) message if otherwise(if the job is not exists or the job id is not related to the user)
     */
-  def stopJob(jobId: String) = AuthenticatedAction { implicit request =>
+  @ApiOperation(value = "Stop the job", notes = "Stops the job with the jobs id")
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
+    def stopJob(jobId: String) = AuthenticatedAction { implicit request =>
     val username = request.username.getOrElse("")
     val server = GMQLExecute()
     try {

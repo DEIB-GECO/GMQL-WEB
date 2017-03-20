@@ -36,7 +36,7 @@ buttonClick = ->
     url: call.url
     type: call.type
     method: call.method
-    headers: {'X-Auth-Token': window.authToken}
+    headers: {'X-AUTH-TOKEN': window.authToken}
     data: formData
     processData: false
     cache: false

@@ -64,7 +64,7 @@ firstDropDown = (dataSet)->
     url: call.url
     type: call.type
     method: call.method
-    headers: {'X-Auth-Token': window.authToken}
+    headers: {'X-AUTH-TOKEN': window.authToken}
     contentType: 'application/json'
     dataType: 'json'
     data: getMetadataQuery()
@@ -109,7 +109,7 @@ firstDropDownOnChange = ->
     url: call.url
     type: call.type
     method: call.method
-    headers: {'X-Auth-Token': window.authToken}
+    headers: {'X-AUTH-TOKEN': window.authToken}
     contentType: 'application/json'
     dataType: 'json'
     data: getMetadataQuery()
@@ -194,7 +194,7 @@ testSelect = ->
     url: call.url
     type: call.type
     method: call.method
-    headers: {'X-Auth-Token': window.authToken}
+    headers: {'X-AUTH-TOKEN': window.authToken}
     contentType: 'application/json'
     dataType: 'json'
     data: getMetadataQuery()
@@ -263,7 +263,7 @@ getSamples = (dataSetName) ->
     url: call.url
     type: call.type
     method: call.method
-    headers: {'X-Auth-Token': window.authToken}
+    headers: {'X-AUTH-TOKEN': window.authToken}
     contentType: 'application/json'
     dataType: 'json'
     success: (result, textStatus, jqXHR) ->
@@ -289,7 +289,7 @@ getSamples = (dataSetName) ->
     url: call.url
     type: call.type
     method: call.method
-    headers: {'X-Auth-Token': window.authToken}
+    headers: {'X-AUTH-TOKEN': window.authToken}
     contentType: 'json'
     dataType: 'json'
     success: (result, textStatus, jqXHR) ->

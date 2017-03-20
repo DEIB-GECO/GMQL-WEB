@@ -27,7 +27,7 @@ separator = "---------------------------------------------------------------<br>
     url: call.url
     type: call.type
     method: call.method
-    headers: {'X-Auth-Token': window.authToken}
+    headers: {'X-AUTH-TOKEN': window.authToken}
     contentType: contentType
     data: input
     dataType: dataType
@@ -54,7 +54,7 @@ printRequest = (call, input, contentType, requestDivId) ->
   requestDiv.append "<b>Request url:</b> #{urlBeaker(call.url)} <br>"
   requestDiv.append "<b>Request type:</b> #{call.type} <br>"
   requestDiv.append "<b>Request method:</b> #{call.method} <br>"
-  requestDiv.append "<b>Headers:</b> {'X-Auth-Token': #{window.authToken}} <br>"
+  requestDiv.append "<b>Headers:</b> {'X-AUTH-TOKEN': #{window.authToken}} <br>"
   requestDiv.append "<b>Content type:</b> #{contentType} <br>" if contentType?
 #  requestDiv.append "<b>Request data:</b> #{input} <br>" if input?
 #  requestDiv.append separator

@@ -37,7 +37,7 @@ saveQuery = (type) ->
       type: call.type
       method: call.method
       contentType: "text/plain"
-      headers: {"X-Auth-Token": window.authToken}
+      headers: {"X-AUTH-TOKEN": window.authToken}
       data: code
       success: (result, textStatus, jqXHR) ->
         console.log(" saveQuery result:" + result)
@@ -70,7 +70,7 @@ runQuery = (fileKey, type) ->
       method: call.method
       dataType: "json"
       contentType: "text/plain"
-      headers: {"X-Auth-Token": window.authToken}
+      headers: {"X-AUTH-TOKEN": window.authToken}
       data: code
       success: (result, textStatus, jqXHR) ->
         jobId = result.job.id
@@ -97,7 +97,7 @@ runQuery = (fileKey, type) ->
     url: call.url
     type: call.type
     method: call.method
-    headers: {'X-Auth-Token': window.authToken}
+    headers: {'X-AUTH-TOKEN': window.authToken}
     contentType: 'json'
     dataType: 'json'
     success: (result, textStatus, jqXHR) ->
@@ -140,7 +140,7 @@ lastJobLog = () ->
     type: call.type
     method: call.method
     contentType: "text/plain"
-    headers: {"X-Auth-Token": window.authToken}
+    headers: {"X-AUTH-TOKEN": window.authToken}
     accept: "json"
     success: (result, textStatus, jqXHR) ->
       console.log result
@@ -167,7 +167,7 @@ lastJobLog = () ->
     url: call.url
     type: call.type
     method: call.method
-    headers: {'X-Auth-Token': window.authToken}
+    headers: {'X-AUTH-TOKEN': window.authToken}
     contentType: 'json'
     dataType: 'json'
     success: (result, textStatus, jqXHR) ->
@@ -215,7 +215,7 @@ lastJobLog = () ->
             type: call.type
             method: call.method
             contentType: "text/plain"
-            headers: {"X-Auth-Token": window.authToken}
+            headers: {"X-AUTH-TOKEN": window.authToken}
             dataType: 'json'
             success: (result, textStatus, jqXHR) ->
               console.log result
@@ -257,7 +257,7 @@ loadQueries =  ->
     type: call.type
     method: call.method
     contentType: "text/plain"
-    headers: {"X-Auth-Token": window.authToken}
+    headers: {"X-AUTH-TOKEN": window.authToken}
     accept: "json"
     success: (result, textStatus, jqXHR) ->
       console.log result
@@ -281,7 +281,7 @@ selectQuery = () ->
     url: call.url
     type: call.type
     method: call.method
-    headers: {"X-Auth-Token": window.authToken}
+    headers: {"X-AUTH-TOKEN": window.authToken}
     contentType: 'json'
     dataType: 'json'
     success: (result, textStatus, jqXHR) ->

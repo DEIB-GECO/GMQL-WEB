@@ -21,7 +21,7 @@ class JavascriptRoute extends Controller {
         //
         //
         controllers.routes.javascript.Application.sampleMetadata,
-        //        controllers.routes.javascript.Application.gmql,
+                controllers.routes.javascript.Application.gmql,
         //
         controllers.gmql.routes.javascript.DSManager.getDatasets,
         controllers.gmql.routes.javascript.DSManager.getSamples,

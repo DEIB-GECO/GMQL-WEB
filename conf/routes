@@ -36,9 +36,9 @@ GET           /guest                                             controllers.Sec
 GET           /logout                                            controllers.SecurityController.logout
 POST          /login                                             controllers.SecurityController.login
 POST          /register                                          controllers.SecurityController.registerUser
-GET           /recoveryEmail/:username                           controllers.SecurityController.passwordRecoveryEmail(username)
+GET           /recovery/:username                                controllers.SecurityController.passwordRecoveryEmail(username)
 GET           /recovery                                          controllers.SecurityController.passwordRecovery
-POST          /updatePassword                                    controllers.SecurityController.updatePassword
+POST          /password                                          controllers.SecurityController.updatePassword
 #
 #
 #

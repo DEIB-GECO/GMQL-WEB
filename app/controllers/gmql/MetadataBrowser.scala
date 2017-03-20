@@ -3,7 +3,7 @@ package controllers.gmql
 import javax.inject.Singleton
 
 import controllers.gmql.ResultUtils.{NA, renderedError}
-import io.swagger.annotations._
+import io.swagger.annotations.{ApiImplicitParams, _}
 import it.polimi.genomics.repository.GMQLExceptions.{GMQLDSNotFound, GMQLSampleNotFound}
 import play.api.libs.json._
 import play.api.mvc.Controller
@@ -17,6 +17,7 @@ import wrappers.authanticate.AuthenticatedAction
 class MetadataBrowser extends Controller {
   val newLine = sys.props("line.separator")
 
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   def getSampleMetadata(datasetName: String, sampleName: String) = AuthenticatedAction { implicit request =>
     var username: String = request.username.get
     var dsName = datasetName
@@ -41,6 +42,7 @@ class MetadataBrowser extends Controller {
   }
 
 
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   def getKeys(datasetName: String) = AuthenticatedAction { implicit request =>
     var username: String = request.username.get
     var dsName = datasetName
@@ -63,6 +65,7 @@ class MetadataBrowser extends Controller {
     }
   }
 
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   def getValues(datasetName: String, key: String) = AuthenticatedAction { implicit request =>
     var username: String = request.username.get
     var dsName = datasetName
@@ -86,6 +89,7 @@ class MetadataBrowser extends Controller {
   }
 
 
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   def getFilteredDataset(datasetName: String) = AuthenticatedAction(DatasetUtils.validateJson[AttributeList]) { implicit request =>
     var username: String = request.username.get
     var dsName = datasetName
@@ -109,6 +113,7 @@ class MetadataBrowser extends Controller {
   }
 
 
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   def getFilteredKeys(datasetName: String) = AuthenticatedAction(DatasetUtils.validateJson[AttributeList]) { implicit request =>
     var username: String = request.username.get
     var dsName = datasetName
@@ -132,6 +137,7 @@ class MetadataBrowser extends Controller {
   }
 
 
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   def getFilteredValues(datasetName: String, key: String) = AuthenticatedAction(DatasetUtils.validateJson[AttributeList]) { implicit request =>
     var username: String = request.username.get
     var dsName = datasetName

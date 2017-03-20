@@ -8,8 +8,8 @@ init = () ->
 updatePassword = () ->
   console.log("updatePassword.click")
   call = jsRoutes.controllers.SecurityController.updatePassword()
-  console.log $("#recovery-password").val()
-  console.log $("#recovery-password-confirmation").val()
+#   console.log $("#recovery-password").val()
+#   console.log $("#recovery-password-confirmation").val()
   if($("#recovery-password").val() != $("#recovery-password-confirmation").val())
     BootstrapDialog.alert("Passwords are not same")
   else
@@ -21,7 +21,7 @@ updatePassword = () ->
       url: call.url
       type: call.type
       method: call.method
-      headers: {"X-Auth-Token": window.authToken}
+      headers: {"X-AUTH-TOKEN": window.authToken}
       data: input
       contentType: 'application/json'
       success: (result, textStatus, jqXHR) ->

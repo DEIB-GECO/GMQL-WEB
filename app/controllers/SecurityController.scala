@@ -5,31 +5,21 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.{Inject, Singleton}
 
+import controllers.gmql.SecurityControllerDefaults._
 import controllers.gmql.SwaggerUtils
-import it.polimi.genomics.repository.GMQLRepository
+import io.swagger.annotations.{ApiImplicitParams, _}
 import models.{AuthenticationDao, AuthenticationModel, UserDao, UserModel}
 import play.api.Play.current
 import play.api.libs.json._
 import play.api.libs.mailer._
 import play.api.mvc._
 import play.api.{Logger, Play}
-import utils.GmqlGlobal
 import wrappers.authanticate.AuthenticatedAction
 
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import io.swagger.annotations._
 
-
-object SecurityControllerDefaults {
-
-  val AUTH_TOKEN_HEADER: String = "X-Auth-Token"
-  val AUTH_TOKEN_COOKIE: String = "authToken"
-  val QUERY_AUTH_TOKEN: String = "auth-token"
-  val GUEST_USER: String = "guest_new"
-  val PUBLIC_USER: String = "public"
-}
 
 /**
   * Created by canakoglu on 6/13/16.
@@ -37,37 +27,31 @@ object SecurityControllerDefaults {
 @Singleton
 @Api(value = SwaggerUtils.swaggerSecurityController, produces = "application/json, application/xml")
 class SecurityController @Inject()(mailerClient: MailerClient) extends Controller {
+
   import utils.GmqlGlobal._
 
   private val guestCounter: AtomicInteger = new AtomicInteger
 
   case class UserData(username: String, password: String, email: String, firstName: String, lastName: String)
 
+  @ApiOperation(value = "Register user",
+    notes = "Register user to the GMQL interface",
+    consumes = "application/json")
+  @ApiImplicitParams(Array(new ApiImplicitParam(
+    name = "body",
+    dataType = "String", paramType = "body",
+    examples = new Example(Array(new ExampleProperty(value =
+      """
+{
+  "firstName": "first_name",
+  "lastName": "last_name",
+  "username": "user_name",
+  "email": "email@email.com",
+  "password": "password_text"
+}
+      """)))
+  )))
   def registerUser = Action(parse.json) { implicit request =>
-
-    //    val userForm = Form(
-    //      mapping(
-    //        "username" -> nonEmptyText,
-    //        "password" -> email,
-    //        "email" -> text,
-    //        "firstName" -> text,
-    //        "lastName" -> text
-    //      )(UserData.apply)(UserData.unapply)
-    //    )
-    //
-    //
-    ////    val userData = userForm.bind(request.body).get
-    //    val userData2 = userForm.bindFromRequest
-    //    if(userData2.hasErrors)
-    //      Logger.error(userData2.errors.toString())
-    //
-    //    val asd: ValidationResult = Constraints.emailAddress.apply("")
-    //    asd match {
-    //      case Valid =>
-    //      case Invalid(errors: Seq[ValidationError]) =>
-    //        Logger.error(errors.toString())
-    //    }
-
     val errorList = ListBuffer.empty[Option[String]]
     val username = (request.body \ "username").asOpt[String].getOrElse("")
     val password = (request.body \ "password").asOpt[String].getOrElse("")
@@ -97,18 +81,33 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
     }
   }
 
-
+  @ApiOperation(value = "Get current user",
+    notes = "Get current user")
   def getUser = AuthenticatedAction { implicit request =>
     val user = request.user
     loginResult(None, user)
   }
 
+  @ApiOperation(value = "Login user",
+    notes = "Login user to the GMQL interface. Returns the authantication key to use for other operations.",
+    consumes = "application/json")
+  @ApiImplicitParams(Array(new ApiImplicitParam(
+    name = "body",
+    dataType = "String", paramType = "body",
+    examples = new Example(Array(new ExampleProperty(value =
+      """
+{
+  "username": "username",
+  "password": "password_text"
+}
+      """)))
+  )))
   def login = Action(parse.json) { implicit request =>
     val username = (request.body \ "username").asOpt[String].getOrElse("")
-    Logger.debug("play.Play.isProd: " + play.Play.isProd)
-    Logger.debug("play.Play.isDev: " + play.Play.isDev)
-    if (Play.isProd && username.startsWith(SecurityControllerDefaults.GUEST_USER))
-      BadRequest(s"Username is not acceptable, it is forbidden to start with ${SecurityControllerDefaults.GUEST_USER}")
+    //    Logger.debug("play.Play.isProd: " + play.Play.isProd)
+    //    Logger.debug("play.Play.isDev: " + play.Play.isDev)
+    if (Play.isProd && username.startsWith(GUEST_USER))
+      BadRequest(s"Username is not acceptable, it is forbidden to start with ${GUEST_USER}")
     else {
       val password = (request.body \ "password").asOpt[String].getOrElse("")
       val userFuture = UserDao.getByUsername(username)
@@ -125,9 +124,9 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
   }
 
   def loginGuest = Action { implicit request =>
-    var username = SecurityControllerDefaults.GUEST_USER + guestCounter.incrementAndGet
+    var username = GUEST_USER + guestCounter.incrementAndGet
     while (Await.result(UserDao.getByUsername(username), Duration.Inf).nonEmpty) {
-      username = SecurityControllerDefaults.GUEST_USER + guestCounter.incrementAndGet
+      username = GUEST_USER + guestCounter.incrementAndGet
     }
     val user: UserModel = UserModel(username, username + "@demo.com", getSha512("password"), "Guest", "")
     val userId = Await.result(UserDao.add(user), Duration.Inf)
@@ -139,6 +138,7 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
       loginResult(token, user = None)
   }
 
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   def logout = AuthenticatedAction { request =>
     val username = request.username.get
     val user = request.user
@@ -146,7 +146,7 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
     authentication match {
       case Some(authentication) =>
         invalidateToken(authentication.id)
-        if (username.startsWith(SecurityControllerDefaults.GUEST_USER))
+        if (username.startsWith(GUEST_USER))
           repository.unregisterUser(username)
         Ok("Logout")
       case None =>
@@ -157,7 +157,7 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
   def loginResult(authToken: Option[String], user: Option[UserModel])(implicit request: RequestHeader): Result = {
     loginResult(authToken,
       user match {
-        case Some(u) if !u.username.startsWith(SecurityControllerDefaults.GUEST_USER) => Some(u.username)
+        case Some(u) if !u.username.startsWith(GUEST_USER) => Some(u.username)
         case _ => None
       },
       user match {
@@ -185,7 +185,7 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
         Ok(xmlResult)
       // @formatter:on
       case Accepts.Json() =>
-        val result = Json.obj(SecurityControllerDefaults.AUTH_TOKEN_COOKIE -> authToken) ++ (
+        val result = Json.obj(AUTH_TOKEN_JSON -> authToken) ++ (
           username match {
             case Some(u) => Json.obj("username" -> u)
             case _ => Json.obj()
@@ -232,13 +232,24 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
   }
 
   //authentication with token
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   def passwordRecovery = AuthenticatedAction { implicit request =>
     val username = request.username.get
 
-    Ok(views.html.password()).withCookies(Cookie(SecurityControllerDefaults.AUTH_TOKEN_COOKIE, request.getQueryString(SecurityControllerDefaults.QUERY_AUTH_TOKEN).get))
+    Ok(views.html.password()).withCookies(Cookie(AUTH_TOKEN_COOKIE, request.getQueryString(QUERY_AUTH_TOKEN).get))
   }
 
   //authentication with token
+  //
+  @ApiOperation(value = "Login user",
+    notes = "Login user to the GMQL interface. Returns the authantication key to use for other operations.",
+    consumes = "application/json")
+  @ApiImplicitParams(Array(new ApiImplicitParam(
+    name = "body",
+    dataType = "String", paramType = "body",
+    examples = new Example(Array(new ExampleProperty(value =
+      """{"password": "password_text"}""")))
+  ),new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   def updatePassword = AuthenticatedAction(parse.json) { implicit request =>
     val username = request.username.get
     val user = request.user.get
@@ -251,12 +262,14 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
 
     val flattenErrorList = errorList.flatten.mkString("\n")
 
+    AuthenticationDao.deleteAll(user.id.get)
+
     if (!flattenErrorList.isEmpty)
       BadRequest(flattenErrorList)
     else {
       UserDao.updateShaPassword(user.id.get, getSha512(password))
       //      createToken(Some(user.id))
-      Ok("OK").withCookies(Cookie(SecurityControllerDefaults.AUTH_TOKEN_COOKIE, "", Some(0)))
+      Ok("OK").withCookies(Cookie(AUTH_TOKEN_COOKIE, "", Some(0)))
     }
   }
 
@@ -264,8 +277,8 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
     val userOption: Option[UserModel] = Await.result(UserDao.getByUsername(username), Duration.Inf)
     userOption match {
       case Some(user) =>
-        val passwordRecovery = createToken(user.id)
-        val link = routes.SecurityController.passwordRecovery.absoluteURL() + "?auth-token=" + passwordRecovery
+        val passwordRecovery: Option[String] = createToken(user.id)
+        val link = routes.SecurityController.passwordRecovery.absoluteURL() + "?authToken=" + passwordRecovery.get
         val userEmail = user.emailAddress
         val email = Email(
           subject = "GMQL password recovery"

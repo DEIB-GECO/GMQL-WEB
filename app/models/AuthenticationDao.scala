@@ -27,6 +27,8 @@ object AuthenticationDao {
 
   def delete(id: Long): Future[Int] = dbConfig.db.run(authentications.filter(_.id === id).delete)
 
+  def deleteAll(userId: Long): Future[Int] = dbConfig.db.run(authentications.filter(_.userId === userId).delete)
+
 
   def get(id: Long): Future[Option[AuthenticationModel]] = dbConfig.db.run(authentications.filter(_.id === id).result.headOption)
 

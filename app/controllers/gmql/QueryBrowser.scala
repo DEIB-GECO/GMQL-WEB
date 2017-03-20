@@ -20,6 +20,7 @@ import scala.concurrent.{Await, Future}
 @Api(value = SwaggerUtils.swaggerQueryBrowser, produces = "application/json, application/xml")
 class QueryBrowser extends Controller {
 
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   def getQueries() = AuthenticatedAction.async { implicit request =>
     val user = request.user.get
     val futureQuerySeq: Future[Seq[QueryModel]] = QueryDao.getUserQueries(user.id.get)
@@ -34,6 +35,7 @@ class QueryBrowser extends Controller {
     }
   }
 
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   def getQuery(queryName: String) = AuthenticatedAction.async { implicit request =>
     val user = request.user.get
     val futureQuerySeq = QueryDao.getUserQuery(user.id.get, queryName)
@@ -49,6 +51,12 @@ class QueryBrowser extends Controller {
     }
   }
 
+  @ApiOperation(value = "Save query",
+    notes = "Save query, if the query exists then update or save as a new query.",
+    consumes = "text/plain"
+  )
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "body", dataType = "String", paramType = "body"),
+  new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   def saveQuery(queryName: String) = AuthenticatedAction { request =>
     val username = request.username.getOrElse("")
     val user = request.user.get
@@ -62,21 +70,6 @@ class QueryBrowser extends Controller {
           QueryDao.updateQueryText(query.id.get, newQueryText)
       case None => QueryDao.add(QueryModel(user.id.get, queryName, newQueryText))
     }
-
-    //    QueryDao.add(QueryModel())
-    //
-    //
-    //    val flattenErrorList = errorList.flatten.mkString("\n")
-    //    if (!flattenErrorList.isEmpty)
-    //      BadRequest(flattenErrorList)
-    //    else {
-    //      val query = request.body.asText
-    //      val response = new QueryManager().saveQueryAs(query.getOrElse(""), username, fileName, fileKey)
-    //      ResultUtils.resultHelper(response)
-    //    }
-
-    Ok("")
+    Ok("Saved")
   }
-
-
 }

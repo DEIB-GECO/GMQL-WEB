@@ -109,12 +109,12 @@ glyph_opts = map:
         call = jsRoutes.controllers.gmql.DSManager.getDatasets()
       else
         call = jsRoutes.controllers.gmql.DSManager.getSamples(data.node.data.value)
-      console.log {'X-Auth-Token': window.authToken}
+      console.log {'X-AUTH-TOKEN': window.authToken}
       $.ajax
         url: call.url
         type: call.type
         method: call.method
-        headers: {'X-Auth-Token': window.authToken}
+        headers: {'X-AUTH-TOKEN': window.authToken}
         contentType: 'json'
         dataType: 'json'
         success: (result, textStatus, jqXHR) ->
@@ -214,7 +214,7 @@ setDataSetSchema = (node) ->
         url: call.url
         type: call.type
         method: call.method
-        headers: {'X-Auth-Token': window.authToken}
+        headers: {'X-AUTH-TOKEN': window.authToken}
         contentType: 'json'
         dataType: 'json'
         success: (result, textStatus, jqXHR) ->
@@ -344,7 +344,7 @@ deleteDataset = (node) ->
     url: call.url
     type: call.type
     method: call.method
-    headers: {'X-Auth-Token': window.authToken}
+    headers: {'X-AUTH-TOKEN': window.authToken}
     success: (result, textStatus, jqXHR) ->
       displayInfo(result)
       #      BootstrapDialog.show
@@ -381,7 +381,7 @@ downloadDataset = () ->
 #      type: call.type
 #      method: call.method
 #      dataType: 'binary'
-#      headers: {'X-Auth-Token': window.authToken}
+#      headers: {'X-AUTH-TOKEN': window.authToken}
 #      success: (result, textStatus, jqXHR) ->
 #        if(result != "inProgress")
 #          callUrl = jsRoutes.controllers.gmql.DSManager.downloadFileZip window.lastDownloadDataSet
@@ -402,7 +402,7 @@ downloadDataset = () ->
 #        type: call.type
 #        method: call.method
 #        dataType: 'binary'
-#        headers: {'X-Auth-Token': window.authToken}
+#        headers: {'X-AUTH-TOKEN': window.authToken}
 #        success: (result, textStatus, jqXHR) ->
 #          downloadResult(result, jqXHR)
 #        error: (jqXHR, textStatus, errorThrown) ->
@@ -433,7 +433,7 @@ loadUcsc = ->
     url: call.url
     type: call.type
     method: call.method
-    headers: {'X-Auth-Token': window.authToken}
+    headers: {'X-AUTH-TOKEN': window.authToken}
     success: (result, textStatus, jqXHR) ->
       console.log result
       #      window.open (ucscBaseLink + result)

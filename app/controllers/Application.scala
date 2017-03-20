@@ -87,7 +87,7 @@ class Application @Inject()(ws: WSClient) extends Controller {
   }
 
   //  def helpRedirect: Action[AnyContent] = Action.async { (request: Request[AnyContent]) =>
-  //    val asd = request.cookies.get("authToken").get.value
+  //    val asd = request.cookies.get("auth-token").get.value
   //    println("asd: " + asd)
   //    request.headers.add(SecurityController.AUTH_TOKEN_HEADER -> asd)
   //    //      get(SecurityController.AUTH_TOKEN_HEADER)

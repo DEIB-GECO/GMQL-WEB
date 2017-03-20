@@ -8,7 +8,7 @@ package wrappers.authanticate
   * http://iankent.uk/blog/action-composition-in-play-framework/
   */
 
-import controllers.{Default, SecurityControllerDefaults}
+import controllers.Default
 import models.{AuthenticationDao, AuthenticationModel, UserModel}
 import play.api.http.MimeTypes
 import play.api.libs.json.Json
@@ -18,6 +18,9 @@ import play.api.mvc._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
+
+import controllers.gmql.SecurityControllerDefaults._
+
 
 
 object AuthenticatedAction extends AuthenticatedActionBuilder {
@@ -61,12 +64,12 @@ trait AuthenticatedActionBuilder extends ActionBuilder[AuthenticatedRequest] {
   }
 
   def getUserAuthentication[A](request: Request[A]): Option[(UserModel, AuthenticationModel)] = {
-    lazy val fromCookie: String = request.cookies.get(SecurityControllerDefaults.AUTH_TOKEN_COOKIE).getOrElse(Cookie(name = SecurityControllerDefaults.AUTH_TOKEN_COOKIE, value = null)).value
+    lazy val fromCookie: String = request.cookies.get(AUTH_TOKEN_COOKIE).getOrElse(Cookie(name = AUTH_TOKEN_COOKIE, value = null)).value
 
-    val token = request.headers.get(SecurityControllerDefaults.AUTH_TOKEN_HEADER) match {
+    val token = request.headers.get(AUTH_TOKEN_HEADER) match {
       case Some(token) => token
       case None =>
-        request.queryString.get(SecurityControllerDefaults.QUERY_AUTH_TOKEN) match {
+        request.queryString.get(QUERY_AUTH_TOKEN) match {
           case Some(token) => Some(token(0)).getOrElse(fromCookie)
           case None => fromCookie
         }

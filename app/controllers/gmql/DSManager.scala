@@ -6,7 +6,7 @@ import java.util
 import javax.inject.Singleton
 
 import controllers.gmql.ResultUtils._
-import io.swagger.annotations._
+import io.swagger.annotations.{ApiImplicitParams, _}
 import it.polimi.genomics.core.DataStructures.IRDataSet
 import it.polimi.genomics.core.{GNull, _}
 import it.polimi.genomics.repository.FSRepository.FS_Utilities
@@ -36,7 +36,6 @@ import scala.xml.Elem
 @Singleton
 @Api(value = SwaggerUtils.swaggerRepository, produces = "application/json, application/xml")
 class DSManager extends Controller {
-  final val swaggerValue = "Repository"
 
   import utils.GmqlGlobal._
 
@@ -52,6 +51,7 @@ class DSManager extends Controller {
   @ApiOperation(value = "Get all datasets",
     notes = "Get the list of the dataset of the user and public user",
     response = classOf[Datasets])
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   @ApiResponses(value = Array(new ApiResponse(code = 401, message = "User is not authenticated")))
   def getDatasets = AuthenticatedAction { implicit request =>
     val username: String = request.username.get
@@ -81,6 +81,7 @@ class DSManager extends Controller {
   @ApiOperation(value = "Get all samples of the dataset",
     notes = "Get the list of the samples of the input dataset",
     response = classOf[Dataset])
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   @ApiResponses(value = Array(
     new ApiResponse(code = 401, message = "User is not authenticated"),
     new ApiResponse(code = 404, message = "Dataset is not found for the user")))
@@ -115,6 +116,7 @@ class DSManager extends Controller {
     */
   @ApiOperation(value = "Delete the dataset",
     notes = "Delete the input dataset")
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   @ApiResponses(value = Array(
     new ApiResponse(code = 401, message = "User is not authenticated"),
     new ApiResponse(code = 403, message = "Public datasets cannot be deleted by user"),
@@ -190,6 +192,7 @@ class DSManager extends Controller {
     notes = "Download region data as stream",
     produces = "file",
     tags = Array("Download repository", SwaggerUtils.swaggerRepository))
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   @ApiResponses(value = Array(
     new ApiResponse(code = 401, message = "User is not authenticated"),
     new ApiResponse(code = 403, message = "Public datasets cannot be downloaded by user"),
@@ -200,6 +203,7 @@ class DSManager extends Controller {
     notes = "Download metadata data as stream",
     produces = "file",
     tags = Array("Download repository", SwaggerUtils.swaggerRepository))
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   @ApiResponses(value = Array(
     new ApiResponse(code = 401, message = "User is not authenticated"),
     new ApiResponse(code = 403, message = "Public datasets cannot be downloaded by user"),
@@ -216,6 +220,7 @@ class DSManager extends Controller {
     notes = "Download dataset as zip stream",
     produces = "file",
     tags = Array("Download repository", SwaggerUtils.swaggerRepository))
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   @ApiResponses(value = Array(
     new ApiResponse(code = 401, message = "User is not authenticated"),
     new ApiResponse(code = 403, message = "Public datasets cannot be downloaded by user"),
@@ -273,6 +278,7 @@ class DSManager extends Controller {
   @ApiOperation(value = "Get shema of the dataset",
     notes = "Get the schema field of the input dataset",
     response = classOf[GMQLSchema])
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   @ApiResponses(value = Array(
     new ApiResponse(code = 401, message = "User is not authenticated"),
     new ApiResponse(code = 404, message = "Dataset is not found for the user")))
@@ -316,6 +322,7 @@ class DSManager extends Controller {
 
 
   @ApiOperation(value = "getUcscLink", hidden = true)
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   def getUcscLink(datasetName: String) = AuthenticatedAction { implicit request =>
     val username = request.username.get
     //TODO create temp token
@@ -324,10 +331,11 @@ class DSManager extends Controller {
     if (datasetName.startsWith("public."))
       BadRequest("Cannot load public datasets")
     else
-      Ok(s"${controllers.gmql.routes.DSManager.getUcscList(datasetName).absoluteURL()}?auth-token=$token")
+      Ok(s"${controllers.gmql.routes.DSManager.getUcscList(datasetName).absoluteURL()}?authToken=$token")
   }
 
   @ApiOperation(value = "getUcscList", hidden = true)
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   def getUcscList(datasetName: String) = AuthenticatedAction { implicit request =>
     // http://genome.ucsc.edu/cgi-bin/hgTracks?org=human&hgt.customText=http://genomic.elet.polimi.it/gmql-rest/dataSet/heatmap/parse2?auth-token=test-best-token
     // http://genome.ucsc.edu/cgi-bin/hgTracks?org=human&hgt.customText=http://www.bioinformatics.deib.polimi.it/canakoglu/test2.txt
@@ -354,7 +362,7 @@ class DSManager extends Controller {
         val description = trackName
         buf ++= s"""track name=\"$trackName\" description=\"$description\"  useScore=1 visibility=\"3\" $newLine"""
         //      buf ++= s"""track name=\"$trackName\" $newLine"""
-        buf ++= s"${controllers.gmql.routes.DSManager.getRegionStream(datasetName, trackName).absoluteURL()}?auth-token=$token $newLine"
+        buf ++= s"${controllers.gmql.routes.DSManager.getRegionStream(datasetName, trackName).absoluteURL()}?authToken=$token $newLine"
       }
       Ok(buf.toString)
     }
@@ -393,6 +401,7 @@ class DSManager extends Controller {
   }
 
   @ApiOperation(value = "parseFiles", hidden = true)
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   def parseFiles(datasetName: String, columnName: String) = AuthenticatedAction { implicit request =>
     import org.apache.hadoop.fs.{FileSystem, Path}
     val username = request.username.getOrElse("")
@@ -573,7 +582,8 @@ class DSManager extends Controller {
     new ApiImplicitParam(name = "file1", dataType = "file", paramType = "form"),
     new ApiImplicitParam(name = "file2", dataType = "file", paramType = "form"),
     new ApiImplicitParam(name = "file3", dataType = "file", paramType = "form"),
-    new ApiImplicitParam(name = "file4", dataType = "file", paramType = "form")))
+    new ApiImplicitParam(name = "file4", dataType = "file", paramType = "form"),
+    new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   def uploadSample(dataSetName: String) = AuthenticatedAction(parse.multipartFormData) { request =>
     val schemaNameOption = request.getQueryString("schemaName")
 
@@ -634,20 +644,17 @@ class DSManager extends Controller {
   @ApiOperation(value = "Upload dataset from URL",
     notes = "Upload dataset from another server.",
     consumes = "application/json"
-//    ,
-//    produces = "text/plain"
+    //    ,
+    //    produces = "text/plain"
   )
   @ApiResponses(value = Array(
     new ApiResponse(code = 200, message = "test"),
     new ApiResponse(code = 401, message = "User is not authenticated"),
     new ApiResponse(code = 404, message = "Dataset is not found for the user")
   ))
-  @ApiImplicitParams(Array(new ApiImplicitParam(
-    name = "body",
-    dataType = "body", paramType = "body"
-    ,
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "body", dataType = "body", paramType = "body",
     examples = new Example(Array(new ExampleProperty(value = "{\n\t\"schema_file\": \"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/HG19_ANN.schema\",\n\t\"data_files\": [\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/RefSeqGenesExons_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/RefSeqGenesExons_hg19.bed.meta\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/TSS_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/TSS_hg19.bed.meta\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/VistaEnhancers_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/VistaEnhancers_hg19.bed.meta\"\n\t]\n}")))
-  )))
+  ), new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   def uploadSamplesFromUrls(dataSetName: String) = AuthenticatedAction(parse.json) {
     request =>
       val schemaName = request.getQueryString("schemaName")

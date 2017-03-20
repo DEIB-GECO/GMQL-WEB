@@ -27,7 +27,7 @@ buttonClick = ->
     for file in  $('#file-upload-schema')[0].files
       formData.append "schema", file;
   call = jsRoutes.controllers.gmql.DSManager.uploadSample $("#file-upload-name").val()
-  if $("#file-upload-type").val()?.length
+  if $("#file-upload-type").val()?.length && $("#file-upload-type").val() != "UPLOAD"
     call.url = call.url + "?schemaName=" + $("#file-upload-type").val()
   console.log call
   $("#file-upload-progress").removeClass("progress-bar-danger progress-bar-success")

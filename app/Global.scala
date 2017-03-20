@@ -16,8 +16,13 @@ object Global extends GlobalSettings {
   override def onStart(app: Application) {
     Logger.info("Application has started ")
     //load all public user metadata into cache.
-    if (play.Play.isProd)
-      DatasetMetadata.loadCache()
+    if (play.Play.isProd) {
+      import scala.concurrent.ExecutionContext.Implicits.global
+      import scala.concurrent.Future
+      Future {
+        DatasetMetadata.loadCache()
+      }
+    }
   }
 
   override def onStop(app: Application) {

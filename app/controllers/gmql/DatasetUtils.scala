@@ -273,6 +273,22 @@ object AttributeList {
   implicit val writer = Json.writes[AttributeList]
 }
 
+case class UploadResult(imported: Seq[Sample],
+                         @ApiModelProperty(dataType = "List[controllers.gmql.Sample]", required = false) autoMetadata: Option[Seq[Sample]] = None,
+                         @ApiModelProperty(dataType = "List[controllers.gmql.Sample]", required = false) regionProblem: Option[Seq[Sample]] = None) {
+  @ApiModelProperty(hidden = true)
+  def getXml =
+    <upload_result>
+      <imported>{imported.map(_.getXml)}</imported>
+      {if (autoMetadata.isDefined) <auto_metadata>{autoMetadata.get.map(_.getXml)}</auto_metadata>}
+      {if (regionProblem.isDefined) <region_problem>{regionProblem.get.map(_.getXml)}</region_problem>}
+    </upload_result>
+}
+
+object UploadResult {
+  implicit val writer = Json.writes[UploadResult]
+}
+
 object SecurityControllerDefaults {
   final val AUTH_TOKEN_HEADER: String = "X-AUTH-TOKEN"
   final val AUTH_TOKEN_COOKIE: String = "authToken"
@@ -282,7 +298,7 @@ object SecurityControllerDefaults {
   final val PUBLIC_USER: String = "public"
 }
 
-object SwaggerUtils{
+object SwaggerUtils {
   final val swaggerRepository = "Repository"
   final val swaggerMetadata = "Metadata"
   final val swaggerQueryBrowser = "Query Browser"

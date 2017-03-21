@@ -571,20 +571,21 @@ class DSManager extends Controller {
   @ApiOperation(value = "Upload dataset",
     notes = "Upload dataset with samples. In this example interface, user can upload up to 4 files",
     consumes = "application/x-www-form-urlencoded",
-    produces = "text/plain")
+    response = classOf[UploadResult])
   @ApiResponses(value = Array(
-    new ApiResponse(code = 200, message = "test"),
+//    new ApiResponse(code = 200, message = "test"),
     new ApiResponse(code = 401, message = "User is not authenticated"),
     new ApiResponse(code = 404, message = "Dataset is not found for the user")
   ))
   @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "schemaName", paramType = "query", dataType = "String", allowableValues = "bed, bedGraph, NarrowPeak, BroadPeak, vcf"),
     new ApiImplicitParam(name = "schema", dataType = "file", paramType = "form"),
     new ApiImplicitParam(name = "file1", dataType = "file", paramType = "form"),
     new ApiImplicitParam(name = "file2", dataType = "file", paramType = "form"),
     new ApiImplicitParam(name = "file3", dataType = "file", paramType = "form"),
     new ApiImplicitParam(name = "file4", dataType = "file", paramType = "form"),
     new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
-  def uploadSample(dataSetName: String) = AuthenticatedAction(parse.multipartFormData) { request =>
+  def uploadSample(dataSetName: String) = AuthenticatedAction(parse.multipartFormData) { implicit request =>
     val schemaNameOption = request.getQueryString("schemaName")
 
     val username = request.username.get
@@ -610,19 +611,10 @@ class DSManager extends Controller {
           Logger.info("File: " + file.filename)
       }
       Logger.info("Schema name: " + schemaNameOption.getOrElse("NO INPUT"))
-      val schemaPathOption = schemaNameOption match {
-        case Some(schemaName) => Some(s"${ut.GMQL_CONF_DIR}/${schemaName.toUpperCase}.schema")
-        case None => if (isSchemaUploaded) Some(tempDirPath + ".schema") else None
-      }
+      val schemaPathOption = getSchemaPath(tempDirPath, isSchemaUploaded, schemaNameOption)
 
-      schemaPathOption match {
-        case Some(schemaPath) =>
-          //      val dataset = IRDataSet(dataSetName, repository.readSchemaFile(schemaPath).fields.map(field => (field.name, field.fieldType)))
-          val samples: util.List[GMQLSample] = files.toList.filter(fileName => files.contains(fileName + ".meta")).map(fileName => GMQLSample(fileName, fileName + ".meta"))
-          repository.importDs(dataSetName, username, samples, schemaPath)
-          Ok("Done")
-        case None => NotAcceptable("Schema is not defined correctly")
-      }
+
+      importDataset(username, dataSetName, schemaPathOption, tempDirPath, files.toSet)
     }
     catch {
       case e: SAXException =>
@@ -641,23 +633,25 @@ class DSManager extends Controller {
     }
   }
 
+
   @ApiOperation(value = "Upload dataset from URL",
     notes = "Upload dataset from another server.",
-    consumes = "application/json"
-    //    ,
-    //    produces = "text/plain"
+    consumes = "application/json",
+    response = classOf[UploadResult]
   )
   @ApiResponses(value = Array(
-    new ApiResponse(code = 200, message = "test"),
+//    new ApiResponse(code = 200, message = "test"),
     new ApiResponse(code = 401, message = "User is not authenticated"),
     new ApiResponse(code = 404, message = "Dataset is not found for the user")
   ))
-  @ApiImplicitParams(Array(new ApiImplicitParam(name = "body", dataType = "body", paramType = "body",
-    examples = new Example(Array(new ExampleProperty(value = "{\n\t\"schema_file\": \"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/HG19_ANN.schema\",\n\t\"data_files\": [\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/RefSeqGenesExons_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/RefSeqGenesExons_hg19.bed.meta\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/TSS_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/TSS_hg19.bed.meta\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/VistaEnhancers_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/VistaEnhancers_hg19.bed.meta\"\n\t]\n}")))
-  ), new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "schemaName", paramType = "query", dataType = "String", allowableValues = "[bed, bedGraph, NarrowPeak, BroadPeak, vcf]"),
+    new ApiImplicitParam(name = "body", dataType = "String", paramType = "body",
+      examples = new Example(Array(new ExampleProperty(value = "{\n\t\"schema_file\": \"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/HG19_ANN.schema\",\n\t\"data_files\": [\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/RefSeqGenesExons_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/RefSeqGenesExons_hg19.bed.meta\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/TSS_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/TSS_hg19.bed.meta\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/VistaEnhancers_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/VistaEnhancers_hg19.bed.meta\"\n\t]\n}")))
+    ), new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
   def uploadSamplesFromUrls(dataSetName: String) = AuthenticatedAction(parse.json) {
-    request =>
-      val schemaName = request.getQueryString("schemaName")
+    implicit request =>
+      val schemaNameOption = request.getQueryString("schemaName")
 
       val username = request.username.get
       val dataFilePaths = (request.body \ "data_files").asOpt[Seq[String]].getOrElse(Seq.empty[String])
@@ -674,15 +668,13 @@ class DSManager extends Controller {
           downloadFile(new File(tempDirPath + ".schema"), schemaFilePath)
         )
 
-        Logger.info("Schema name: " + schemaName.getOrElse("NO INPUT"))
+        Logger.info("Schema name: " + schemaNameOption.getOrElse("NO INPUT"))
+
+        val schemaPathOption = getSchemaPath(tempDirPath, schemaPath.isDefined, schemaNameOption)
 
 
-        //      val dataset = IRDataSet(dataSetName, repository.readSchemaFile(schemaPath).fields.map(field => (field.name, field.fieldType)))
-        val samples: util.List[GMQLSample] = files.toList.filter(fileName => files.contains(fileName + ".meta")).map(fileName => GMQLSample(fileName, fileName + ".meta"))
-        repository.importDs(dataSetName, username, samples, schemaPath.getOrElse(""))
+        importDataset(username, dataSetName, schemaPathOption, tempDirPath, files.toSet)
 
-        Ok("Files uploaded")
-        //      Ok("Got: " + dataFilePaths)
       } catch {
         case e: FileNotFoundException =>
           Logger.error("error", e)
@@ -704,6 +696,60 @@ class DSManager extends Controller {
       }
 
   }
+
+
+  private def getSchemaPath(tempDirPath: String, isSchemaUploaded: Boolean, schemaNameOption: Option[String]): Option[String] = {
+    schemaNameOption match {
+      case Some(schemaName) => Some(s"${ut.GMQL_CONF_DIR}/${schemaName.toUpperCase}.schema")
+      case None => if (isSchemaUploaded) Some(tempDirPath + ".schema") else None
+    }
+  }
+
+
+  private def importDataset(username: String, dataSetName: String, schemaPathOption: Option[String], tempDirPath: String, files: Set[String])(implicit request: RequestHeader) = {
+    val samplesTuple3 = createEmptyMeta(tempDirPath, files)
+    val samplesToImport = samplesTuple3._1 ++ samplesTuple3._2
+
+    schemaPathOption match {
+      case Some(schemaPath) =>
+        //      val dataset = IRDataSet(dataSetName, repository.readSchemaFile(schemaPath).fields.map(field => (field.name, field.fieldType)))
+        val samples: util.List[GMQLSample] = samplesToImport.toList.map(fileName => GMQLSample(fileName, fileName + ".meta"))
+        repository.importDs(dataSetName, username, samples, schemaPath)
+
+        def stringToSample(set: Set[String]) = if (set.isEmpty) None else Some(set.toSeq.map((file: String) => Sample("", file.split("/").last)))
+
+        val uploadResult = UploadResult(stringToSample(samplesTuple3._1).getOrElse(Seq.empty), stringToSample(samplesTuple3._2), stringToSample(samplesTuple3._3))
+        render {
+          case Accepts.Xml() => Ok(scala.xml.Utility.trim(uploadResult.getXml))
+          case Accepts.Json() => Ok(Json.toJson(uploadResult))
+          case _ => NA
+        }
+      //        Ok("Done")
+      case None => NotAcceptable("Schema is not defined correctly")
+    }
+  }
+
+  private def createEmptyMeta(tempDirPath: String, sampleSet: Set[String]) = {
+    val (metasTemp, regions) = sampleSet.partition(_.endsWith(".meta"))
+    val metas = metasTemp.map(t => t.substring(0, t.size - 5))
+    val regionOnly = regions diff metas
+    val metaOnly = metas diff regions
+    val both = metas intersect regions
+
+    Logger.debug("both      : " + both)
+    Logger.debug("regionOnly: " + regionOnly)
+    Logger.debug("metaOnly  : " + metaOnly)
+
+    for (regionFile <- regionOnly)
+      new PrintWriter(s"$regionFile.meta") {
+        write(s"filename\t${regionFile.split("/").last}");
+        close
+      }
+
+    Logger.debug((both, regionOnly, metaOnly).toString())
+    (both, regionOnly, metaOnly)
+  }
+
 
   //TODO move to utils
   private def downloadFile(tempDirPath: String, filePath: String): String = {

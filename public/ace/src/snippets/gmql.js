@@ -10,7 +10,7 @@ snippet SELECT\n\
 \n\
 ## MATERIALIZE\n\
 snippet MATERIALIZE\n\
-	MATERIALIZE ${1:DS} INTO ​${2:fileName};\n\
+	MATERIALIZE ${1:DATA_SET_VAR} INTO ${2:RESULT_DS};\n\
 ##\n\
 \n\
 ## PROJECT\n\

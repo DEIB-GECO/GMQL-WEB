@@ -148,7 +148,7 @@ glyph_opts = map:
               value: (if newType == "data-set" && att.owner == "public" then att.owner + "." else "") +  att.name
               selected: data.node.selected
             }
-            temp.iconclass = iconclass if iconclass
+            temp.iconClass = iconclass if iconclass
             temp.id = att.id if att.id
             temp
           dfd.resolve(res)

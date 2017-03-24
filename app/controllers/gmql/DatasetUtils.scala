@@ -233,7 +233,7 @@ case class Attribute(key: String,
                      @ApiModelProperty(dataType = "List[controllers.gmql.Value]", required = false) var values: Option[Seq[Value]] = None,
                      @ApiModelProperty(dataType = "Int", required = false) valueCount: Option[Int] = None,
                      @ApiModelProperty(dataType = "Int", required = false) sampleCount: Option[Int] = None) extends Ordered[Attribute] {
-  def compare(that: Attribute): Int = Ordering.Tuple2[String, Option[Value]].compare((this.key.toLowerCase, this.value), (that.key.toLowerCase, that.value))
+  def compare(that: Attribute): Int = Ordering.Tuple2[String, String].compare((this.key.toLowerCase, this.value.getOrElse(Value("")).text.toLowerCase), (that.key.toLowerCase, that.value.getOrElse(Value("")).text.toLowerCase))
 
   values = values.map(_.sorted)
 

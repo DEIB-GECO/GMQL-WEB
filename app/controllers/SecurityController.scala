@@ -39,7 +39,7 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
     consumes = "application/json")
   @ApiImplicitParams(Array(new ApiImplicitParam(
     name = "body",
-    dataType = "String", paramType = "body",
+    dataType = "string", paramType = "body",
     examples = new Example(Array(new ExampleProperty(value =
       """
 {
@@ -93,7 +93,7 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
     consumes = "application/json")
   @ApiImplicitParams(Array(new ApiImplicitParam(
     name = "body",
-    dataType = "String", paramType = "body",
+    dataType = "string", paramType = "body",
     examples = new Example(Array(new ExampleProperty(value =
       """
 {
@@ -138,7 +138,7 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
       loginResult(token, user = None)
   }
 
-  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
   def logout = AuthenticatedAction { request =>
     val username = request.username.get
     val user = request.user
@@ -232,7 +232,7 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
   }
 
   //authentication with token
-  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
   def passwordRecovery = AuthenticatedAction { implicit request =>
     val username = request.username.get
 
@@ -246,10 +246,10 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
     consumes = "application/json")
   @ApiImplicitParams(Array(new ApiImplicitParam(
     name = "body",
-    dataType = "String", paramType = "body",
+    dataType = "string", paramType = "body",
     examples = new Example(Array(new ExampleProperty(value =
       """{"password": "password_text"}""")))
-  ),new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "String", paramType = "header", required = true)))
+  ),new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
   def updatePassword = AuthenticatedAction(parse.json) { implicit request =>
     val username = request.username.get
     val user = request.user.get

@@ -71,8 +71,8 @@ object DatasetUtils {
 
 case class Sample(id: String,
                   name: String,
-                  @ApiModelProperty(dataType = "String", required = false) path: Option[String] = None,
-                  @ApiModelProperty(dataType = "String", required = false) dataset: Option[String] = None) extends Ordered[Sample] {
+                  @ApiModelProperty(dataType = "string", required = false) path: Option[String] = None,
+                  @ApiModelProperty(dataType = "string", required = false) dataset: Option[String] = None) extends Ordered[Sample] {
   def compare(that: Sample): Int = this.name.toLowerCase compare that.name.toLowerCase
 
   @ApiModelProperty(hidden = true)
@@ -90,8 +90,8 @@ object Sample {
 }
 
 case class Dataset(var name: String,
-                   @ApiModelProperty(dataType = "String", required = false) owner: Option[String] = None,
-                   @ApiModelProperty(dataType = "String", required = false) group: Option[String] = None,
+                   @ApiModelProperty(dataType = "string", required = false) owner: Option[String] = None,
+                   @ApiModelProperty(dataType = "string", required = false) group: Option[String] = None,
                    @ApiModelProperty(dataType = "List[controllers.gmql.Sample]", required = false) samples: Option[Seq[Sample]] = None) extends Ordered[Dataset] {
   def compare(that: Dataset): Int = Ordering.Tuple2[Option[String], String].compare((this.owner, this.name.toLowerCase), (that.owner, that.name.toLowerCase))
 
@@ -121,10 +121,10 @@ object Datasets {
 
 // job id,
 case class Job(id: String,
-               @ApiModelProperty(dataType = "String", required = false) status: Option[String] = None,
-               @ApiModelProperty(dataType = "String", required = false) message: Option[String] = None,
+               @ApiModelProperty(dataType = "string", required = false) status: Option[String] = None,
+               @ApiModelProperty(dataType = "string", required = false) message: Option[String] = None,
                @ApiModelProperty(dataType = "List[controllers.gmql.Dataset]", required = false) datasets: Option[Seq[Dataset]] = None,
-               @ApiModelProperty(dataType = "String", required = false) executionTime: Option[String] = None) {
+               @ApiModelProperty(dataType = "string", required = false) executionTime: Option[String] = None) {
   @ApiModelProperty(hidden = true)
   def getXml =
     <job>
@@ -167,7 +167,7 @@ object QueryResult {
 }
 
 case class Query(name: String,
-                 @ApiModelProperty(dataType = "String", required = false) text: Option[String] = None) {
+                 @ApiModelProperty(dataType = "string", required = false) text: Option[String] = None) {
   @ApiModelProperty(hidden = true)
   def getXml =
         <query>

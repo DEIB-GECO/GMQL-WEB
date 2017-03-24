@@ -113,7 +113,7 @@
         <div id="message-bar" class="swagger-ui-wrap" data-sw-translate>&nbsp;</div>
 
         <div id="gmql-info" class="swagger-ui-wrap" >
-      All the operations, except register, login or password recovery, needs an authentication token with one of the method below:
+      All the operations, except registration, login and password recovery, need an authentication token with one of the method below:
             <ul style="display: block;
                 list-style-type: disc;
                 margin-top: 0.3em;
@@ -121,11 +121,11 @@
                 margin-left: 0;
                 margin-right: 0;
                 padding-left: 40px;">
-                <li>the HTTP header with "@controllers.gmql.SecurityControllerDefaults.AUTH_TOKEN_HEADER"</li>
-                <li>query string parameter with "@controllers.gmql.SecurityControllerDefaults.QUERY_AUTH_TOKEN"</li>
+                <li>HTTP header with "@controllers.gmql.SecurityControllerDefaults.AUTH_TOKEN_HEADER"</li>
+                <li>query string parameter as field value "@controllers.gmql.SecurityControllerDefaults.QUERY_AUTH_TOKEN"</li>
                 <li>cookie value with "@controllers.gmql.SecurityControllerDefaults.AUTH_TOKEN_COOKIE"</li>
             </ul>
-          For testing Rest API below, please login from <a href="@controllers.routes.Application.gmql">home page</a> or use "Guest account":
+          For testing the REST API below, please login from <a href="@controllers.routes.Application.gmql">home page</a> or use "Guest account":
             <button id="swagger-guest-button">Guest</button>
             <br>
             Current authentication token:

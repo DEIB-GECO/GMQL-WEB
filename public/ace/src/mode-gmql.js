@@ -99,7 +99,7 @@ oop.inherits(Mode, TextMode);
 
 (function() {
 
-    this.lineCommentStart = "--";
+    this.lineCommentStart = "#";
 
     this.$id = "ace/mode/gmql";
 }).call(Mode.prototype);

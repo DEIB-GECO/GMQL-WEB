@@ -363,11 +363,15 @@ var JsonHighlightRules = function() {
                 token : "constant.language.boolean",
                 regex : "(?:true|false)\\b"
             }, {
-                token : "invalid.illegal", // single quoted strings are not allowed
+                token : "text", // single quoted strings are not allowed
                 regex : "['](?:(?:\\\\.)|(?:[^'\\\\]))*?[']"
             }, {
-                token : "invalid.illegal", // comments are not allowed
+                token : "comment", // comments are not allowed, but who cares?
                 regex : "\\/\\/.*$"
+            }, {
+                token : "comment.start", // comments are not allowed, but who cares?
+                regex : "\\/\\*",
+                next  : "comment"
             }, {
                 token : "paren.lparen",
                 regex : "[[({]"
@@ -385,15 +389,19 @@ var JsonHighlightRules = function() {
                 regex : /\\(?:x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|["\\\/bfnrt])/
             }, {
                 token : "string",
-                regex : '[^"\\\\]+'
-            }, {
-                token : "string",
-                regex : '"',
+                regex : '"|$',
                 next  : "start"
             }, {
-                token : "string",
-                regex : "",
+                defaultToken : "string"
+            }
+        ],
+        "comment" : [
+            {
+                token : "comment.end", // comments are not allowed, but who cares?
+                regex : "\\*\\/",
                 next  : "start"
+            }, {
+                defaultToken: "comment"
             }
         ]
     };
@@ -429,7 +437,7 @@ var JavaScriptHighlightRules = function(options) {
         "keyword":
             "const|yield|import|get|set|async|await|" +
             "break|case|catch|continue|default|delete|do|else|finally|for|function|" +
-            "if|in|instanceof|new|return|switch|throw|try|typeof|let|var|while|with|debugger|" +
+            "if|in|of|instanceof|new|return|switch|throw|try|typeof|let|var|while|with|debugger|" +
             "__parent__|__count__|escape|unescape|with|__proto__|" +
             "class|enum|extends|super|export|implements|private|public|interface|package|protected|static",
         "storage.type":
@@ -535,7 +543,7 @@ var JavaScriptHighlightRules = function(options) {
                 next  : "property"
             }, {
                 token : "keyword.operator",
-                regex : /--|\+\+|\.{3}|===|==|=|!=|!==|<+=?|>+=?|!|&&|\|\||\?\:|[!$%&*+\-~\/^]=?/,
+                regex : /--|\+\+|\.{3}|===|==|=|!=|!==|<+=?|>+=?|!|&&|\|\||\?:|[!$%&*+\-~\/^]=?/,
                 next  : "start"
             }, {
                 token : "punctuation.operator",
@@ -1458,15 +1466,15 @@ oop.inherits(PgsqlHighlightRules, TextHighlightRules);
 exports.PgsqlHighlightRules = PgsqlHighlightRules;
 });
 
-define("ace/mode/pgsql",["require","exports","module","ace/lib/oop","ace/mode/text","ace/mode/pgsql_highlight_rules","ace/range"], function(require, exports, module) {
+define("ace/mode/pgsql",["require","exports","module","ace/lib/oop","ace/mode/text","ace/mode/pgsql_highlight_rules"], function(require, exports, module) {
 
 var oop = require("../lib/oop");
 var TextMode = require("../mode/text").Mode;
 var PgsqlHighlightRules = require("./pgsql_highlight_rules").PgsqlHighlightRules;
-var Range = require("../range").Range;
 
 var Mode = function() {
     this.HighlightRules = PgsqlHighlightRules;
+    this.$behaviour = this.$defaultBehaviour;
 };
 oop.inherits(Mode, TextMode);
 
@@ -1480,7 +1488,7 @@ oop.inherits(Mode, TextMode);
         } else {
             return this.$getIndent(line); // Keep whatever indent the previous line has
         }
-    }
+    };
 
     this.$id = "ace/mode/pgsql";
 }).call(Mode.prototype);

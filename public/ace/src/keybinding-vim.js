@@ -118,17 +118,15 @@ define("ace/keyboard/vim",["require","exports","module","ace/range","ace/lib/eve
     return this.ace.inVirtualSelectionMode && this.ace.selection.index;
   };
   this.onChange = function(delta) {
-    if (delta.action[0] == 'i') {
-      var change = { text: delta.lines };
-      var curOp = this.curOp = this.curOp || {};
-      if (!curOp.changeHandlers)
-        curOp.changeHandlers = this._eventRegistry["change"] && this._eventRegistry["change"].slice();
-      if (this.virtualSelectionMode()) return;
-      if (!curOp.lastChange) {
-        curOp.lastChange = curOp.change = change;
-      } else {
-        curOp.lastChange.next = curOp.lastChange = change;
-      }
+    var change = { text: delta.action[0] == 'i' ? delta.lines : [] };
+    var curOp = this.curOp = this.curOp || {};
+    if (!curOp.changeHandlers)
+      curOp.changeHandlers = this._eventRegistry["change"] && this._eventRegistry["change"].slice();
+    if (this.virtualSelectionMode()) return;
+    if (!curOp.lastChange) {
+      curOp.lastChange = curOp.change = change;
+    } else {
+      curOp.lastChange.next = curOp.lastChange = change;
     }
     this.$updateMarkers(delta);
   };
@@ -1454,8 +1452,12 @@ dom.importCssString(".normal-mode .ace_cursor{\
 
           if (lastInsertModeKeyTimer) { window.clearTimeout(lastInsertModeKeyTimer); }
           if (keysAreChars) {
-            var here = cm.getCursor();
-            cm.replaceRange('', offsetCursor(here, 0, -(keys.length - 1)), here, '+input');
+            var selections = cm.listSelections();
+            for (var i = 0; i < selections.length; i++) {
+              var here = selections[i].head;
+              cm.replaceRange('', offsetCursor(here, 0, -(keys.length - 1)), here, '+input');
+            }
+            vimGlobalState.macroModeState.lastInsertModeChanges.changes.pop();
           }
           clearInputState(cm);
           return match.command;
@@ -4487,7 +4489,6 @@ dom.importCssString(".normal-mode .ace_cursor{\
             }
           }
         }
-        throw Error('No such mapping.');
       }
     };
 
@@ -5098,6 +5099,10 @@ dom.importCssString(".normal-mode .ace_cursor{\
           if (changeObj.origin == '+input' || changeObj.origin == 'paste'
               || changeObj.origin === undefined /* only in testing */) {
             var text = changeObj.text.join('\n');
+            if (lastChange.maybeReset) {
+              lastChange.changes = [];
+              lastChange.maybeReset = false;
+            }
             lastChange.changes.push(text);
           }
           changeObj = changeObj.next;
@@ -5113,7 +5118,7 @@ dom.importCssString(".normal-mode .ace_cursor{\
         if (lastChange.expectCursorActivityForChange) {
           lastChange.expectCursorActivityForChange = false;
         } else {
-          lastChange.changes = [];
+          lastChange.maybeReset = true;
         }
       } else if (!cm.curOp.isVimOp) {
         handleExternalSelection(cm, vim);
@@ -5165,6 +5170,10 @@ dom.importCssString(".normal-mode .ace_cursor{\
       var keyName = CodeMirror.keyName(e);
       if (!keyName) { return; }
       function onKeyFound() {
+        if (lastChange.maybeReset) {
+          lastChange.changes = [];
+          lastChange.maybeReset = false;
+        }
         lastChange.changes.push(new InsertModeKey(keyName));
         return true;
       }

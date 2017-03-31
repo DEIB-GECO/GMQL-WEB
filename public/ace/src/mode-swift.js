@@ -185,7 +185,7 @@ var SwiftHighlightRules = function() {
                 regex : /[+-]?(?:0(?:b[01]+|o[0-7]+|x[\da-fA-F])|\d+(?:(?:\.\d*)?(?:[PpEe][+-]?\d+)?)\b)/
             }, {
                 token : "keyword.operator",
-                regex : /--|\+\+|===|==|=|!=|!==|<=|>=|<<=|>>=|>>>=|<>|<|>|!|&&|\|\||\?\:|[!$%&*+\-~\/^]=?/,
+                regex : /--|\+\+|===|==|=|!=|!==|<=|>=|<<=|>>=|>>>=|<>|<|>|!|&&|\|\||\?:|[!$%&*+\-~\/^]=?/,
                 next  : "start"
             }, {
                 token : "punctuation.operator",
@@ -367,6 +367,7 @@ var Mode = function() {
     this.HighlightRules = HighlightRules;
     this.foldingRules = new FoldMode();
     this.$behaviour = new CstyleBehaviour();
+    this.$behaviour = this.$defaultBehaviour;
 };
 oop.inherits(Mode, TextMode);
 

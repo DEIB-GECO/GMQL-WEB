@@ -72,7 +72,7 @@ var JavaScriptHighlightRules = function(options) {
         "keyword":
             "const|yield|import|get|set|async|await|" +
             "break|case|catch|continue|default|delete|do|else|finally|for|function|" +
-            "if|in|instanceof|new|return|switch|throw|try|typeof|let|var|while|with|debugger|" +
+            "if|in|of|instanceof|new|return|switch|throw|try|typeof|let|var|while|with|debugger|" +
             "__parent__|__count__|escape|unescape|with|__proto__|" +
             "class|enum|extends|super|export|implements|private|public|interface|package|protected|static",
         "storage.type":
@@ -178,7 +178,7 @@ var JavaScriptHighlightRules = function(options) {
                 next  : "property"
             }, {
                 token : "keyword.operator",
-                regex : /--|\+\+|\.{3}|===|==|=|!=|!==|<+=?|>+=?|!|&&|\|\||\?\:|[!$%&*+\-~\/^]=?/,
+                regex : /--|\+\+|\.{3}|===|==|=|!=|!==|<+=?|>+=?|!|&&|\|\||\?:|[!$%&*+\-~\/^]=?/,
                 next  : "start"
             }, {
                 token : "punctuation.operator",
@@ -695,14 +695,13 @@ oop.inherits(FoldMode, BaseFoldMode);
 
 });
 
-define("ace/mode/javascript",["require","exports","module","ace/lib/oop","ace/mode/text","ace/mode/javascript_highlight_rules","ace/mode/matching_brace_outdent","ace/range","ace/worker/worker_client","ace/mode/behaviour/cstyle","ace/mode/folding/cstyle"], function(require, exports, module) {
+define("ace/mode/javascript",["require","exports","module","ace/lib/oop","ace/mode/text","ace/mode/javascript_highlight_rules","ace/mode/matching_brace_outdent","ace/worker/worker_client","ace/mode/behaviour/cstyle","ace/mode/folding/cstyle"], function(require, exports, module) {
 "use strict";
 
 var oop = require("../lib/oop");
 var TextMode = require("./text").Mode;
 var JavaScriptHighlightRules = require("./javascript_highlight_rules").JavaScriptHighlightRules;
 var MatchingBraceOutdent = require("./matching_brace_outdent").MatchingBraceOutdent;
-var Range = require("../range").Range;
 var WorkerClient = require("../worker/worker_client").WorkerClient;
 var CstyleBehaviour = require("./behaviour/cstyle").CstyleBehaviour;
 var CStyleFoldMode = require("./folding/cstyle").FoldMode;
@@ -733,7 +732,7 @@ oop.inherits(Mode, TextMode);
         }
 
         if (state == "start" || state == "no_regex") {
-            var match = line.match(/^.*(?:\bcase\b.*\:|[\{\(\[])\s*$/);
+            var match = line.match(/^.*(?:\bcase\b.*:|[\{\(\[])\s*$/);
             if (match) {
                 indent += tab;
             }
@@ -1274,7 +1273,7 @@ var XmlHighlightRules = function(normalize) {
                 token : ["punctuation.instruction.xml", "keyword.instruction.xml"],
                 regex : "(<\\?)(" + tagRegex + ")", next : "processing_instruction"
             },
-            {token : "comment.xml", regex : "<\\!--", next : "comment"},
+            {token : "comment.start.xml", regex : "<\\!--", next : "comment"},
             {
                 token : ["xml-pe.doctype.xml", "xml-pe.doctype.xml"],
                 regex : "(<\\!)(DOCTYPE)(?=[\\s])", next : "doctype", caseInsensitive: true
@@ -1344,7 +1343,7 @@ var XmlHighlightRules = function(normalize) {
         ],
 
         comment : [
-            {token : "comment.xml", regex : "-->", next : "start"},
+            {token : "comment.end.xml", regex : "-->", next : "start"},
             {defaultToken : "comment.xml"}
         ],
 
@@ -1806,7 +1805,7 @@ function is(token, type) {
         var tag = this._getFirstTagInLine(session, row);
 
         if (!tag)
-            return "";
+            return this.getCommentFoldWidget(session, row);
 
         if (tag.closing || (!tag.tagName && tag.selfClosing))
             return foldStyle == "markbeginend" ? "end" : "";
@@ -1819,6 +1818,12 @@ function is(token, type) {
 
         return "start";
     };
+    
+    this.getCommentFoldWidget = function(session, row) {
+        if (/comment/.test(session.getState(row)) && /<!-/.test(session.getLine(row)))
+            return "start";
+        return "";
+    }
     this._getFirstTagInLine = function(session, row) {
         var tokens = session.getTokens(row);
         var tag = new Tag();
@@ -1937,8 +1942,10 @@ function is(token, type) {
     this.getFoldWidgetRange = function(session, foldStyle, row) {
         var firstTag = this._getFirstTagInLine(session, row);
         
-        if (!firstTag)
-            return null;
+        if (!firstTag) {
+            return this.getCommentFoldWidget(session, row)
+                && session.getCommentFoldRange(row, session.getLine(row).length);
+        }
         
         var isBackward = firstTag.closing || firstTag.selfClosing;
         var stack = [];
@@ -2279,7 +2286,7 @@ var HtmlCompletions = function() {
         if (is(token, "attribute-value"))
             return this.getAttributeValueCompletions(state, session, pos, prefix);
         var line = session.getLine(pos.row).substr(0, pos.column);
-        if (/&[A-z]*$/i.test(line))
+        if (/&[a-z]*$/i.test(line))
             return this.getHTMLEntityCompletions(state, session, pos, prefix);
 
         return [];
@@ -2524,7 +2531,7 @@ var LuaHighlightRules = function() {
             stateName: "bracketedString",
             onMatch : function(value, currentState, stack){
                 stack.unshift(this.next, value.length, currentState);
-                return "comment";
+                return "string.start";
             },
             regex : /\[=*\[/,
             next  : [
@@ -2537,13 +2544,13 @@ var LuaHighlightRules = function() {
                         } else {
                             this.next = "";
                         }
-                        return "comment";
+                        return "string.end";
                     },
                     
                     regex : /\]=*\]/,
                     next  : "start"
                 }, {
-                    defaultToken : "comment"
+                    defaultToken : "string"
                 }
             ]
         },
@@ -2733,6 +2740,7 @@ var Mode = function() {
     this.HighlightRules = LuaHighlightRules;
     
     this.foldingRules = new LuaFoldMode();
+    this.$behaviour = this.$defaultBehaviour;
 };
 oop.inherits(Mode, TextMode);
 
@@ -2823,7 +2831,7 @@ oop.inherits(Mode, TextMode);
         var tabLength = session.getTabString().length;
         var expectedIndent = prevIndent + tabLength * getNetIndentLevel(prevTokens);
         var curIndent = this.$getIndent(session.getLine(row)).length;
-        if (curIndent < expectedIndent) {
+        if (curIndent <= expectedIndent) {
             return;
         }
         session.outdentRows(new Range(row, 0, row + 2, 0));

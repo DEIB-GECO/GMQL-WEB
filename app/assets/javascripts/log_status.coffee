@@ -37,7 +37,7 @@ insertTable = (dialog) ->
                         <th>Job ID</th>
                         <th>Status</th>
                         <th>Message</th>
-                        <th>Data set names</th>
+                        <th>Dataset names</th>
                         <th>Elapsed time</th>
                     </tr>
                 </thead>

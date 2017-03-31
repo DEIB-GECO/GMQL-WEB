@@ -95,7 +95,7 @@ printResult = (result, responseDivId, contentType) ->
     a.click -> selectNode($(this).data('dsName'))
     a.attr("data-toggle", "tooltip")
     .attr("data-placement", "bottom")
-    .attr("title", "Click to select on tree")
+    .attr("title", "Click to select on dataset tree")
     a.tooltip()
     result.append a
     result.append "<br>"

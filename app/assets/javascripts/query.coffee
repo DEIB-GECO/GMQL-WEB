@@ -192,7 +192,7 @@ lastJobLog = () ->
                 </div>
             </div>
             <div class='form-group'>
-                <label class='col-xs-2 control-label'>Data set names</label>
+                <label class='col-xs-2 control-label'>Dataset names</label>
                 <div class='col-xs-10'>
                   <p id ='datasetNames' class='form-control-static'></p>
                 </div>

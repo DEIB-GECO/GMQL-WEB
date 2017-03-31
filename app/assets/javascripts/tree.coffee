@@ -293,7 +293,7 @@ deleteSelectedNodes = ->
   if dataSetsDiv.length + samplesDiv.length > 0
     BootstrapDialog.show
       message: '<div>Are you sure to delete? </div>' +
-        (("<b>Data sets:</b>#{dataSetsDiv}" if dataSetsDiv.length) or '') +
+        (("<b>Datasets:</b>#{dataSetsDiv}" if dataSetsDiv.length) or '') +
         (("<b>Samples:</b>#{samplesDiv}" if samplesDiv.length) or '') +
         (("<div>Sample deletion is not implemented, yet</div>" if samplesDiv.length) or '')
       buttons: [
@@ -348,10 +348,10 @@ deleteDataset = (node) ->
     success: (result, textStatus, jqXHR) ->
       displayInfo(result)
       #      BootstrapDialog.show
-      #        message: "Data set(#{node.title}) is deleted"
+      #        message: "Dataset(#{node.title}) is deleted"
       $.notify({
         title: '<strong>Deleted</strong>',
-        message: "Data set(#{node.title}) is deleted"
+        message: "Dataset(#{node.title}) is deleted"
       }, {
         type: 'success'
         placement: {

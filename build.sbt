@@ -125,4 +125,4 @@ libraryDependencies += "io.swagger" % "swagger-core" % "1.5.10"
 //libraryDependencies += "com.wordnik" %% "swagger-play2" % "1.3.12"
 
 
-//libraryDependencies ~= { _.map(_.exclude("org.slf4j", "slf4j-log4j12")) }
+libraryDependencies ~= { _.map(_.exclude("org.slf4j", "slf4j-log4j12")) }

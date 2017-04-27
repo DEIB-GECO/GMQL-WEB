@@ -124,7 +124,7 @@ class DSManager extends Controller {
   def deleteDataset(datasetName: String) = AuthenticatedAction { implicit request =>
     val username: String = request.username.get
     if (datasetName.startsWith("public."))
-      renderedError(FORBIDDEN, "Public dataset cannot be deleted")
+      renderedError(FORBIDDEN, "Public dataset cannot be deleted.")
     else {
       //TODO add also DSExists after its implementation
       try {
@@ -158,7 +158,7 @@ class DSManager extends Controller {
     import scala.concurrent.ExecutionContext.Implicits.global
     val username: String = request.username.get
     if (datasetName.startsWith("public."))
-      renderedError(FORBIDDEN, "Public dataset cannot be deleted")
+      renderedError(FORBIDDEN, "Public dataset cannot be downloaded.")
     else {
       try {
         //TODO use ARM solution, if it is possible
@@ -232,7 +232,7 @@ class DSManager extends Controller {
 
     try {
       if (datasetName.startsWith("public."))
-        renderedError(FORBIDDEN, "Public dataset cannot be deleted")
+        renderedError(FORBIDDEN, "Public dataset cannot be downloaded.")
       else {
         val sampleNames = repository.listDSSamples(datasetName, username).map(temp => (temp.name.split("/").last.split("\\.").head, temp.name.split("/").last))
         Logger.debug("sampleNames" + sampleNames)

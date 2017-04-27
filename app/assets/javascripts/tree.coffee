@@ -262,8 +262,8 @@ schemaTable = (schema) ->
 
   table.append tbody = $("<tbody>")
   for x in schema.fields
-    newRow = $("<tr>").append($("<td>").text(x.name)).append($("<td>").text(x.fieldType))
-    if x.name not in ["seqname", "feature", "start", "end"] and x.fieldType not in ["STRING",
+    newRow = $("<tr>").append($("<td>").text(x.name)).append($("<td>").text(x.type))
+    if x.name not in ["seqname", "feature", "start", "end"] and x.type not in ["STRING",
       "CHAR"] and not /^public\./.test window.lastSelectedDataSet
       link = jsRoutes.controllers.gmql.DSManager.parseFiles(window.lastSelectedDataSet, x.name).url
       button = $("<a target='_blank' href='#{link}' class='btn btn-default btn-xs'>View</a>")

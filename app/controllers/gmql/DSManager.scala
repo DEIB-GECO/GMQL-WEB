@@ -15,6 +15,7 @@ import it.polimi.genomics.repository._
 import it.polimi.genomics.spark.implementation.loaders.CustomParser
 import org.xml.sax.SAXException
 import play.api.Play.current
+import play.api.libs.functional.syntax._
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json._
 import play.api.mvc._
@@ -28,7 +29,6 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
 import scala.sys.process._
 import scala.xml.Elem
-
 
 /**
   * Created by Canakoglu on 15-Mar-16.
@@ -293,18 +293,26 @@ class DSManager extends Controller {
     def getXmlGmqlSchema(gmqlSchema: GMQLSchema): Elem =
         <schema>
           <name>{gmqlSchema.name}</name>
-          <schema_type>{gmqlSchema.schemaType}</schema_type>
+          <type>{gmqlSchema.schemaType}</type>
           {gmqlSchema.fields.map(getXmlGmqlSchemaField)}
         </schema>
 
     def getXmlGmqlSchemaField(gmqlSchemaField: GMQLSchemaField): Elem =
       <field>
         <name>{gmqlSchemaField.name}</name>
-        <field_type>{gmqlSchemaField.fieldType}</field_type>
+        <type>{gmqlSchemaField.fieldType}</type>
       </field>
 
-    implicit val writerGmqlSchemaField = Json.writes[GMQLSchemaField]
-    implicit val writerGmqlSchema = Json.writes[GMQLSchema]
+    implicit val writerGmqlSchemaField =  (
+      (JsPath \ "name").write[String] and
+        (JsPath \ "type").write[ParsingType.Value]
+      ) (unlift(GMQLSchemaField.unapply))
+
+    implicit val writerGmqlSchema  = (
+      (JsPath \ "name").write[String] and
+        (JsPath \ "type").write[GMQLSchemaFormat.Value]and
+        (JsPath \ "fields").write[List[GMQLSchemaField]]
+      ) (unlift(GMQLSchema.unapply))
 
     try {
       val gmqlSchema = repository.getSchema(dsName, username)
@@ -573,7 +581,7 @@ class DSManager extends Controller {
     consumes = "application/x-www-form-urlencoded",
     response = classOf[UploadResult])
   @ApiResponses(value = Array(
-//    new ApiResponse(code = 200, message = "test"),
+    //    new ApiResponse(code = 200, message = "test"),
     new ApiResponse(code = 401, message = "User is not authenticated"),
     new ApiResponse(code = 404, message = "Dataset is not found for the user")
   ))
@@ -640,7 +648,7 @@ class DSManager extends Controller {
     response = classOf[UploadResult]
   )
   @ApiResponses(value = Array(
-//    new ApiResponse(code = 200, message = "test"),
+    //    new ApiResponse(code = 200, message = "test"),
     new ApiResponse(code = 401, message = "User is not authenticated"),
     new ApiResponse(code = 404, message = "Dataset is not found for the user")
   ))

@@ -68,8 +68,8 @@ glyph_opts = map:
         title: "Private"
         "folder": true
         "lazy": true
-        hideCheckbox: true
-        unselectable: true
+        hideCheckbox: false
+        unselectable: false
         type: "main"
         value: "private-data-set"
       }

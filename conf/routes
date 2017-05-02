@@ -53,6 +53,9 @@ DELETE        /datasets/:datasetName                             controllers.gmq
 ##this could be alternative
 ##GET           /datasets/:datasetName/delete                                     controllers.gmql.DSManager.deleteDataset(datasetName)
 
+
+PATCH         /datasets/:datasetName                             controllers.gmql.DSManager.modifyDataset(datasetName)
+
 #
 ## get single sample file, region or meta
 #GET           /datasets/:datasetName/:sampleName/:isMeta          controllers.gmql.DSManager.getFile(datasetName, sampleName, isMeta)
@@ -68,8 +71,9 @@ GET           /datasets/:datasetName/getUCSCLink                 controllers.gmq
 
 GET           /datasets/:datasetName/schema                      controllers.gmql.DSManager.dataSetSchema(datasetName)
 
-
+#    val schemaNameOption = request.getQueryString("schemaName")
 POST          /datasets/:datasetName/uploadSample                controllers.gmql.DSManager.uploadSample(datasetName: String)
+#    val schemaNameOption = request.getQueryString("schemaName")
 POST          /datasets/:datasetName/uploadSampleUrls            controllers.gmql.DSManager.uploadSamplesFromUrls(datasetName: String)
 #TODO change can be problem with upper one
 GET           /datasets/:datasetName/:columnName/parse           controllers.gmql.DSManager.parseFiles(datasetName:String, columnName: String)

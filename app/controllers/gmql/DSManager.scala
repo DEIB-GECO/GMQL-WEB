@@ -10,7 +10,7 @@ import io.swagger.annotations.{ApiImplicitParams, _}
 import it.polimi.genomics.core.DataStructures.IRDataSet
 import it.polimi.genomics.core.{GNull, _}
 import it.polimi.genomics.repository.FSRepository.FS_Utilities
-import it.polimi.genomics.repository.GMQLExceptions.{GMQLDSNotFound, GMQLSampleNotFound}
+import it.polimi.genomics.repository.GMQLExceptions.{GMQLDSNotFound, GMQLNotValidDatasetNameException, GMQLSampleNotFound}
 import it.polimi.genomics.repository._
 import it.polimi.genomics.spark.implementation.loaders.CustomParser
 import org.xml.sax.SAXException
@@ -146,6 +146,50 @@ class DSManager extends Controller {
       }
     }
   }
+
+  /**
+    * Rename the dataset.
+    *
+    * @param datasetName name of the dataset.
+    *                    If starts with <i>"public."</i> then it is about public dataset, which is forbidden to rename.
+    * @return
+    */
+  @ApiOperation(value = "Rename the dataset",
+    notes = "Rename the input dataset")
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
+  @ApiResponses(value = Array(
+    new ApiResponse(code = 401, message = "User is not authenticated"),
+    new ApiResponse(code = 403, message = "Public datasets cannot be modified by user"),
+    new ApiResponse(code = 404, message = "Dataset is not found for the user")))
+  def modifyDataset(datasetName: String) = AuthenticatedAction(parse.empty) { implicit request =>   val newDatasetName = datasetName + "_new"
+    val username: String = request.username.get
+    if (datasetName.startsWith("public."))
+      renderedError(FORBIDDEN, "Public dataset cannot be modified.")
+    else {
+      //TODO add also DSExists after its implementation
+      try {
+        // set as lazy in if the header accept is not correct one
+        lazy val result = {
+          Logger.debug(s"Renaming dataset of user: $username dataset: $datasetName")
+          repository.changeDSName(datasetName, username, newDatasetName)
+          "Ok"
+        }
+        render {
+          case Accepts.Xml() => Ok(<result>
+            {result}
+          </result>)
+          case Accepts.Json() => Ok(JsObject(Seq("result" -> JsString(result))))
+          case _ => NA
+        }
+      } catch {
+        case e: GMQLNotValidDatasetNameException => renderedError(NOT_FOUND, e.getMessage)
+        case _: GMQLDSNotFound => renderedError(NOT_FOUND, "Dataset not found")
+      }
+    }
+  }
+
+
+
 
   /**
     *

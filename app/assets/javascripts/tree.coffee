@@ -28,6 +28,9 @@ $ ->
   $('#button-ucsc-data-set').click ->
     loadUcsc()
 
+  $('#tree-full-screen').click changeFullScreen
+
+
 
 @resetPrivate = ->
   $("#tree").fancytree("getRootNode").children[0].resetLazy()
@@ -445,3 +448,9 @@ loadUcsc = ->
       newWin.close()
 
 
+changeFullScreen = ->
+  $('#col-tree').toggleClass('col-md-4 col-md-12');
+  $('#col-query').toggleClass('col-md-8 col-md-0');
+  #  $('#col-schema').toggleClass('col-md-4 col-md-0');
+  $('#tree-full-screen span').toggleClass('glyphicon-resize-full glyphicon-resize-small');
+  ace.edit("main-query-editor").resize()

@@ -3,15 +3,22 @@
 <div id="tree-panel" class="panel panel-default">
     <div class="panel-heading">
         <b>Datasets</b>
-        <button id="refresh-tree" type="button" class="login-event btn btn-info btn-xs pull-right" data-toggle="tooltip" data-placement="right" title="Reload tree">
-            <span class="glyphicon glyphicon-refresh"></span>
-        </button>
-        <button id="button-expand-all" class="tree-btn btn btn-xs btn-warning pull-right" data-toggle="tooltip" data-placement="right" title="Expand all">
-            <span class="glyphicon glyphicon-expand" aria-hidden="true"></span>
-            @*Expand all*@</button>
-        <button id="button-collapse-all" class="tree-btn btn btn-xs btn-warning  pull-right" data-toggle="tooltip" data-placement="right" title="Collapse all">
-            <span class="glyphicon glyphicon-collapse-down" aria-hidden="true"></span>
-            @*Collapse all*@</button>
+        <div class="pull-right">
+            @*Collapse all button*@
+            <button id="button-collapse-all" class="tree-btn btn btn-xs btn-warning" data-toggle="tooltip" data-placement="right" title="Collapse all">
+                <span class="glyphicon glyphicon-collapse-down" aria-hidden="true"></span>
+            </button>
+            @*Expand all button*@
+            <button id="button-expand-all" class="tree-btn btn btn-xs btn-warning" data-toggle="tooltip" data-placement="right" title="Expand all">
+                <span class="glyphicon glyphicon-expand" aria-hidden="true"></span>
+            </button>
+            @*resfresjh tree button*@
+            <button id="refresh-tree" type="button" class="login-event btn btn-info btn-xs" data-toggle="tooltip" data-placement="right" title="Reload tree">
+                <span class="glyphicon glyphicon-refresh"></span>
+            </button>
+            @*fulscreen tree*@
+            <button id="tree-full-screen" class="btn-default btn-xs"><span class="glyphicon glyphicon glyphicon-resize-full" aria-hidden="true"></span></button>
+        </div>
         <div class="clearfix"></div>
     </div>
     <div class="panel-body panel-body-no-padding" id="tree-panel-body">

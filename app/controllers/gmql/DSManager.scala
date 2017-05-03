@@ -161,7 +161,8 @@ class DSManager extends Controller {
     new ApiResponse(code = 401, message = "User is not authenticated"),
     new ApiResponse(code = 403, message = "Public datasets cannot be modified by user"),
     new ApiResponse(code = 404, message = "Dataset is not found for the user")))
-  def modifyDataset(datasetName: String) = AuthenticatedAction(parse.empty) { implicit request =>   val newDatasetName = datasetName + "_new"
+  def modifyDataset(datasetName: String) = AuthenticatedAction(parse.empty) { implicit request =>
+    val newDatasetName = datasetName + "_new"
     val username: String = request.username.get
     if (datasetName.startsWith("public."))
       renderedError(FORBIDDEN, "Public dataset cannot be modified.")
@@ -187,8 +188,6 @@ class DSManager extends Controller {
       }
     }
   }
-
-
 
 
   /**
@@ -253,6 +252,46 @@ class DSManager extends Controller {
     new ApiResponse(code = 403, message = "Public datasets cannot be downloaded by user"),
     new ApiResponse(code = 404, message = "Dataset or its sample is not found for the user")))
   def getMetadataStream(datasetName: String, sampleName: String) = getStream(datasetName, sampleName, isMeta = true)
+
+
+  @ApiOperation(value = "Download dataset query",
+    notes = "Download dataset query if exists as stream",
+    produces = "file",
+    tags = Array("Download repository", SwaggerUtils.swaggerRepository))
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
+  @ApiResponses(value = Array(
+    new ApiResponse(code = 401, message = "User is not authenticated"),
+    new ApiResponse(code = 403, message = "Public datasets cannot be downloaded by user"),
+    new ApiResponse(code = 404, message = "Dataset or its sample is not found for the user")))
+  def getQueryStream(datasetName: String) = AuthenticatedAction {
+    implicit request =>
+      import scala.concurrent.ExecutionContext.Implicits.global
+      val username: String = request.username.get
+      if (datasetName.startsWith("public."))
+        renderedError(FORBIDDEN, "Public dataset cannot be downloaded.")
+      else {
+        try {
+          val scriptStreamOption = try {
+            Some(repository.getScriptStream(datasetName, username))
+          } catch {
+            case _: Throwable => None
+          }
+
+          if (scriptStreamOption.isDefined) {
+            val fileContent: Enumerator[Array[Byte]] = Enumerator.fromStream(scriptStreamOption.get)
+            Ok.chunked(fileContent).withHeaders(
+              "Content-Type" -> "text/plain",
+              "Content-Disposition" -> s"attachment; filename=$datasetName.gmql"
+            )
+          }
+          else
+            renderedError(NOT_FOUND, s"Dataset query not found: $datasetName")
+        } catch {
+          case _: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found: $datasetName")
+        }
+      }
+  }
+
 
   /**
     * returns the sample
@@ -347,14 +386,14 @@ class DSManager extends Controller {
         <type>{gmqlSchemaField.fieldType}</type>
       </field>
 
-    implicit val writerGmqlSchemaField =  (
+    implicit val writerGmqlSchemaField = (
       (JsPath \ "name").write[String] and
         (JsPath \ "type").write[ParsingType.Value]
       ) (unlift(GMQLSchemaField.unapply))
 
-    implicit val writerGmqlSchema  = (
+    implicit val writerGmqlSchema = (
       (JsPath \ "name").write[String] and
-        (JsPath \ "type").write[GMQLSchemaFormat.Value]and
+        (JsPath \ "type").write[GMQLSchemaFormat.Value] and
         (JsPath \ "fields").write[List[GMQLSchemaField]]
       ) (unlift(GMQLSchema.unapply))
 
@@ -748,7 +787,6 @@ class DSManager extends Controller {
       }
 
   }
-
 
   private def getSchemaPath(tempDirPath: String, isSchemaUploaded: Boolean, schemaNameOption: Option[String]): Option[String] = {
     schemaNameOption match {

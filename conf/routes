@@ -70,6 +70,9 @@ GET           /datasets/:datasetName/getUCSCList                 controllers.gmq
 GET           /datasets/:datasetName/getUCSCLink                 controllers.gmql.DSManager.getUcscLink(datasetName:String)
 
 GET           /datasets/:datasetName/schema                      controllers.gmql.DSManager.dataSetSchema(datasetName)
+# get generation query of dataset
+GET           /datasets/:datasetName/query                      controllers.gmql.DSManager.getQueryStream(datasetName)
+
 
 #    val schemaNameOption = request.getQueryString("schemaName")
 POST          /datasets/:datasetName/uploadSample                controllers.gmql.DSManager.uploadSample(datasetName: String)

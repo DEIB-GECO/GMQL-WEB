@@ -29,6 +29,7 @@ $ ->
     loadUcsc()
 
   $('#tree-full-screen').click changeFullScreen
+  loadContext()
 
 
 
@@ -148,7 +149,7 @@ glyph_opts = map:
               hideCheckbox: hideCheckBox
               unselectable: hideCheckBox
               type: newType
-              value: (if newType == "data-set" && att.owner == "public" then att.owner + "." else "") +  att.name
+              value: (if newType == "data-set" && att.owner == "public" then att.owner + "." else "") + att.name
               selected: data.node.selected
             }
             temp.iconClass = iconclass if iconclass
@@ -281,6 +282,7 @@ logEvent = (event, data, msg) ->
 #        var args = $.isArray(args) ? args.join(", ") :
   msg = if msg then ': ' + msg else ''
   $.ui.fancytree.info "Event('" + event.type + '\', node=' + data.node + ')' + msg
+  console.log "Event('" + event.type + '\', node=' + data.node + ')' + msg
 
 
 deleteSelectedNodes = ->
@@ -454,3 +456,137 @@ changeFullScreen = ->
   #  $('#col-schema').toggleClass('col-md-4 col-md-0');
   $('#tree-full-screen span').toggleClass('glyphicon-resize-full glyphicon-resize-small');
   ace.edit("main-query-editor").resize()
+
+# start showQuery: shows the query of the dataset.
+showQuery = (node) ->
+  data = node.data
+  type = data.type
+  value =
+    switch type
+      when "sample"   then node.parent.data.value
+      when "data-set"  then data.value
+
+  if value?
+    call = jsRoutes.controllers.gmql.DSManager.getQueryStream(value)
+    $.ajax
+      url: call.url
+      type: call.type
+      method: call.method
+      headers: {'X-AUTH-TOKEN': window.authToken}
+      contentType: 'text'
+      dataType: 'text'
+      success: (result, textStatus, jqXHR) ->
+        window.result = result
+        BootstrapDialog.show
+          message: "<div id='tree-query-editor' style='height: 100px;'></div>"
+          buttons: [
+            {
+              label: 'Copy'
+              action: (dialogItself) ->
+                if(ace.edit("main-query-editor").getValue().length)
+                  BootstrapDialog.confirm 'Are you sure to overwrite to query editor?', (yesNo) ->
+                    if(yesNo)
+                      ace.edit("main-query-editor").setValue(result)
+                      dialogItself.close()
+                else
+                  ace.edit("main-query-editor").setValue(result)
+                  dialogItself.close()
+            },
+            {
+              label: 'Cancel'
+              action: (dialogItself) ->
+                dialogItself.close()
+            }
+          ]
+          onshown: ->
+            editor = ace.edit("tree-query-editor")
+            editorOption(editor, result, "gmql")
+            editor.getSession().setUseWrapMode(true)
+
+      error: (jqXHR, textStatus, errorThrown) ->
+        BootstrapDialog.alert "There is no query for this dataset."
+
+
+loadContext = -> $('#tree').contextmenu
+  delegate: 'span.fancytree-title'
+  autoFocus: true
+  menu: [
+    {
+      title: 'Show Query'
+      cmd: 'showQuery'
+      uiIcon: 'ui-icon-note'
+    }
+#    {
+#      title: 'Cut'
+#      cmd: 'cut'
+#      uiIcon: 'ui-icon-scissors'
+#    }
+#    {
+#      title: 'Copy'
+#      cmd: 'copy'
+#      uiIcon: 'ui-icon-copy'
+#    }
+#    {
+#      title: 'Paste'
+#      cmd: 'paste'
+#      uiIcon: 'ui-icon-clipboard'
+#      disabled: false
+#    }
+#    { title: '----' }
+#    {
+#      title: 'Edit'
+#      cmd: 'edit'
+#      uiIcon: 'ui-icon-pencil'
+#      disabled: true
+#    }
+#    {
+#      title: 'Delete'
+#      cmd: 'delete'
+#      uiIcon: 'ui-icon-trash'
+#      disabled: true
+#    }
+#    {
+#      title: 'More'
+#      children: [
+#        {
+#          title: 'Sub 1'
+#          cmd: 'sub1'
+#        }
+#        {
+#          title: 'Sub 2'
+#          cmd: 'sub1'
+#        }
+#      ]
+#    }
+  ]
+  beforeOpen: (event, ui) ->
+    node = $.ui.fancytree.getNode(ui.target)
+    # Modify menu entries depending on node status
+    $('#tree').contextmenu 'enableEntry', 'paste', node.isFolder()
+    # Show/hide single entries
+    #            $("#tree").contextmenu("showEntry", "cut", false);
+    # Activate node on right-click
+    node.setActive()
+    # Disable tree keyboard handling
+    ui.menu.prevKeyboard = node.tree.options.keyboard
+    node.tree.options.keyboard = false
+    tempNode = node
+    if tempNode.data.type == 'main'
+      return false
+    else
+      tempNode = tempNode.parent until tempNode.data.type == 'main'
+      return tempNode.data.value == 'private-data-set'
+  close: (event, ui) ->
+# Restore tree keyboard handling
+# console.log("close", event, ui, this)
+# Note: ui is passed since v1.15.0
+    node = $.ui.fancytree.getNode(ui.target)
+    node.tree.options.keyboard = ui.menu.prevKeyboard
+    node.setFocus()
+    return
+  select: (event, ui) ->
+    node = $.ui.fancytree.getNode(ui.target)
+    console.log 'select ' + ui.cmd + ' on ' + node
+    switch ui.cmd
+        when 'showQuery' then showQuery(node)
+

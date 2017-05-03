@@ -156,17 +156,24 @@ class DSManager extends Controller {
     */
   @ApiOperation(value = "Rename the dataset",
     notes = "Rename the input dataset")
-  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "newName", paramType = "query", dataType = "string", required = true),
+    new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
   @ApiResponses(value = Array(
     new ApiResponse(code = 401, message = "User is not authenticated"),
     new ApiResponse(code = 403, message = "Public datasets cannot be modified by user"),
     new ApiResponse(code = 404, message = "Dataset is not found for the user")))
   def modifyDataset(datasetName: String) = AuthenticatedAction(parse.empty) { implicit request =>
-    val newDatasetName = datasetName + "_new"
+    val newDatasetNameOption = request.getQueryString("newName")
     val username: String = request.username.get
     if (datasetName.startsWith("public."))
       renderedError(FORBIDDEN, "Public dataset cannot be modified.")
+    else if (newDatasetNameOption.isEmpty)
+      renderedError(UNPROCESSABLE_ENTITY, "New name is missing")
+    else if (newDatasetNameOption.get == datasetName)
+      renderedError(UNPROCESSABLE_ENTITY, "There is nothing to change")
     else {
+      val newDatasetName = newDatasetNameOption.get
       //TODO add also DSExists after its implementation
       try {
         // set as lazy in if the header accept is not correct one

@@ -481,7 +481,16 @@ showQuery = (node) ->
           message: "<div id='tree-query-editor' style='height: 100px;'></div>"
           buttons: [
             {
-              label: 'Copy'
+              label: 'Copy to clipboard'
+              action: (dialogItself) ->
+                editor = ace.edit("tree-query-editor")
+                editor.selectAll()
+                editor.focus()
+                document.execCommand('copy')
+                editor.clearSelection()
+            }
+            {
+              label: 'Copy to query editor'
               action: (dialogItself) ->
                 if(ace.edit("main-query-editor").getValue().length)
                   BootstrapDialog.confirm 'Are you sure to overwrite to query editor?', (yesNo) ->
@@ -491,7 +500,7 @@ showQuery = (node) ->
                 else
                   ace.edit("main-query-editor").setValue(result)
                   dialogItself.close()
-            },
+            }
             {
               label: 'Cancel'
               action: (dialogItself) ->

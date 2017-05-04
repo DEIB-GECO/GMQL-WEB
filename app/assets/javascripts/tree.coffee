@@ -28,7 +28,7 @@ $ ->
   $('#button-ucsc-data-set').click ->
     loadUcsc()
 
-  $('#tree-full-screen').click changeFullScreen
+  $('.tree-full-screen').click changeFullScreen
   loadContext()
 
 
@@ -454,7 +454,7 @@ changeFullScreen = ->
   $('#col-tree').toggleClass('col-md-4 col-md-12');
   $('#col-query').toggleClass('col-md-8 col-md-0');
   #  $('#col-schema').toggleClass('col-md-4 col-md-0');
-  $('#tree-full-screen span').toggleClass('glyphicon-resize-full glyphicon-resize-small');
+  $('.tree-full-screen span').toggleClass('glyphicon-resize-full glyphicon-resize-small');
   ace.edit("main-query-editor").resize()
 
 # start showQuery: shows the query of the dataset.

@@ -5,7 +5,7 @@
         </div>
         <div class="pull-right">
             <select id="main-query-select" class="selectpicker" data-style="btn-info btn-xs" data-live-search="true" title="Select query"></select>
-            <button id="main-query-full-screen" class="btn-default btn-xs"><span class="glyphicon glyphicon glyphicon-resize-full" aria-hidden="true"></span></button>
+            <button class="btn-default btn-xs main-query-full-screen"><span class="glyphicon glyphicon glyphicon-resize-full" aria-hidden="true"></span></button>
         </div>
     </div>
     <div class="panel-body panel-body-no-padding">
@@ -39,17 +39,18 @@
 
 <div class="panel-footer">
     <div class="input-group input-group-sm pull-left">
-        <input id="query-status" type="text" class="btn btn-info btn-sm" value="Java script problem" >
-        <button id="query-stop" data-toggle="tooltip" data-placement="bottom" title="Click to stop job" type="button" class="btn btn-danger btn-sm"><span class="glyphicon glyphicon-stop" aria-hidden="true"></span></button>
+        <input id="query-status" type="text" class="btn btn-info btn-xs" value="Java script problem" >
+        <button id="query-stop" data-toggle="tooltip" data-placement="bottom" title="Click to stop job" type="button" class="btn btn-danger btn-xs"><span class="glyphicon glyphicon-stop" aria-hidden="true"></span></button>
     </div>
-
-    <button id="query-execute-button" type="button" class="btn btn-primary btn-sm pull-right" >
-        <span class="glyphicon glyphicon-play" aria-hidden="true"/> Execute
-    </button>
-    <button id="query-compile-button" type="button" class="btn btn-primary btn-sm pull-right" >
-        <span class="glyphicon glyphicon-cog" aria-hidden="true"/> Compile
-    </button>
-
+    <div class="pull-right">
+        <button id="query-compile-button" type="button" class="btn btn-primary btn-xs" >
+            <span class="glyphicon glyphicon-cog" aria-hidden="true"/> Compile
+        </button>
+        <button id="query-execute-button" type="button" class="btn btn-primary btn-xs" >
+            <span class="glyphicon glyphicon-play" aria-hidden="true"/> Execute
+        </button>
+        <button class="btn-default btn-xs main-query-full-screen"><span class="glyphicon glyphicon glyphicon-resize-full" aria-hidden="true"></span></button>
+    </div>
     <div class="clearfix"></div>
 </div>
 <script>

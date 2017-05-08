@@ -16,7 +16,7 @@ import it.polimi.genomics.spark.implementation.loaders.CustomParser
 import org.xml.sax.SAXException
 import play.api.Play.current
 import play.api.libs.functional.syntax._
-import play.api.libs.iteratee.Enumerator
+import play.api.libs.iteratee.{Enumeratee, Enumerator}
 import play.api.libs.json._
 import play.api.mvc._
 import play.api.{Logger, Play}
@@ -39,7 +39,7 @@ class DSManager extends Controller {
 
   import utils.GmqlGlobal._
 
-  val newLine = sys.props("line.separator")
+  val lineSeparator = sys.props("line.separator")
 
 
   /**
@@ -199,37 +199,86 @@ class DSManager extends Controller {
 
   /**
     *
-    * @param datasetName
-    * @param sampleName
-    * @param isMeta
-    * @return
+    * @param datasetName name of the dataset
+    * @param sampleName name of the sample
+    * @param isMeta is it meta or region file
+    * @return the result as text file to the user. The header contains also
     */
   private def getStream(datasetName: String, sampleName: String, isMeta: Boolean) = AuthenticatedAction { implicit request =>
+    import scala.util.Try
+    var dsName = datasetName
+    val topK: Option[Int] = request.getQueryString("top").flatMap(s => Try(s.toInt).toOption)
+    val header: Option[Boolean] = request.getQueryString("header").flatMap(s => Try(s.toBoolean).toOption)
+
     import scala.concurrent.ExecutionContext.Implicits.global
-    val username: String = request.username.get
-    if (datasetName.startsWith("public."))
-      renderedError(FORBIDDEN, "Public dataset cannot be downloaded.")
-    else {
+    val transform = Enumeratee.map[String] { line =>
+      val newLine = line + lineSeparator
+      newLine.getBytes
+    }
+
+    var username: String = request.username.get
+    if (dsName.startsWith("public.")) {
+      username = "public"
+      dsName = dsName.replace("public.", "")
+    }
+//    else {
       try {
         //TODO use ARM solution, if it is possible
-        val (streamRegion, streamMeta) = repository.sampleStreams(datasetName, username, sampleName)
-        val stream = if (isMeta) {
+        val (streamRegion, streamMeta) = repository.sampleStreams(dsName, username, sampleName)
+        val headerContent: Enumerator[Array[Byte]] =
+          if (header.getOrElse(false)) {
+            val headerString =
+              if (isMeta)
+                "Attribute\tValue"
+              else {
+                val gmqlSchema: GMQLSchema = repository.getSchema(dsName, username)
+                gmqlSchema.fields.map(_.name).mkString("\t")
+              }
+            Enumerator(headerString).through(transform)
+          }
+          else
+            Enumerator.empty
+
+        val stream: InputStream = if (isMeta) {
           streamRegion.close
           streamMeta
         } else {
           streamMeta.close
           streamRegion
         }
-        val fileContent: Enumerator[Array[Byte]] = Enumerator.fromStream(stream)
-        Ok.chunked(fileContent).withHeaders(
+        val fileContent: Enumerator[Array[Byte]] =
+          if (topK.isDefined) {
+            import play.api.libs.iteratee._
+            lazy val bufferedReader = new BufferedReader(new InputStreamReader(stream))
+            var count = topK.get
+            val fileStream: Enumerator[String] = Enumerator.generateM[String] {
+              scala.concurrent.Future {
+                val line: String =
+                  if (count > 0)
+                    bufferedReader.readLine()
+                  else {
+                    bufferedReader.close()
+                    null
+                  }
+                count -= 1
+                Option(line)
+              }
+            }
+
+            fileStream.through(transform)
+          }
+          else //if topK not defined then stream all directly
+            Enumerator.fromStream(stream)
+
+        Ok.chunked(headerContent >>> fileContent).withHeaders(
           "Content-Type" -> "text/plain",
-          "Content-Disposition" -> s"attachment; filename=$datasetName-$sampleName"
+          "Content-Disposition" -> s"attachment; filename=$dsName-$sampleName${if(isMeta) ".meta" else ""}"
         )
       } catch {
-        case _: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found: $datasetName")
-        case _: GMQLSampleNotFound => renderedError(NOT_FOUND, s"Sample not found: $datasetName-$sampleName")
+        case _: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found: $dsName")
+        case _: GMQLSampleNotFound => renderedError(NOT_FOUND, s"Sample not found: $dsName-$sampleName")
       }
-    }
+//    }
   }
 
   /**
@@ -242,7 +291,10 @@ class DSManager extends Controller {
     notes = "Download region data as stream",
     produces = "file",
     tags = Array("Download repository", SwaggerUtils.swaggerRepository))
-  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "top", paramType = "query", dataType = "integer"),
+    new ApiImplicitParam(name = "header", paramType = "query", dataType = "boolean"),
+    new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
   @ApiResponses(value = Array(
     new ApiResponse(code = 401, message = "User is not authenticated"),
     new ApiResponse(code = 403, message = "Public datasets cannot be downloaded by user"),
@@ -253,7 +305,10 @@ class DSManager extends Controller {
     notes = "Download metadata data as stream",
     produces = "file",
     tags = Array("Download repository", SwaggerUtils.swaggerRepository))
-  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "top", paramType = "query", dataType = "integer"),
+    new ApiImplicitParam(name = "header", paramType = "query", dataType = "boolean"),
+    new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
   @ApiResponses(value = Array(
     new ApiResponse(code = 401, message = "User is not authenticated"),
     new ApiResponse(code = 403, message = "Public datasets cannot be downloaded by user"),
@@ -405,7 +460,7 @@ class DSManager extends Controller {
       ) (unlift(GMQLSchema.unapply))
 
     try {
-      val gmqlSchema = repository.getSchema(dsName, username)
+      lazy val gmqlSchema = repository.getSchema(dsName, username)
       //      lazy val gmqlSchema: GMQLSchema = GMQLSchema("Test", GMQLSchemaTypes.Delimited, List(GMQLSchemaField("COL1", ParsingType.DOUBLE), GMQLSchemaField("COL2", ParsingType.INTEGER)))
 
       render {
@@ -458,9 +513,9 @@ class DSManager extends Controller {
         //      Logger.debug("file asd:" + file)
         val trackName: String = sample.name
         val description = trackName
-        buf ++= s"""track name=\"$trackName\" description=\"$description\"  useScore=1 visibility=\"3\" $newLine"""
+        buf ++= s"""track name=\"$trackName\" description=\"$description\"  useScore=1 visibility=\"3\" $lineSeparator"""
         //      buf ++= s"""track name=\"$trackName\" $newLine"""
-        buf ++= s"${controllers.gmql.routes.DSManager.getRegionStream(datasetName, trackName).absoluteURL()}?authToken=$token $newLine"
+        buf ++= s"${controllers.gmql.routes.DSManager.getRegionStream(datasetName, trackName).absoluteURL()}?authToken=$token $lineSeparator"
       }
       Ok(buf.toString)
     }

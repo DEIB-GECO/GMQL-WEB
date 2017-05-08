@@ -32,7 +32,6 @@ $ ->
   loadContext()
 
 
-
 @resetPrivate = ->
   $("#tree").fancytree("getRootNode").children[0].resetLazy()
   expandPrivate()
@@ -478,6 +477,7 @@ showQuery = (node) ->
       success: (result, textStatus, jqXHR) ->
         window.result = result
         BootstrapDialog.show
+          size: BootstrapDialog.SIZE_WIDE
           message: "<div id='tree-query-editor' style='height: 100px;'></div>"
           buttons: [
             {
@@ -502,7 +502,7 @@ showQuery = (node) ->
                   dialogItself.close()
             }
             {
-              label: 'Cancel'
+              label: 'Close'
               action: (dialogItself) ->
                 dialogItself.close()
             }
@@ -514,6 +514,55 @@ showQuery = (node) ->
 
       error: (jqXHR, textStatus, errorThrown) ->
         BootstrapDialog.alert "There is no query for this dataset."
+# end showQuery: shows the query of the dataset.
+
+
+# start showRegion: shows the first lines of the regions of sample
+showRegion = (node) ->
+  data = node.data
+  type = data.type
+  sampleName = data.value
+  datasetName = node.parent.data.value
+
+  if type == "sample"
+    call = jsRoutes.controllers.gmql.DSManager.getRegionStream(datasetName, sampleName)
+    call.url = call.url + "?header=true&top=20"
+    $.ajax
+      url: call.url
+      type: call.type
+      method: call.method
+      headers: {'X-AUTH-TOKEN': window.authToken}
+      contentType: 'text'
+      dataType: 'text'
+      success: (result, textStatus, jqXHR) ->
+        window.result = result
+        BootstrapDialog.show
+          size: BootstrapDialog.SIZE_WIDE
+          message: "<div id='tree-query-editor' style='height: 100px;'></div>"
+          buttons: [
+            {
+              label: 'Copy to clipboard'
+              action: (dialogItself) ->
+                editor = ace.edit("tree-query-editor")
+                editor.selectAll()
+                editor.focus()
+                document.execCommand('copy')
+                editor.clearSelection()
+            }
+            {
+              label: 'Close'
+              action: (dialogItself) ->
+                dialogItself.close()
+            }
+          ]
+          onshown: ->
+            editor = ace.edit("tree-query-editor")
+            editorOption(editor, result, "")
+            editor.getSession().setUseWrapMode(true)
+
+      error: (jqXHR, textStatus, errorThrown) ->
+        BootstrapDialog.alert "The sample is not available"
+# end showRegion: shows the first lines of the regions of sample
 
 
 loadContext = -> $('#tree').contextmenu
@@ -524,6 +573,11 @@ loadContext = -> $('#tree').contextmenu
       title: 'Show Query'
       cmd: 'showQuery'
       uiIcon: 'ui-icon-note'
+    }
+    {
+      title: 'Show Region'
+      cmd: 'showRegion'
+      uiIcon: 'ui-icon-circle-zoomin'
     }
 #    {
 #      title: 'Cut'
@@ -571,7 +625,9 @@ loadContext = -> $('#tree').contextmenu
   beforeOpen: (event, ui) ->
     node = $.ui.fancytree.getNode(ui.target)
     # Modify menu entries depending on node status
-    $('#tree').contextmenu 'enableEntry', 'paste', node.isFolder()
+    #    $('#tree').contextmenu 'enableEntry', 'paste', node.isFolder()
+    $('#tree').contextmenu 'enableEntry', 'showRegion', node.data.type == 'sample'
+    $('#tree').contextmenu 'enableEntry', 'showQuery', node.data.value == 'private-data-set' || node.parent.data.value == 'private-data-set' || node.parent.parent.data.value == 'private-data-set'
     # Show/hide single entries
     #            $("#tree").contextmenu("showEntry", "cut", false);
     # Activate node on right-click
@@ -579,12 +635,13 @@ loadContext = -> $('#tree').contextmenu
     # Disable tree keyboard handling
     ui.menu.prevKeyboard = node.tree.options.keyboard
     node.tree.options.keyboard = false
-    tempNode = node
-    if tempNode.data.type == 'main'
+    if node.data.type == 'main'
       return false
     else
-      tempNode = tempNode.parent until tempNode.data.type == 'main'
-      return tempNode.data.value == 'private-data-set'
+      return true
+#    else
+#      tempNode = tempNode.parent until tempNode.data.type == 'main'
+#      return tempNode.data.value == 'private-data-set'
   close: (event, ui) ->
 # Restore tree keyboard handling
 # console.log("close", event, ui, this)
@@ -597,5 +654,6 @@ loadContext = -> $('#tree').contextmenu
     node = $.ui.fancytree.getNode(ui.target)
     console.log 'select ' + ui.cmd + ' on ' + node
     switch ui.cmd
-        when 'showQuery' then showQuery(node)
+      when 'showQuery' then showQuery(node)
+      when 'showRegion' then showRegion(node)
 

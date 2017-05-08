@@ -190,9 +190,10 @@ object DatasetMetadata {
     import scala.concurrent.ExecutionContext.Implicits.global
     import scala.concurrent.Future
     for (ds <- utils.GmqlGlobal.repository.listAllDSs(username)) {
-      Future {
-        DatasetMetadata("public", ds.position)
-      }
+      // in order to load all public dataset in pararllel run as a future execution
+      //Future {
+      DatasetMetadata("public", ds.position)
+      //}
     }
   }
 

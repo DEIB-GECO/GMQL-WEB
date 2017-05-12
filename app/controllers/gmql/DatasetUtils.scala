@@ -274,8 +274,8 @@ object AttributeList {
 }
 
 case class UploadResult(imported: Seq[Sample],
-                         @ApiModelProperty(dataType = "List[controllers.gmql.Sample]", required = false) autoMetadata: Option[Seq[Sample]] = None,
-                         @ApiModelProperty(dataType = "List[controllers.gmql.Sample]", required = false) regionProblem: Option[Seq[Sample]] = None) {
+                        @ApiModelProperty(dataType = "List[controllers.gmql.Sample]", required = false) autoMetadata: Option[Seq[Sample]] = None,
+                        @ApiModelProperty(dataType = "List[controllers.gmql.Sample]", required = false) regionProblem: Option[Seq[Sample]] = None) {
   @ApiModelProperty(hidden = true)
   def getXml =
     <upload_result>
@@ -306,3 +306,39 @@ object SwaggerUtils {
   final val swaggerSecurityController = "Security controller"
 }
 
+case class MatrixResult(samples: Seq[Sample],
+                        attributes: Seq[Attribute],
+                        matrix: Seq[Seq[String]]) {
+
+  @ApiModelProperty(hidden = true)
+  def getXml =
+      <dataset>
+        <samples>{samples.map(_.getXml)}</samples>
+        <attributes>{attributes.map(_.getXml)}</attributes>
+        <matrix>{matrix}</matrix>
+      </dataset>
+
+
+  @ApiModelProperty(hidden = true)
+  def getStream = {
+    val upperLeftTitle = "Samples"
+    val columnNames = upperLeftTitle :: attributes.map(_.key).toList
+    val firstColumn = samples.map (_.name)
+
+
+    import MatrixResult._
+    val stringBuilder = new StringBuilder()
+    columnNames.addString(stringBuilder, cvsSeperator).append(lineSeparator)
+    firstColumn.zip(matrix).foreach{zip=>
+      stringBuilder.append(zip._1).append(cvsSeperator)
+      zip._2.addString(stringBuilder, cvsSeperator).append(lineSeparator)
+    }
+    stringBuilder.toString()
+  }
+}
+
+object MatrixResult {
+  val cvsSeperator = "\t"
+  val lineSeparator = new DSManager().lineSeparator
+  implicit val writer = Json.writes[MatrixResult]
+}

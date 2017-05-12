@@ -2,10 +2,9 @@ MAX_SAMPLES = 20
 red = 0
 
 
-
 $ ->
   $("#metadata-add-button").click metadataAddButtonClick
-  $('#metadata-test-button').click testSelect
+  $('#metadata-test-button').click testSelect2
 
 
   #  editor creation
@@ -25,10 +24,10 @@ metadataAddButtonClick = ->
     metadataSearchDiv.append row
     row.find(".selectpicker").selectpicker('show')
     # move window till end of metedata division
-    windowBottom = $( window ).scrollTop() + $( window ).height()
-    metadataSearchDivBottom = $( "#metadata-search-div" ).offset().top +  $( "#metadata-search-div" ).height()
-#    $("html, body").animate({ scrollTop: (metadataSearchDivBottom - $( window ).height()) }) if(metadataSearchDivBottom>windowBottom)
-    $( window ).scrollTop(metadataSearchDivBottom - $( window ).height()) if(metadataSearchDivBottom>windowBottom)
+    windowBottom = $(window).scrollTop() + $(window).height()
+    metadataSearchDivBottom = $("#metadata-search-div").offset().top + $("#metadata-search-div").height()
+    #    $("html, body").animate({ scrollTop: (metadataSearchDivBottom - $( window ).height()) }) if(metadataSearchDivBottom>windowBottom)
+    $(window).scrollTop(metadataSearchDivBottom - $(window).height()) if(metadataSearchDivBottom > windowBottom)
   else
     alert('Please select a data set')
 
@@ -36,10 +35,10 @@ metadataAddButtonClick = ->
 rowDiv = () ->
   delButton = deleteButton()
   div = $('<div/>')
-  .addClass "metadata-row-div"
-  .append firstDropDown
-  .append secondDropDown
-  .append delButton
+    .addClass "metadata-row-div"
+    .append firstDropDown
+    .append secondDropDown
+    .append delButton
   delButton.click ->
     metadataSearchDiv = div.prev()
     metadataSearchDiv.find('.selectpicker').attr('disabled', false).selectpicker('refresh')
@@ -52,13 +51,13 @@ rowDiv = () ->
 
 firstDropDown = (dataSet)->
   select = $('<select/>')
-  .attr("id", "first-drop-down")
-  .addClass("selectpicker")
-  .addClass("first-drop-down")
-  .attr("data-style", "btn-primary")
-  .attr("data-live-search", "true")
-  .attr("title", "Choose attribute")
-#  call = jsRoutes.controllers.gmql.MetadataBrowser.getKeys window.lastSelectedDataSet
+    .attr("id", "first-drop-down")
+    .addClass("selectpicker")
+    .addClass("first-drop-down")
+    .attr("data-style", "btn-primary")
+    .attr("data-live-search", "true")
+    .attr("title", "Choose attribute")
+  #  call = jsRoutes.controllers.gmql.MetadataBrowser.getKeys window.lastSelectedDataSet
   call = jsRoutes.controllers.gmql.MetadataBrowser.getFilteredKeys window.lastSelectedDataSet
   $.ajax
     url: call.url
@@ -81,24 +80,24 @@ firstDropDown = (dataSet)->
 
 secondDropDown = ->
   select = $('<select multiple/>')
-  .attr("id", "second-drop-down")
-  .addClass("selectpicker")
-  .addClass("second-drop-down")
-  .attr("data-style", "btn-info")
-  .attr("data-live-search", "true")
-  .attr("data-selected-text-format", "count > 3")
-  .attr("title", "First choose attribute")
+    .attr("id", "second-drop-down")
+    .addClass("selectpicker")
+    .addClass("second-drop-down")
+    .attr("data-style", "btn-info")
+    .attr("data-live-search", "true")
+    .attr("data-selected-text-format", "count > 3")
+    .attr("title", "First choose attribute")
   select.change secondDropDownOnChange
   select
 
 deleteButton = ->
   button = $('<button/>')
-  .attr("id", "delete-button")
-  .addClass("del-button btn btn-danger")
-  .attr("data-toggle", "tooltip")
-  .attr("data-placement", "right")
-  .attr("title", "Delete row")
-  .html '<span class="glyphicon glyphicon-minus"></span>'
+    .attr("id", "delete-button")
+    .addClass("del-button btn btn-danger")
+    .attr("data-toggle", "tooltip")
+    .attr("data-placement", "right")
+    .attr("title", "Delete row")
+    .html '<span class="glyphicon glyphicon-minus"></span>'
 
 firstDropDownOnChange = ->
   selected = $(this).find("option:selected").val()
@@ -164,13 +163,13 @@ getQuery = ->
 Generate query into ACE editor
 ###
 @generateQuery = ->
-  console.log "generateQuery: " +  @red
+  console.log "generateQuery: " + @red
 
   editor = ace.edit("metadata-query-editor");
   query = getQuery()
-  console.log "generateQuery: " +  query
+  console.log "generateQuery: " + query
   editorSetValue(editor, query)
-  console.log "generateQuery: " +  @red
+  console.log "generateQuery: " + @red
   @red > 0
 
 getMetadataQuery = ->
@@ -188,7 +187,7 @@ getMetadataQuery = ->
 testSelect = ->
   console.log "testSelect"
   console.log("getQuery-> dataSetMame: #{window.lastSelectedDataSet}")
-  
+
   call = jsRoutes.controllers.gmql.MetadataBrowser.getFilteredDataset window.lastSelectedDataSet
   $.ajax
     url: call.url
@@ -283,7 +282,7 @@ getSamples = (dataSetName) ->
         Metadata Table
 ###
 
-@insertMetadataTable = (div, dataSet, id,sampleName) ->
+@insertMetadataTable = (div, dataSet, id, sampleName) ->
   call = jsRoutes.controllers.gmql.MetadataBrowser.getSampleMetadata(dataSet, sampleName)
   $.ajax
     url: call.url
@@ -320,3 +319,154 @@ metadataTable = (dataSet, id, metadata) ->
   div
 
 
+testSelect2 = ->
+  console.log "testSelect2"
+  console.log("getQuery-> dataSetMame: #{window.lastSelectedDataSet}")
+
+  call = jsRoutes.controllers.gmql.MetadataBrowser.getFilteredMaxtrix window.lastSelectedDataSet
+  $.ajax
+    url: call.url
+    type: call.type
+    method: call.method
+    headers: {'X-AUTH-TOKEN': window.authToken}
+    contentType: 'application/json'
+    dataType: 'json'
+    data: getMetadataQuery()
+    success: (result, textStatus, jqXHR) ->
+      samples = result.samples
+      count = samples.length
+
+      if count
+        list = samples.slice(0, MAX_SAMPLES)
+        idList = (second.id for second in list).join "_"
+
+        bsd = BootstrapDialog.show
+          closeByBackdrop: false
+          closeByKeyboard: true
+          title: 'Search result for ' + window.lastSelectedDataSet
+          message: '<div id="tableDiv"><table id="displayTable" ><thead><tr></tr></thead><tfoot><tr></tr></tfoot></table></div>'
+          size: BootstrapDialog.SIZE_WIDE
+          cssClass: 'modal-wide'
+          buttons: [{
+            label: 'Close'
+            action: (dialogItself) ->
+              dialogItself.close()
+
+          }]
+          onshown: (dialogRef) ->
+# to define which direction will be the result
+            upperLeftTitle = 'Samples'
+            columnNames = result.attributes.map (attribute) -> attribute.key.replace /\|/, " ".replace /__/, " "
+            firstColumn = result.samples.map (sample) -> sample.name
+            data = result.matrix
+            columnNames.unshift upperLeftTitle
+
+            # add first column information
+            for i in [0..result.matrix.length - 1]
+              data[i].unshift firstColumn[i]
+
+            thead = $('#displayTable thead tr')
+            tfoot = $('#displayTable tfoot tr')
+
+            # columns to show
+
+            #            columns = []
+            for column in columnNames
+#              columns.push title: column
+              thead.append("<th>#{column}</th>")
+              tfoot.append("<th>#{column}</th>")
+
+
+            # show the table
+            table = $('#displayTable').DataTable
+              columnDefs: [{"searchable": false, "targets": 0}]
+              dom: 'Bfrtip',
+              buttons: [
+                'copy', 'csv', 'excel', 'pdf', 'print'
+              ]
+#              columns: columns
+              data: data
+#              fixedHeader:
+#                header: true
+#                footer: true
+              fixedColumns:
+                leftColumns: 1
+              searchHighlight: true
+              scrollX: true
+              autoWidth: false
+              deferRender: true
+#              scroller: true
+#              scrollY: 400
+#              scrollX: 400
+              language:
+                decimal: ''
+                emptyTable: 'No data available in table'
+                info: 'Showing _START_ to _END_ of _TOTAL_ samples'
+                infoEmpty: 'Showing 0 to 0 of 0 samples'
+                infoFiltered: '(filtered from _MAX_ total samples)'
+                infoPostFix: ''
+                thousands: ','
+                lengthMenu: 'Show _MENU_ samples'
+                loadingRecords: 'Loading...'
+                processing: 'Processing...'
+                search: 'Search:'
+                zeroRecords: 'No matching samples found'
+                paginate:
+                  first: 'First'
+                  last: 'Last'
+                  next: 'Next'
+                  previous: 'Previous'
+                aria:
+                  sortAscending: ': activate to sort column ascending'
+                  sortDescending: ': activate to sort column descending'
+#              initComplete: ->
+#                @api().columns().every ->
+#                  myCol = this
+#                  if(myCol.index() > 0)
+#                    select = $('<select><option value=""></option></select>').appendTo($(myCol.footer())).on('change', ->
+#                      val = $.fn.dataTable.util.escapeRegex($(this).val())
+#                      temp = if val then '^' + val + '$' else ''
+#                      myCol.search(temp, true, false).draw()
+#                    )
+#                    myCol.data().unique().sort().each (d, j) ->
+#                      select.append '<option value="' + d + '">' + d + '</option>'
+
+      else
+        BootstrapDialog.alert "No result"
+
+#in case I need transpose
+transpose = (a) ->
+  return a[0].map (_, c) ->
+    return a.map (r) ->
+      return r[c]
+
+$ ->
+  $('#metadata-download-button').on 'click', ->
+    call = jsRoutes.controllers.gmql.MetadataBrowser.getFilteredMaxtrix window.lastSelectedDataSet
+
+
+    # Use XMLHttpRequest instead of Jquery $ajax
+    xhttp = new XMLHttpRequest
+
+    xhttp.onreadystatechange = ->
+      a = undefined
+      if xhttp.readyState == 4 and xhttp.status == 200
+  # Trick for making downloadable link
+        a = document.createElement('a')
+        a.href = window.URL.createObjectURL(xhttp.response)
+        # Give filename you wish to download
+        a.download = "#{window.lastSelectedDataSet}.txt"
+        a.style.display = 'none'
+        document.body.appendChild a
+        a.click()
+      return
+
+    # Post data to URL which handles post request
+    xhttp.open 'POST', call.url
+    xhttp.setRequestHeader 'Content-Type', 'application/json'
+    # You should set responseType as blob for binary responses
+    xhttp.responseType = 'blob'
+    xhttp.send getMetadataQuery()
+    xhttp.setRequestHeader('Accept', 'text/plain');
+
+    return

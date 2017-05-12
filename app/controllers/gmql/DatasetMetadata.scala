@@ -119,6 +119,47 @@ class DatasetMetadata(username: String, datasetName: String) {
     Dataset(s"${datasetName}_temp_result", samples = Some(sampleList))
   }
 
+  //  var temp: Option[MatrixResult] = None
+
+  def getFilteredMatrix(attributeList: AttributeList): MatrixResult = {
+    //    if(temp.isDefined)
+    //      return temp.get
+
+
+    Logger.debug(s"getFilteredMatrix: $username -> $datasetName")
+    val sampleList = {
+      val samples: Set[String] = getIds(attributeList)
+      samples.map(sampleId => Sample(sampleId, idToName(sampleId))).toSeq.sorted
+    }
+    val sortedSampleIds = sampleList.map(_.id)
+
+
+    val filteredKeyBasedUnordered: Map[String, Map[String, Set[Meta]]] = getFilteredKeyBased(attributeList)
+    val sortedKeys = filteredKeyBasedUnordered.keys.toSeq.sortBy(_.toLowerCase)
+
+    val matrix: Seq[Seq[String]] = sortedKeys.map { key =>
+      val valueMap: Map[String, Set[Meta]] = filteredKeyBasedUnordered.get(key).getOrElse(Map.empty)
+      val idToValues: Map[String, Seq[String]] = valueMap.values.flatten.groupBy(_.id).map { case (id: String, metaIt: Iterable[Meta]) =>
+        (id, metaIt.map(_.value).toSeq.distinct)
+      }
+      val cellValues: Seq[Seq[String]] = sortedSampleIds.map { id => idToValues.get(id).getOrElse(Seq.empty) }
+      //seperate with "|"
+      cellValues.map{in =>
+        if(in.length>1)
+          in.mkString("[", ", ", "]")
+        else if(in.length == 1)
+          in.head
+        else
+          null
+      }
+    }
+    Logger.debug(s"pre transpose: $username -> $datasetName")
+    val res = MatrixResult(sampleList, sortedKeys.map(Attribute(_)), matrix.transpose)
+    Logger.debug(s"post transpose: $username -> $datasetName")
+    //    temp = Some(res)
+    res
+  }
+
 
   def getFilteredKeys(attributeListInput: AttributeList): AttributeList = {
     Logger.debug(s"getFilteredKeys pre $username->$datasetName")
@@ -187,12 +228,12 @@ object DatasetMetadata {
 
   // use for preloading dataset of the user, default is public
   def loadCache(username: String = "public") = {
-    import scala.concurrent.ExecutionContext.Implicits.global
-    import scala.concurrent.Future
+//    import scala.concurrent.ExecutionContext.Implicits.global
+//    import scala.concurrent.Future
     for (ds <- utils.GmqlGlobal.repository.listAllDSs(username)) {
       // in order to load all public dataset in pararllel run as a future execution
       //Future {
-      DatasetMetadata("public", ds.position)
+      DatasetMetadata(username, ds.position)
       //}
     }
   }
@@ -209,6 +250,6 @@ object DatasetMetadata {
     if (username == "public")
       Cache.getOrElse(s"$username->$datasetName")(new DatasetMetadata(username: String, datasetName: String))
     else
-      Cache.getOrElse(s"$username->$datasetName", 120)(new DatasetMetadata(username: String, datasetName: String))
+      Cache.getOrElse(s"$username->$datasetName", 600)(new DatasetMetadata(username: String, datasetName: String))
 }
 

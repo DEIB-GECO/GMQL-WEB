@@ -5,8 +5,10 @@ import javax.inject.Singleton
 import controllers.gmql.ResultUtils.{NA, renderedError}
 import io.swagger.annotations.{ApiImplicitParams, _}
 import it.polimi.genomics.repository.GMQLExceptions.{GMQLDSNotFound, GMQLSampleNotFound}
+import play.api.Logger
+import play.api.http.MimeTypes
 import play.api.libs.json._
-import play.api.mvc.Controller
+import play.api.mvc.{Accepting, Controller}
 import wrappers.authanticate.AuthenticatedAction
 
 /**
@@ -17,6 +19,13 @@ import wrappers.authanticate.AuthenticatedAction
 class MetadataBrowser extends Controller {
   val newLine = sys.props("line.separator")
 
+  /**
+    * get all the metadata of the sample
+    *
+    * @param datasetName dataset name
+    * @param sampleName  sample name
+    * @return returns the list of the leys and
+    */
   @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
   def getSampleMetadata(datasetName: String, sampleName: String) = AuthenticatedAction { implicit request =>
     var username: String = request.username.get
@@ -41,7 +50,12 @@ class MetadataBrowser extends Controller {
     }
   }
 
-
+  /**
+    * get all the keys of the dataset.
+    *
+    * @param datasetName
+    * @return
+    */
   @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
   def getKeys(datasetName: String) = AuthenticatedAction { implicit request =>
     var username: String = request.username.get
@@ -111,6 +125,43 @@ class MetadataBrowser extends Controller {
       case e: GMQLSampleNotFound => renderedError(NOT_FOUND, s"Sample not found ${e.getMessage}")
     }
   }
+
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
+  def getFilteredMaxtrix(datasetName: String) = AuthenticatedAction(DatasetUtils.validateJson[AttributeList]) { implicit request =>
+    var username: String = request.username.get
+    var dsName = datasetName
+    // if public then user name is public and get the correct dataset name
+    if (datasetName.startsWith("public.")) {
+      username = "public"
+      dsName = dsName.substring("public.".length)
+    }
+    try {
+      val attributeList = request.body
+      lazy val matrixResult: MatrixResult = DatasetMetadata(username, dsName).getFilteredMatrix(attributeList)
+      val Text = Accepting(MimeTypes.TEXT)
+      render {
+        case Text() =>
+          Ok(matrixResult.getStream).withHeaders(
+            "Content-Type" -> "text/plain",
+            "Content-Disposition" -> s"attachment; filename=$dsName.txt"
+          )
+        case Accepts.Xml() => Ok(scala.xml.Utility.trim(matrixResult.getXml))
+        case Accepts.Json() => Ok(Json.toJson(matrixResult))
+        case _ =>
+          Ok(matrixResult.getStream).withHeaders(
+            "Content-Type" -> "text/plain",
+            "Content-Disposition" -> s"attachment; filename=$dsName.txt"
+          )
+      }
+    } catch {
+      case e: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found ${e.getMessage}")
+      case e: GMQLSampleNotFound => renderedError(NOT_FOUND, s"Sample not found ${e.getMessage}")
+    }
+  }
+
+
+  //  var temp:Option[Result] = None
+
 
 
   @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))

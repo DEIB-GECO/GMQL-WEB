@@ -64,6 +64,8 @@ class JavascriptRoute extends Controller {
         controllers.gmql.routes.javascript.MetadataBrowser.getFilteredDataset,
         controllers.gmql.routes.javascript.MetadataBrowser.getFilteredKeys,
         controllers.gmql.routes.javascript.MetadataBrowser.getFilteredValues,
+        controllers.gmql.routes.javascript.MetadataBrowser.getFilteredMaxtrix,
+
 
 
         controllers.gmql.routes.javascript.QueryBrowser.getQueries,

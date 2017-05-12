@@ -82,14 +82,21 @@ POST          /datasets/:datasetName/uploadSampleUrls            controllers.gmq
 GET           /datasets/:datasetName/:columnName/parse           controllers.gmql.DSManager.parseFiles(datasetName:String, columnName: String)
 
 
-GET           /metadata/:datasetName/sample/:sampleName          controllers.gmql.MetadataBrowser.getSampleMetadata(datasetName, sampleName)
-GET           /metadata/:datasetName/all                         controllers.gmql.MetadataBrowser.getKeys(datasetName)
-GET           /metadata/:datasetName/all/:key                    controllers.gmql.MetadataBrowser.getValues(datasetName,key)
-POST          /metadata/:datasetName/dataset/filter              controllers.gmql.MetadataBrowser.getFilteredDataset(datasetName)
 
+
+GET           /metadata/:datasetName/sample/:sampleName          controllers.gmql.MetadataBrowser.getSampleMetadata(datasetName, sampleName)
+
+
+GET           /metadata/:datasetName/all                         controllers.gmql.MetadataBrowser.getKeys(datasetName)
 POST          /metadata/:datasetName/filter                      controllers.gmql.MetadataBrowser.getFilteredKeys(datasetName)
+
+GET           /metadata/:datasetName/all/:key                    controllers.gmql.MetadataBrowser.getValues(datasetName,key)
 POST          /metadata/:datasetName/filter/:key                 controllers.gmql.MetadataBrowser.getFilteredValues(datasetName,key)
 
+POST          /metadata/:datasetName/dataset/filter              controllers.gmql.MetadataBrowser.getFilteredDataset(datasetName)
+
+
+POST          /metadata/:datasetName/dataset/matrix              controllers.gmql.MetadataBrowser.getFilteredMaxtrix(datasetName)
 
 
 #

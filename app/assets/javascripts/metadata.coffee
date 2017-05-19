@@ -345,7 +345,7 @@ testSelect2 = ->
           closeByKeyboard: true
           title: 'Search result for ' + window.lastSelectedDataSet
           message: '<div id="tableDiv"><table id="displayTable" ><thead><tr></tr></thead><tfoot><tr></tr></tfoot></table></div>'
-          size: BootstrapDialog.SIZE_WIDE
+#          size: BootstrapDialog.SIZE_WIDE
           cssClass: 'modal-wide'
           buttons: [{
             label: 'Close'
@@ -451,7 +451,7 @@ $ ->
     xhttp.onreadystatechange = ->
       a = undefined
       if xhttp.readyState == 4 and xhttp.status == 200
-  # Trick for making downloadable link
+# Trick for making downloadable link
         a = document.createElement('a')
         a.href = window.URL.createObjectURL(xhttp.response)
         # Give filename you wish to download

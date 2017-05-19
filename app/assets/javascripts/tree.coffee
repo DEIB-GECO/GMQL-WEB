@@ -477,6 +477,7 @@ showQuery = (node) ->
       success: (result, textStatus, jqXHR) ->
         window.result = result
         BootstrapDialog.show
+          title: "Query of #{value}"
           size: BootstrapDialog.SIZE_WIDE
           message: "<div id='tree-query-editor' style='height: 100px;'></div>"
           buttons: [
@@ -537,7 +538,8 @@ showRegion = (node) ->
       success: (result, textStatus, jqXHR) ->
         window.result = result
         BootstrapDialog.show
-          size: BootstrapDialog.SIZE_WIDE
+          cssClass: 'modal-wide'
+          title: "Region data of #{datasetName}->#{sampleName}"
           message: "<div id='tree-query-editor' style='height: 100px;'></div>"
           buttons: [
             {
@@ -570,12 +572,12 @@ loadContext = -> $('#tree').contextmenu
   autoFocus: true
   menu: [
     {
-      title: 'Show Query'
+      title: 'Show query'
       cmd: 'showQuery'
       uiIcon: 'ui-icon-note'
     }
     {
-      title: 'Show Region'
+      title: 'Show region data'
       cmd: 'showRegion'
       uiIcon: 'ui-icon-circle-zoomin'
     }

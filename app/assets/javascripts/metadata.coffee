@@ -371,7 +371,7 @@ showTable = (result, transposed) ->
   $('#tableDiv').append '<table id="displayTable" ><thead><tr></tr></thead><tfoot><tr></tr></tfoot></table>'
 
 
-  upperLeftTitle = 'attributes'
+  upperLeftTitle = 'attribute'
   firstColumn = result.attributes.map (attribute) -> attribute.key.replace /\|/, " ".replace /__/, " "
   columnNames = result.samples.map (sample) -> sample.name
   data = cloneArray result.matrix

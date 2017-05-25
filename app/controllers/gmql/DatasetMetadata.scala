@@ -8,6 +8,7 @@ import play.api.cache.Cache
 import utils.GmqlGlobal
 
 import scala.collection.JavaConversions._
+import scala.collection.mutable
 
 
 /**
@@ -18,7 +19,7 @@ import scala.collection.JavaConversions._
 case class Meta(id: String, key: String, value: String)
 
 class DatasetMetadata(username: String, datasetName: String) {
-  Logger.debug(s"DatasetMetadata is creating: $username -> $datasetName")
+  Logger.debug(s"DatasetMetadata is loading: $username -> $datasetName")
   val repository: GMQLRepository = GmqlGlobal.repository
   val ut: Utilities = GmqlGlobal.ut
 
@@ -144,19 +145,17 @@ class DatasetMetadata(username: String, datasetName: String) {
       }
       val cellValues: Seq[Seq[String]] = sortedSampleIds.map { id => idToValues.get(id).getOrElse(Seq.empty) }
       //seperate with "|"
-      cellValues.map{in =>
-        if(in.length>1)
+      cellValues.map { in =>
+        if (in.length > 1)
           in.mkString("[", ", ", "]")
-        else if(in.length == 1)
+        else if (in.length == 1)
           in.head
         else
           null
       }
     }
-    Logger.debug(s"pre transpose: $username -> $datasetName")
-    val res = MatrixResult(sampleList, sortedKeys.map(Attribute(_)), matrix.transpose)
-    Logger.debug(s"post transpose: $username -> $datasetName")
-    //    temp = Some(res)
+    val res = MatrixResult(sampleList, sortedKeys.map(Attribute(_)), matrix/*.transpose*/)
+    //temp += attributeList -> res
     res
   }
 
@@ -220,6 +219,8 @@ class DatasetMetadata(username: String, datasetName: String) {
     }
     samples
   }
+
+  Logger.debug(s"DatasetMetadata is loaded: $username -> $datasetName")
 }
 
 object DatasetMetadata {
@@ -228,8 +229,8 @@ object DatasetMetadata {
 
   // use for preloading dataset of the user, default is public
   def loadCache(username: String = "public") = {
-//    import scala.concurrent.ExecutionContext.Implicits.global
-//    import scala.concurrent.Future
+    //    import scala.concurrent.ExecutionContext.Implicits.global
+    //    import scala.concurrent.Future
     for (ds <- utils.GmqlGlobal.repository.listAllDSs(username)) {
       // in order to load all public dataset in pararllel run as a future execution
       //Future {
@@ -247,7 +248,7 @@ object DatasetMetadata {
 
 
   def apply(username: String, datasetName: String): DatasetMetadata =
-    if (username == "public")
+    if (username == "public" || username == "canakoglu")
       Cache.getOrElse(s"$username->$datasetName")(new DatasetMetadata(username: String, datasetName: String))
     else
       Cache.getOrElse(s"$username->$datasetName", 600)(new DatasetMetadata(username: String, datasetName: String))

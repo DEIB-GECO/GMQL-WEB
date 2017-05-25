@@ -3,7 +3,7 @@
   */
 
 
-import controllers.gmql.DatasetMetadata
+import controllers.gmql.{AttributeList, DatasetMetadata}
 import play.api._
 
 object Global extends GlobalSettings {
@@ -11,18 +11,18 @@ object Global extends GlobalSettings {
 
   override def beforeStart(app: Application) {
     Logger.info("Global.beforeStart")
+    //load all public user metadata into cache.
+    //    if (play.Play.isProd) {
+    import scala.concurrent.ExecutionContext.Implicits.global
+    import scala.concurrent.Future
+    //      Future {
+    DatasetMetadata.loadCache()
+    //      }
+    //    }
   }
 
   override def onStart(app: Application) {
     Logger.info("Application has started ")
-    //load all public user metadata into cache.
-//    if (play.Play.isProd) {
-      import scala.concurrent.ExecutionContext.Implicits.global
-      import scala.concurrent.Future
-//      Future {
-        DatasetMetadata.loadCache()
-//      }
-//    }
   }
 
   override def onStop(app: Application) {

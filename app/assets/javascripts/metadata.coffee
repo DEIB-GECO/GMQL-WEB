@@ -344,7 +344,7 @@ testSelect2 = ->
           closeByBackdrop: false
           closeByKeyboard: true
           title: 'Search result for ' + window.lastSelectedDataSet
-          message: '<div id="tableDiv"><table id="displayTable" ><thead><tr></tr></thead><tfoot><tr></tr></tfoot></table></div>'
+          message: '<div id="tableDiv"><table id="displayTable" ></table></div>'
 #          size: BootstrapDialog.SIZE_WIDE
           cssClass: 'modal-wide'
           buttons: [{
@@ -353,72 +353,131 @@ testSelect2 = ->
               dialogItself.close()
 
           }]
+          onhide: ->
+            $('#displayTable').DataTable().destroy(true)
+            window.tableResult = null
           onshown: (dialogRef) ->
 # to define which direction will be the result
-            upperLeftTitle = 'Samples'
-            columnNames = result.attributes.map (attribute) -> attribute.key.replace /\|/, " ".replace /__/, " "
-            firstColumn = result.samples.map (sample) -> sample.name
-            data = result.matrix
-            columnNames.unshift upperLeftTitle
+            window.tableResult = result
+            window.transposed = true
+            showTable(result, true)
 
-            # add first column information
-            for i in [0..result.matrix.length - 1]
-              data[i].unshift firstColumn[i]
+      else
+        BootstrapDialog.alert "No result"
 
-            thead = $('#displayTable thead tr')
-            tfoot = $('#displayTable tfoot tr')
-
-            # columns to show
-
-            #            columns = []
-            for column in columnNames
-#              columns.push title: column
-              thead.append("<th>#{column}</th>")
-              tfoot.append("<th>#{column}</th>")
+showTable = (result, transposed) ->
+#  $('#displayTable')?.DataTable()?.destroy(true)
+  $('#tableDiv').empty()
+  $('#tableDiv').append '<table id="displayTable" ><thead><tr></tr></thead><tfoot><tr></tr></tfoot></table>'
 
 
-            # show the table
-            table = $('#displayTable').DataTable
-              columnDefs: [{"searchable": false, "targets": 0}]
-              dom: 'Bfrtip',
-              buttons: [
-                'copy', 'csv', 'excel', 'pdf', 'print'
-              ]
+  upperLeftTitle = 'attributes'
+  firstColumn = result.attributes.map (attribute) -> attribute.key.replace /\|/, " ".replace /__/, " "
+  columnNames = result.samples.map (sample) -> sample.name
+  data = cloneArray result.matrix
+
+
+  if transposed
+    upperLeftTitle = 'sample'
+    columnNames = result.attributes.map (attribute) -> attribute.key.replace /\|/, " ".replace /__/, " "
+    firstColumn = result.samples.map (sample) -> sample.name
+    data = transpose result.matrix
+
+  columnNames.unshift "#{upperLeftTitle[0].toUpperCase()}#{upperLeftTitle[1..-1].toLowerCase()}s"
+
+
+  # add first column information
+  for i in [0..firstColumn.length - 1]
+    data[i].unshift firstColumn[i]
+
+  thead = $('#displayTable thead tr')
+  tfoot = $('#displayTable tfoot tr')
+
+  # columns to show
+
+  #            columns = []
+  #  for column in columnNames
+  for i in [0..columnNames.length - 1]
+    column = columnNames[i]
+    #              columns.push title: column
+    th1 = $("<th>#{column}</th>")
+    th1.append $("<a data-column='#{i}' class='toggle-vis'><span class='glyphicon glyphicon-remove-circle' style='color:red'></span></a>") if i
+    th2 = $("<th>#{column}</th>")
+    th2.append $("<a data-column='#{i}' class='toggle-vis'><span class='glyphicon glyphicon-remove-circle' style='color:red'></span></a>") if i
+    thead.append th1
+    tfoot.append th2
+
+  $('a.toggle-vis').on 'click', (e) ->
+    e.preventDefault()
+    # Get the column API object
+    column = $('#displayTable').DataTable().column($(this).attr('data-column'))
+    # Toggle the visibility
+    column.visible false
+    return
+
+  # show the table
+  table = $('#displayTable').DataTable
+    columnDefs: [{"searchable": false, "targets": 0}]
+    dom: '<"datatable-buttons"B><"datatable-lengths"l>ifrtip',
+    buttons: [
+      'copy'
+      'csv'
+      'excel'
+      'pdf'
+      'print'
+      {
+#column vis
+        extend: 'colvis'
+        columns: ':gt(0)'
+        columnText: (dt, idx, title) -> title.split " "[-1..][0]
+      }
+      {
+#Transpose
+        text: 'Transpose'
+        action: (e, dt, node, config) ->
+          $('#displayTable').DataTable().destroy(true)
+          window.transposed = !window.transposed
+          showTable(window.tableResult, window.transposed)
+
+      }
+    ]
 #              columns: columns
-              data: data
+    data: data
 #              fixedHeader:
 #                header: true
 #                footer: true
-              fixedColumns:
-                leftColumns: 1
-              searchHighlight: true
-              scrollX: true
-              autoWidth: false
-              deferRender: true
+    fixedColumns:
+      leftColumns: 1
+    searchDelay: 10000
+    searchHighlight: true
+    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]]
+    scrollX: true
+    autoWidth: false
+    deferRender: true
 #              scroller: true
 #              scrollY: 400
 #              scrollX: 400
-              language:
-                decimal: ''
-                emptyTable: 'No data available in table'
-                info: 'Showing _START_ to _END_ of _TOTAL_ samples'
-                infoEmpty: 'Showing 0 to 0 of 0 samples'
-                infoFiltered: '(filtered from _MAX_ total samples)'
-                infoPostFix: ''
-                thousands: ','
-                lengthMenu: 'Show _MENU_ samples'
-                loadingRecords: 'Loading...'
-                processing: 'Processing...'
-                search: 'Search:'
-                zeroRecords: 'No matching samples found'
-                paginate:
-                  first: 'First'
-                  last: 'Last'
-                  next: 'Next'
-                  previous: 'Previous'
-                aria:
-                  sortAscending: ': activate to sort column ascending'
-                  sortDescending: ': activate to sort column descending'
+    language:
+      decimal: ''
+      emptyTable: 'No data available in table'
+      info: "Showing _START_ to _END_ of _TOTAL_ #{upperLeftTitle}s"
+      infoEmpty: 'Showing 0 to 0 of 0 #{upperLeftTitle}'
+      infoFiltered: "(filtered from _MAX_ total #{upperLeftTitle})s"
+      infoPostFix: ''
+      thousands: ','
+      lengthMenu: "Show _MENU_ #{upperLeftTitle}s"
+      loadingRecords: 'Loading...'
+      processing: 'Processing...'
+      search: 'Search:'
+      zeroRecords: "No matching #{upperLeftTitle} found"
+      paginate:
+        first: 'First'
+        last: 'Last'
+        next: 'Next'
+        previous: 'Previous'
+      aria:
+        sortAscending: ': activate to sort column ascending'
+        sortDescending: ': activate to sort column descending'
 #              initComplete: ->
 #                @api().columns().every ->
 #                  myCol = this
@@ -431,14 +490,21 @@ testSelect2 = ->
 #                    myCol.data().unique().sort().each (d, j) ->
 #                      select.append '<option value="' + d + '">' + d + '</option>'
 
-      else
-        BootstrapDialog.alert "No result"
 
 #in case I need transpose
 transpose = (a) ->
-  return a[0].map (_, c) ->
-    return a.map (r) ->
-      return r[c]
+  a[0].map (_, c) ->
+    a.map (r) ->
+      r[c]
+
+cloneArray = (arr) ->
+# Deep copy arrays. Going one level deep seems to be enough.
+  clone = []
+  i = 0
+  while i < arr.length
+    clone.push arr[i].slice(0)
+    i++
+  clone
 
 $ ->
   $('#metadata-download-button').on 'click', ->

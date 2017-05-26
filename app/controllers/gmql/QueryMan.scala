@@ -16,6 +16,8 @@ import wrappers.authanticate.AuthenticatedAction
 
 import scala.collection.JavaConversions._
 
+import it.polimi.genomics.manager.Status._
+
 
 /**
   * Created by canakoglu on 4/11/16.
@@ -50,10 +52,15 @@ class QueryMan extends Controller {
         QueryResult(None)
       case Some(query) =>
         Logger.info("\n" + username + " : " + queryName + "\n" + queryOption + "\n\n\n\n\n")
-        val server = GMQLExecute()
-        val job = registerJob(username, query, queryName, outputFormat)
-        server.execute(job.jobId, new GMQLSparkLauncher(job))
-        QueryResult(Some(Job(job.jobId, Some(job.getJobStatus.toString))))
+        val compileResultJob = compileJob(username, query, queryName, outputFormat)
+        if(compileResultJob.getJobStatus == COMPILE_FAILED) {
+          QueryResult(Some(Job(compileResultJob.jobId, Some(compileResultJob.getJobStatus.toString), Some(compileResultJob.jobOutputMessages.toString()))))
+        }else {
+            val server = GMQLExecute()
+            val job = registerJob(username, query, queryName, outputFormat)
+            server.execute(job)
+            QueryResult(Some(Job(job.jobId, Some(job.getJobStatus.toString))))
+          }
     }
 
     render {
@@ -81,6 +88,16 @@ class QueryMan extends Controller {
     server.registerJob(gmqlScript, gmqlContext, "")
   }
 
+  private def compileJob(username: String, query: String, queryName: String, outputFormat: GMQLSchemaFormat.Value) = {
+    val gmqlScript = new GMQLScript(query, queryName)
+    val binSize = new BinSize(5000, 5000, 1000)
+    val emptyContext: SparkContext = null
+    val gmqlContext = new GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat, binSize, username, emptyContext)
+    val job: GMQLJob = new GMQLJob(gmqlContext,gmqlScript,gmqlContext.username)
+    job.compile()
+    job
+  }
+
   @ApiOperation(value = "Compile query",
     notes = "Compile query and for the result user needs to check trace the job.",
     consumes = "text/plain"
@@ -102,13 +119,7 @@ class QueryMan extends Controller {
         ResultUtils.renderedError(NOT_ACCEPTABLE, "Query must be send in the request body")
         QueryResult(None)
       case Some(query) =>
-//        val gmqlScript = new GMQLScript(query, queryName)
-//        val binSize = new BinSize(5000, 5000, 1000)
-//        val emptyContext: SparkContext = null
-//        val gmqlContext = new GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat, binSize, username, emptyContext)
-//        val job: GMQLJob = new GMQLJob(gmqlContext,gmqlScript,gmqlContext.username)
-//        job.compile()
-        val job = registerJob(username, query, queryName, outputFormat)
+        val job = compileJob(username, query, queryName, outputFormat)
         QueryResult(Some(Job(job.jobId, Some(job.getJobStatus.toString), Some(job.jobOutputMessages.toString()))))
     }
 

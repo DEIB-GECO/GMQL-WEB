@@ -90,15 +90,16 @@ printResult = (result, responseDivId, contentType) ->
 # returns splitted clickable datasets list. When it is clicked, it selected the related DS from tree
 @getDatasetList = (datasets) ->
   result = $("<div>")
-  for dataset in datasets
-    a = $("<a href='#' data-ds-name='#{dataset.name}'>#{dataset.name}</a>")
-    a.click -> selectNode($(this).data('dsName'))
-    a.attr("data-toggle", "tooltip")
-    .attr("data-placement", "bottom")
-    .attr("title", "Click to select on dataset tree")
-    a.tooltip()
-    result.append a
-    result.append "<br>"
+  if datasets
+    for dataset in datasets
+      a = $("<a href='#' data-ds-name='#{dataset.name}'>#{dataset.name}</a>")
+      a.click -> selectNode($(this).data('dsName'))
+      a.attr("data-toggle", "tooltip")
+      .attr("data-placement", "bottom")
+      .attr("title", "Click to select on dataset tree")
+      a.tooltip()
+      result.append a
+      result.append "<br>"
   result
 
 

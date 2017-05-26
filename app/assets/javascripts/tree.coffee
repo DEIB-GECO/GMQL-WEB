@@ -250,7 +250,7 @@ schemaTables = (result)->
 
 schemaTable = (schema) ->
   div = $("<div id='schema-table-div-#{schema.name}'>")
-  div.append "<h4><b>Schema name:</b> #{schema.name}</h4>" if schema.name?.length
+#  div.append "<h4><b>Schema name:</b> #{schema.name}</h4>" if schema.name?.length
   div.append "<h4><b>Schema type:</b> #{schema.type}</h4>" if schema.type?.length
   div.append table = $("
             <table id='schema-table-#{schema.name}' class='table table-striped table-bordered'>

@@ -1,11 +1,14 @@
 $ ->
-#  setTimeout expand, 4000
+  setTimeout expand, 2000
 #  setTimeout selectFirstPublic, 8000
-  #  setTimeout runTimeout, 3000
-#  setTimeout expandFirstPublic, 3000
-#  setTimeout selectFirstFirstPublic, 4000
-#  setTimeout expand, 5000
+#  setTimeout runTimeout, 3000
+  setTimeout expandFirstPublic, 3000
+  setTimeout selectFirstFirstPublic, 4000
+#  setTimeout doOnFirstFirstPublic, 5000
+  setTimeout doOnFirstPrivate, 5000
 
+#  setTimeout expand, 5000
+#
 #  setTimeout expand, 2000
 #  setTimeout selectFirstPrivate, 4000
 #  setTimeout expandFirstPrivate, 4000
@@ -40,3 +43,13 @@ selectFirstPrivate = ->
 selectFirstFirstPrivate = ->
   firstDS = $("#tree").fancytree("getRootNode").children[0].children[0].children[0]
   firstDS.setActive(true)
+
+
+
+doOnFirstPrivate = ->
+  node = $("#tree").fancytree("getRootNode").children[0].children[0]
+  showQuery node
+
+doOnFirstFirstPublic = ->
+  node = $("#tree").fancytree("getRootNode").children[1].children[0].children[0]
+  showMetaRegion node, true

@@ -457,7 +457,7 @@ changeFullScreen = ->
   ace.edit("main-query-editor").resize()
 
 # start showQuery: shows the query of the dataset.
-showQuery = (node) ->
+@showQuery = (node) ->
   data = node.data
   type = data.type
   value =
@@ -481,6 +481,11 @@ showQuery = (node) ->
           size: BootstrapDialog.SIZE_WIDE
           message: "<div id='tree-query-editor' style='height: 100px;'></div>"
           buttons: [
+            {
+              label: 'Download'
+              action: (dialogItself) ->
+                window.location = call.url
+            }
             {
               label: 'Copy to clipboard'
               action: (dialogItself) ->
@@ -519,7 +524,7 @@ showQuery = (node) ->
 
 
 # start showRegion: shows the first lines of the regions of sample
-showRegion = (node) ->
+showMetaRegion = (node, isMeta) ->
   data = node.data
   type = data.type
   sampleName = data.value
@@ -527,7 +532,17 @@ showRegion = (node) ->
 
   if type == "sample"
     call = jsRoutes.controllers.gmql.DSManager.getRegionStream(datasetName, sampleName)
-    call.url = call.url + "?header=true&top=20"
+    top = 20
+    if(isMeta)
+      call = jsRoutes.controllers.gmql.DSManager.getMetadataStream(datasetName, sampleName)
+      top = 0
+
+
+    callUrlOriginal = call.url     # for download button
+
+    call.url = call.url + "?header=true"
+    call.url = call.url + "&top=#{top}" if top # if it is meta show all
+
     $.ajax
       url: call.url
       type: call.type
@@ -542,6 +557,11 @@ showRegion = (node) ->
           title: "Region data of #{datasetName}->#{sampleName}"
           message: "<div id='tree-query-editor' style='height: 100px;'></div>"
           buttons: [
+            {
+              label: 'Download'
+              action: (dialogItself) ->
+                window.location = callUrlOriginal
+            }
             {
               label: 'Copy to clipboard'
               action: (dialogItself) ->
@@ -579,6 +599,11 @@ loadContext = -> $('#tree').contextmenu
     {
       title: 'Show region data'
       cmd: 'showRegion'
+      uiIcon: 'ui-icon-circle-zoomin'
+    }
+    {
+      title: 'Show metadata'
+      cmd: 'showMeta'
       uiIcon: 'ui-icon-circle-zoomin'
     }
 #    {
@@ -629,6 +654,7 @@ loadContext = -> $('#tree').contextmenu
     # Modify menu entries depending on node status
     #    $('#tree').contextmenu 'enableEntry', 'paste', node.isFolder()
     $('#tree').contextmenu 'enableEntry', 'showRegion', node.data.type == 'sample'
+    $('#tree').contextmenu 'enableEntry', 'showMeta', node.data.type == 'sample'
     $('#tree').contextmenu 'enableEntry', 'showQuery', node.data.value == 'private-data-set' || node.parent.data.value == 'private-data-set' || node.parent.parent.data.value == 'private-data-set'
     # Show/hide single entries
     #            $("#tree").contextmenu("showEntry", "cut", false);
@@ -657,5 +683,6 @@ loadContext = -> $('#tree').contextmenu
     console.log 'select ' + ui.cmd + ' on ' + node
     switch ui.cmd
       when 'showQuery' then showQuery(node)
-      when 'showRegion' then showRegion(node)
+      when 'showRegion' then showMetaRegion(node, false)
+      when 'showMeta' then showMetaRegion(node, true)
 

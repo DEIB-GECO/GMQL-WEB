@@ -457,7 +457,7 @@ changeFullScreen = ->
   ace.edit("main-query-editor").resize()
 
 # start showQuery: shows the query of the dataset.
-@showQuery = (node) ->
+showQuery = (node) ->
   data = node.data
   type = data.type
   value =

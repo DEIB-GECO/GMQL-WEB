@@ -536,3 +536,9 @@ $ ->
     xhttp.setRequestHeader('Accept', 'text/plain');
 
     return
+
+
+$ ->
+  $('#metadata-copy-button').on 'click', ->
+    editor = ace.edit("main-query-editor")
+    editor.session.insert(editor.getCursorPosition(), ace.edit("metadata-query-editor").getValue() + "\n")

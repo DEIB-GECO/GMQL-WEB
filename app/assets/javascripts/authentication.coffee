@@ -35,7 +35,15 @@ displayGuestButton = () ->
   $("#login").append $("<button class='btn btn-default navbar-btn'>").text("Guest Login").click(doGuestLogin)
   $("#signInDropdown").show()
   $('.registered-user').remove()
-  $('#login-problem').append('<div><h2>Please login before use the GMQL.</h2></div>')
+  $('#login-problem').append('
+      <div>
+        <h4>Please login before use the GMQL.</h4>
+        <p>This system is under active development, please forgive us for possible errors and send us your comments, criticisms and congratulations, if any.</p>
+        <div id="visit_count"></div>
+      </div>
+  ')
+  makeRequest('/AnalyticsQueryWrapper/AnalyticsServlet')
+
 
 
 displayLoggedIn = (fullName) ->

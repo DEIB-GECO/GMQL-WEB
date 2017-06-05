@@ -3,6 +3,24 @@
         <div class="pull-left">
             <h3 class="panel-title">Query editor</h3>
         </div>
+        @*<input type="number" min="10"  step="1" />*@
+        <div style="width: 80px;float: left;  margin-left: 10px;" data-toggle="tooltip" data-placement="bottom" title="Max lines of query editor">
+
+            <input class="input-xs" id="ace-size" type="text" value="50" name="demo_vertical">
+            <script>
+                $("input[name='demo_vertical']").TouchSpin({
+//                    verticalbuttons: true,
+                    min: 10,
+                    max: 500,
+                    step: 1,
+                    boostat: 10,
+                    maxboostedstep: 50
+                });
+            </script>
+
+        </div>
+
+
         <div class="pull-right">
             <select id="main-query-select" class="selectpicker" data-style="btn-info btn-xs" data-live-search="true" title="Select query"></select>
             <button id="main-query-delete" class="btn-danger btn-xs" data-toggle="tooltip" data-placement="bottom" title="Delete selected query"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span></button>

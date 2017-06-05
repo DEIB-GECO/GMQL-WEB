@@ -24,6 +24,9 @@ $ ->
     e.preventDefault()
     deleteQuery $('#main-query-select').val()
 
+  $('#ace-size').on 'change', (e) ->
+    editor = ace.edit("main-query-editor")
+    editor.setOption("maxLines", $('#ace-size').val())
 
 saveQuery = (type) ->
   editor = ace.edit("main-query-editor");
@@ -337,3 +340,4 @@ deleteQuery = (queryName) ->
         console.log("error checkLastJob:" + "runQuery: " + jqXHR + "&" + textStatus + "&" + errorThrown)
         loadQueries()
     console.log "after delete ->" + queryName
+

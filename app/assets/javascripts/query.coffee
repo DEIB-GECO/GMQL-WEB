@@ -20,6 +20,10 @@ $ ->
   loadQueries()
   $('.main-query-full-screen').click changeFullScreen
 
+  $('#main-query-delete').on 'click', (e) ->
+    e.preventDefault()
+    deleteQuery $('#main-query-select').val()
+
 
 saveQuery = (type) ->
   editor = ace.edit("main-query-editor");
@@ -315,3 +319,21 @@ changeFullScreen = ->
 lastJobStop = ->
   jobId = window.lastJobId
   stopJob(jobId)
+
+
+deleteQuery = (queryName) ->
+  console.log "pre-delete ->" + queryName
+  if queryName
+    console.log "delete ->" + queryName
+    call = jsRoutes.controllers.gmql.QueryBrowser.deleteQuery(queryName)
+    $.ajax
+      url: call.url
+      type: call.type
+      method: call.method
+      headers: {"X-AUTH-TOKEN": window.authToken}
+      success: (result, textStatus, jqXHR) ->
+        loadQueries()
+      error: (jqXHR, textStatus, errorThrown)->
+        console.log("error checkLastJob:" + "runQuery: " + jqXHR + "&" + textStatus + "&" + errorThrown)
+        loadQueries()
+    console.log "after delete ->" + queryName

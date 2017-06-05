@@ -71,7 +71,7 @@ GET           /datasets/:datasetName/getUCSCLink                 controllers.gmq
 
 GET           /datasets/:datasetName/schema                      controllers.gmql.DSManager.dataSetSchema(datasetName)
 # get generation query of dataset
-GET           /datasets/:datasetName/query                      controllers.gmql.DSManager.getQueryStream(datasetName)
+GET           /datasets/:datasetName/query                       controllers.gmql.DSManager.getQueryStream(datasetName)
 
 
 #    val schemaNameOption = request.getQueryString("schemaName")
@@ -169,6 +169,7 @@ GET           /jobs/:id/stop                                     controllers.gmq
 GET           /query                                             controllers.gmql.QueryBrowser.getQueries
 GET           /query/:queryName                                  controllers.gmql.QueryBrowser.getQuery(queryName)
 POST          /query/:queryName/save                             controllers.gmql.QueryBrowser.saveQuery(queryName)
+DELETE        /query/:queryName                                  controllers.gmql.QueryBrowser.deleteQuery(queryName)
 
 #
 #

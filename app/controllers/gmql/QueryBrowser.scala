@@ -56,7 +56,7 @@ class QueryBrowser extends Controller {
     consumes = "text/plain"
   )
   @ApiImplicitParams(Array(new ApiImplicitParam(name = "body", dataType = "string", paramType = "body"),
-  new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
+    new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
   def saveQuery(queryName: String) = AuthenticatedAction { request =>
     val username = request.username.getOrElse("")
     val user = request.user.get
@@ -71,5 +71,20 @@ class QueryBrowser extends Controller {
       case None => QueryDao.add(QueryModel(user.id.get, queryName, newQueryText))
     }
     Ok("Saved")
+  }
+
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
+  def deleteQuery(queryName: String) = AuthenticatedAction.async { implicit request =>
+    val user = request.user.get
+    val futureQueryOpt: Future[Option[QueryModel]] = QueryDao.getUserQuery(user.id.get, queryName)
+
+    futureQueryOpt.flatMap {
+      case Some(queryModel: QueryModel) =>
+        val deleteResultOpt: Future[Int] = QueryDao.delete(queryModel.id.getOrElse(-1))
+        deleteResultOpt.map { (c: Int) => if(c > 0) Ok("Deleted") else NotFound("Query Not Found") }
+      case None => Future {
+        NotFound("Query Not Found")
+      }
+    }
   }
 }

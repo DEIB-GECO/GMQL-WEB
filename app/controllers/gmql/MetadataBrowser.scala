@@ -127,7 +127,7 @@ class MetadataBrowser extends Controller {
   }
 
   @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
-  def getFilteredMaxtrix(datasetName: String) = AuthenticatedAction(DatasetUtils.validateJson[AttributeList]) { implicit request =>
+  def getFilteredMaxtrix(datasetName: String, transposed:Boolean = false) = AuthenticatedAction(DatasetUtils.validateJson[AttributeList]) { implicit request =>
     var username: String = request.username.get
     var dsName = datasetName
     // if public then user name is public and get the correct dataset name
@@ -138,17 +138,18 @@ class MetadataBrowser extends Controller {
     try {
       val attributeList = request.body
       lazy val matrixResult: MatrixResult = DatasetMetadata(username, dsName).getFilteredMatrix(attributeList)
+      lazy val matrixStream = matrixResult.getStream(transposed)
       val Text = Accepting(MimeTypes.TEXT)
       render {
         case Text() =>
-          Ok(matrixResult.getStream).withHeaders(
+          Ok(matrixStream).withHeaders(
             "Content-Type" -> "text/plain",
             "Content-Disposition" -> s"attachment; filename=$dsName.txt"
           )
         case Accepts.Xml() => Ok(scala.xml.Utility.trim(matrixResult.getXml))
         case Accepts.Json() => Ok(Json.toJson(matrixResult))
         case _ =>
-          Ok(matrixResult.getStream).withHeaders(
+          Ok(matrixStream).withHeaders(
             "Content-Type" -> "text/plain",
             "Content-Disposition" -> s"attachment; filename=$dsName.txt"
           )

@@ -144,7 +144,6 @@ class DatasetMetadata(username: String, datasetName: String) {
         (id, metaIt.map(_.value).toSeq.distinct)
       }
       val cellValues: Seq[Seq[String]] = sortedSampleIds.map { id => idToValues.get(id).getOrElse(Seq.empty) }
-      //seperate with "|"
       cellValues.map { in =>
         if (in.length > 1)
           in.mkString("[", ", ", "]")

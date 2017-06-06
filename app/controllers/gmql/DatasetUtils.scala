@@ -320,16 +320,29 @@ case class MatrixResult(samples: Seq[Sample],
 
 
   @ApiModelProperty(hidden = true)
-  def getStream = {
-    val upperLeftTitle = "Samples"
-    val columnNames = upperLeftTitle :: attributes.map(_.key).toList
-    val firstColumn = samples.map (_.name)
+  def getStream(transposed: Boolean) = {
+    var upperLeftTitle = "Attributes"
+    var firstColumn = attributes.map(attribute => attribute.key)
+    var columnNames = samples.map(sample => sample.name)
+    var data = matrix
 
 
+    if (transposed) {
+      upperLeftTitle = "Samples"
+      columnNames = attributes.map(attribute => attribute.key)
+      firstColumn = samples.map(sample => sample.name)
+      data = matrix.transpose
+    }
+
+
+    columnNames = upperLeftTitle :: columnNames.toList
+
+
+    //imported for seperators
     import MatrixResult._
     val stringBuilder = new StringBuilder()
     columnNames.addString(stringBuilder, cvsSeperator).append(lineSeparator)
-    firstColumn.zip(matrix).foreach{zip=>
+    firstColumn.zip(matrix).foreach { zip =>
       stringBuilder.append(zip._1).append(cvsSeperator)
       zip._2.addString(stringBuilder, cvsSeperator).append(lineSeparator)
     }

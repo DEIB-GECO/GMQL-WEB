@@ -1,3 +1,5 @@
+import sbt.ConflictWarning
+
 name := "GMQL-REST"
 
 version := "1.1"
@@ -102,7 +104,7 @@ libraryDependencies += "org.eclipse.persistence" % "eclipselink" % "2.6.3"
 //libraryDependencies += "orchestrator.genomics" % "orchestrator" % "7.1"
 libraryDependencies += "it.polimi.genomics" % "Compiler" % "3.0"
 libraryDependencies += "it.polimi.genomics" % "GMQL-Core" % "2.0"
-libraryDependencies += "it.polimi.genomics" % "GMQL-Flink" % "3.0"
+//libraryDependencies += "it.polimi.genomics" % "GMQL-Flink" % "3.0"
 libraryDependencies += "it.polimi.genomics" % "GMQL-Repository" % "1.0"
 libraryDependencies += "it.polimi.genomics" % "GMQL-Server" % "2.0"
 libraryDependencies += "it.polimi.genomics" % "GMQL-SManager" % "2.0"
@@ -118,11 +120,20 @@ routesGenerator := InjectedRoutesGenerator
 conflictWarning := ConflictWarning.disable
 
 
+
 libraryDependencies +=    "io.swagger" %% "swagger-play2" % "1.5.1"
 libraryDependencies += "io.swagger" % "swagger-core" % "1.5.10"
+
+dependencyOverrides ++= Set(
+  "com.fasterxml.jackson.core" % "jackson-databind" % "2.6.7",
+  "com.fasterxml.jackson.core" % "jackson-module-scala" % "2.6.7"
+)
+
+
 
 
 //libraryDependencies += "com.wordnik" %% "swagger-play2" % "1.3.12"
 
 
 libraryDependencies ~= { _.map(_.exclude("org.slf4j", "slf4j-log4j12")) }
+//libraryDependencies ~= { _.map(_.exclude("com.fasterxml.jackson.module", "jackson-module-scala_2.10")) }

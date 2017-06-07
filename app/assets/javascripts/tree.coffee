@@ -135,7 +135,7 @@ glyph_opts = map:
             newType = "sample"
             lazy = false
             window.list = list
-            iconclass = "glyphicon glyphicon-file"
+            icon = "glyphicon glyphicon-file"
             list = result.samples
 
           res = for att in list
@@ -151,7 +151,7 @@ glyph_opts = map:
               value: (if newType == "data-set" && att.owner == "public" then att.owner + "." else "") + att.name
               selected: data.node.selected
             }
-            temp.iconClass = iconclass if iconclass
+            temp.icon = icon if icon
             temp.id = att.id if att.id
             temp
           dfd.resolve(res)

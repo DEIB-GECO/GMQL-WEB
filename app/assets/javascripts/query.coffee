@@ -24,9 +24,7 @@ $ ->
     e.preventDefault()
     deleteQuery $('#main-query-select').val()
 
-  $('#ace-size').on 'change', (e) ->
-    editor = ace.edit("main-query-editor")
-    editor.setOption("maxLines", $('#ace-size').val())
+
 
 saveQuery = (type) ->
   editor = ace.edit("main-query-editor");
@@ -341,3 +339,21 @@ deleteQuery = (queryName) ->
         loadQueries()
     console.log "after delete ->" + queryName
 
+
+$ ->
+  $('#popover-anchor-query').popover html: true
+  popover = $('#popover-anchor-query').popover()
+  popover.on 'inserted.bs.popover', ->
+    instance = $(this).data('bs.popover')
+    # Replace the popover's content element with the 'content' element
+    slider = new Slider('#query-size', {})
+    editor = ace.edit("main-query-editor")
+    slider.setValue([editor.getOption("minLines"),editor.getOption("maxLines")])
+    #    slider.setValues(editor.getOption("minLines"),editor.getOption("maxLines"))
+    slider.on 'change', (event) ->
+      editor = ace.edit("main-query-editor")
+      n = event.newValue
+      o = event.oldValue
+#      console.log event
+      editor.setOption("minLines", n[0]) if o[0] != n[0]
+      editor.setOption("maxLines", n[1]) if o[1] != n[1]

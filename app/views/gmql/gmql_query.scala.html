@@ -1,25 +1,11 @@
 <div class="panel panel-default">
     <div class="panel-heading clearfix">
-        <div class="pull-left">
+        <div style="display: flex;" class="pull-left">
             <h3 class="panel-title">Query editor</h3>
+            <button id="popover-anchor-query" class="btn btn-default btn-xs popovers" data-placement="bottom" data-toggle="popover" data-content="Size: <input id='query-size' type='text' class='span2' value='' data-slider-min='10' data-slider-max='200' data-slider-step='1' data-slider-value='[10,50]'/>" data-original-title="Settings">
+                <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
+            </button>
         </div>
-        @*<input type="number" min="10"  step="1" />*@
-        <div style="width: 80px;float: left;  margin-left: 10px;" data-toggle="tooltip" data-placement="bottom" title="Max lines of query editor">
-
-            <input class="input-xs" id="ace-size" type="text" value="50" name="demo_vertical">
-            <script>
-                $("input[name='demo_vertical']").TouchSpin({
-//                    verticalbuttons: true,
-                    min: 10,
-                    max: 500,
-                    step: 1,
-                    boostat: 10,
-                    maxboostedstep: 50
-                });
-            </script>
-
-        </div>
-
 
         <div class="pull-right">
             <select id="main-query-select" class="selectpicker" data-style="btn-info btn-xs" data-live-search="true" title="Select query"></select>
@@ -80,7 +66,7 @@
 
         editor.setOptions({
             minLines: 10,
-            maxLines: 50,
+            maxLines: 20,
             enableBasicAutocompletion: true,
             enableSnippets: true
         });

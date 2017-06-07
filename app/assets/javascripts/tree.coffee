@@ -250,7 +250,7 @@ schemaTables = (result)->
 
 schemaTable = (schema) ->
   div = $("<div id='schema-table-div-#{schema.name}'>")
-#  div.append "<h4><b>Schema name:</b> #{schema.name}</h4>" if schema.name?.length
+  #  div.append "<h4><b>Schema name:</b> #{schema.name}</h4>" if schema.name?.length
   div.append "<h4><b>Schema type:</b> #{schema.type}</h4>" if schema.type?.length
   div.append table = $("
             <table id='schema-table-#{schema.name}' class='table table-striped table-bordered'>
@@ -538,7 +538,7 @@ showMetaRegion = (node, isMeta) ->
       top = 0
 
 
-    callUrlOriginal = call.url     # for download button
+    callUrlOriginal = call.url # for download button
 
     call.url = call.url + "?header=true"
     call.url = call.url + "&top=#{top}" if top # if it is meta show all
@@ -686,3 +686,30 @@ loadContext = -> $('#tree').contextmenu
       when 'showRegion' then showMetaRegion(node, false)
       when 'showMeta' then showMetaRegion(node, true)
 
+$ ->
+  $('#popover-anchor-tree').popover html: true
+  popover = $('#popover-anchor-tree').popover()
+  popover.on 'inserted.bs.popover', ->
+    instance = $(this).data('bs.popover')
+    # Replace the popover's content element with the 'content' element
+    slider = new Slider('#tree-size', {})
+    editor = ace.edit("main-query-editor")
+    fontSize = $('ul.fancytree-container').css('font-size').replace /px/, ""
+    min = ($('ul.fancytree-container').css('min-height').replace /px/, "") / fontSize
+    max = ($('ul.fancytree-container').css('max-height').replace /px/, "") / fontSize
+    slider.setValue([min, max])
+    #    slider.setValues(editor.getOption("minLines"),editor.getOption("maxLines"))
+    slider.on 'change', (event) ->
+      editor = ace.edit("main-query-editor")
+      n = event.newValue
+      o = event.oldValue
+      #      console.log event
+      $('ul.fancytree-container').css('min-height', "#{n[0]}em") if o[0] != n[0]
+      $('ul.fancytree-container').css('max-height', "#{n[1]}em") if o[1] != n[1]
+
+
+#      ul.fancytree-container {
+#          min-height: 160px;
+#  width: 100%;
+#  max-height: 320px;
+#}

@@ -139,7 +139,14 @@ getQuery = ->
     secondSelected = $(div).find(".second-drop-down").find("option:selected")
 
     inner = for second in secondSelected
-      "#{firstSelectedText} == '#{second.value}'"
+      "#{firstSelectedText} == #{
+      if /"/.test(second.value) and /'/.test(second.value) # if both
+        '"' + (second.value.replace /"/, '\\"') + '"'
+      else if /"/.test(second.value) # only  double quotation "
+        "'" + second.value + "'"
+      else
+        '"' + second.value + '"' # only  single quotation '
+      }"
     reduced = if inner.length then inner.reduce (t, s) -> "#{t} OR #{s}" else ""
     if inner.length > 1  then "(#{reduced})" else reduced
   reduced = if outer?.length then outer.reduce (t, s) -> t + (if t.length && s.length then " AND " else "") + s else ""

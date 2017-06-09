@@ -1390,12 +1390,9 @@ var Autocomplete = function() {
     };
 
     this.blurListener = function(e) {
-        if (e.relatedTarget && e.relatedTarget.nodeName == "A" && e.relatedTarget.href) {
-            window.open(e.relatedTarget.href, "_blank");
-        }
         var el = document.activeElement;
         var text = this.editor.textInput.getElement();
-        var fromTooltip = e.relatedTarget && e.relatedTarget == this.tooltipNode;
+        var fromTooltip = e.relatedTarget && this.tooltipNode.contains(e.relatedTarget);
         var container = this.popup && this.popup.container;
         if (el != text && el.parentNode != container && !fromTooltip
             && el != this.tooltipNode && e.relatedTarget != text
@@ -1604,6 +1601,7 @@ var Autocomplete = function() {
             this.tooltipNode.style.pointerEvents = "auto";
             this.tooltipNode.tabIndex = -1;
             this.tooltipNode.onblur = this.blurListener.bind(this);
+            this.tooltipNode.onclick = this.onTooltipClick.bind(this);
         }
 
         var tooltipNode = this.tooltipNode;
@@ -1640,6 +1638,18 @@ var Autocomplete = function() {
         if (el.parentNode)
             el.parentNode.removeChild(el);
     };
+    
+    this.onTooltipClick = function(e) {
+        var a = e.target;
+        while (a && a != this.tooltipNode) {
+            if (a.nodeName == "A" && a.href) {
+                a.rel = "noreferrer";
+                a.target = "_blank";
+                break;
+            }
+            a = a.parentNode;
+        }
+    }
 
 }).call(Autocomplete.prototype);
 

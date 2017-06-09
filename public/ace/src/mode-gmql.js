@@ -50,12 +50,14 @@ var GmqlHighlightRules = function() {
         "start" : [ {
             token : "comment",
             regex : "#.*$"
-        },  {
-            token : "string",           // " string
-            regex : '".*?"'
         }, {
-            token : "string",           // ' string
-            regex : "'.*?'"
+            token : "string",
+            regex : "'(?=.)",
+            next  : "qstring"
+        }, {
+            token : "string",
+            regex : '"(?=.)',
+            next  : "qqstring"
         }, {
             token : "constant.numeric", // float
             regex : "[+-]?\\d+(?:(?:\\.\\d*)?(?:[eE][+-]?\\d+)?)?\\b"
@@ -74,7 +76,35 @@ var GmqlHighlightRules = function() {
         }, {
             token : "text",
             regex : "\\s+"
-        } ]
+        } ],
+        "qqstring" : [ {
+            token : "constant.language.escape",
+            regex : escapedRe
+        }, {
+            token : "string",
+            regex : "\\\\$",
+            next  : "qqstring"
+        }, {
+            token : "string",
+            regex : '"|$',
+            next  : "no_regex"
+        }, {
+            defaultToken: "string"
+        }],
+        "qstring" : [ {
+            token : "constant.language.escape",
+            regex : escapedRe
+        }, {
+            token : "string",
+            regex : "\\\\$",
+            next  : "qstring"
+        }, {
+            token : "string",
+            regex : "'|$",
+            next  : "no_regex"
+        }, {
+            defaultToken: "string"
+        }]
     };
     this.normalizeRules();
 };
@@ -110,7 +140,7 @@ oop.inherits(FoldMode, BaseFoldMode);
 
     this.singleLineBlockCommentRe= /^\s*(\/\*).*\*\/\s*$/;
     this.tripleStarBlockCommentRe = /^\s*(\/\*\*\*).*\*\/\s*$/;
-    this.startRegionRe = /^\s*(\/\*|\/\/)#?region\b/;
+    this.startRegionRe = /^\s*(\/\*|\/\/|#)#?region\b/;
     this._getFoldWidgetBase = this.getFoldWidget;
     this.getFoldWidget = function(session, foldStyle, row) {
         var line = session.getLine(row);
@@ -203,7 +233,7 @@ oop.inherits(FoldMode, BaseFoldMode);
         var maxRow = session.getLength();
         var startRow = row;
         
-        var re = /^\s*(?:\/\*|\/\/|--)#?(end)?region\b/;
+        var re = /^\s*(?:\/\*|\/\/|--|#)#?(end)?region\b/;
         var depth = 1;
         while (++row < maxRow) {
             line = session.getLine(row);

@@ -2231,7 +2231,11 @@ var TextInput = function(parentNode, host) {
         if (e.type == "compositionend" && c.range) {
             host.selection.setRange(c.range);
         }
-        if (useragent.isChrome && useragent.isChrome >= 53) {
+        var needsOnInput =
+            (!!useragent.isChrome && useragent.isChrome >= 53) ||
+            (!!useragent.isWebKit && useragent.isWebKit >= 603);
+
+        if (needsOnInput) {
           onInput();
         }
     };
@@ -13768,7 +13772,7 @@ var Gutter = function(parentEl) {
             var text = lastLineNumber = gutterRenderer
                 ? gutterRenderer.getText(session, row)
                 : row + firstLineNumber;
-            if (text != cell.textNode.data)
+            if (text !== cell.textNode.data)
                 cell.textNode.data = text;
 
             row++;

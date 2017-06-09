@@ -140,12 +140,12 @@ getQuery = ->
 
     inner = for second in secondSelected
       "#{firstSelectedText} == #{
-      if /"/.test(second.value) and /'/.test(second.value) # if both
+      if /"/.test(second.value) and /'/.test(second.value)
         '"' + (second.value.replace /"/, '\\"') + '"'
-      else if /"/.test(second.value) # only  double quotation "
+      else if /"/.test(second.value)
         "'" + second.value + "'"
       else
-        '"' + second.value + '"' # only  single quotation '
+        '"' + second.value + '"'
       }"
     reduced = if inner.length then inner.reduce (t, s) -> "#{t} OR #{s}" else ""
     if inner.length > 1  then "(#{reduced})" else reduced

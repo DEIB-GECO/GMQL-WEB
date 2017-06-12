@@ -141,7 +141,7 @@ getQuery = ->
     inner = for second in secondSelected
       "#{firstSelectedText} == #{
       if /"/.test(second.value) and /'/.test(second.value)
-        '"' + (second.value.replace /"/, '\\"') + '"'
+        '"' + (second.value.replace /"/g, '\\"') + '"'
       else if /"/.test(second.value)
         "'" + second.value + "'"
       else

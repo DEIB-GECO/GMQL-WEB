@@ -46,6 +46,14 @@ var GmqlHighlightRules = function() {
         "storage.type": dataTypes
     }, "identifier", true);
 
+    var escapedRe = "\\\\(?:x[0-9a-fA-F]{2}|" + // hex
+        "u[0-9a-fA-F]{4}|" + // unicode
+        "[0-2][0-7]{0,2}|" + // oct
+        "3[0-6][0-7]?|" + // oct
+        "37[0-7]?|" + // oct
+        "[4-7][0-7]?|" + //oct
+        ".)";
+
     this.$rules = {
         "start" : [ {
             token : "comment",

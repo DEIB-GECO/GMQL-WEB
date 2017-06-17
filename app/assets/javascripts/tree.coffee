@@ -554,7 +554,7 @@ showMetaRegion = (node, isMeta) ->
         window.result = result
         BootstrapDialog.show
           cssClass: 'modal-wide'
-          title: "Region data of #{datasetName}->#{sampleName}"
+          title: (if isMeta then "Metadata " else "Region data ") + "of #{datasetName}->#{sampleName}"
           message: "<div id='tree-query-editor' style='height: 100px;'></div>"
           buttons: [
             {

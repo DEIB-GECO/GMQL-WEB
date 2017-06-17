@@ -124,7 +124,7 @@ case class Job(id: String,
                @ApiModelProperty(dataType = "string", required = false) status: Option[String] = None,
                @ApiModelProperty(dataType = "string", required = false) message: Option[String] = None,
                @ApiModelProperty(dataType = "List[controllers.gmql.Dataset]", required = false) datasets: Option[Seq[Dataset]] = None,
-               @ApiModelProperty(dataType = "string", required = false) executionTime: Option[String] = None) {
+               @ApiModelProperty(dataType = "string", required = false) executionTime: Option[Long] = None) {
   @ApiModelProperty(hidden = true)
   def getXml =
     <job>
@@ -152,18 +152,6 @@ case class JobList(jobs: Seq[Job]) {
 
 object JobList {
   implicit val writer = Json.writes[JobList]
-}
-
-case class QueryResult(@ApiModelProperty(dataType = "controllers.gmql.Job", required = false) job: Option[Job]) {
-  @ApiModelProperty(hidden = true)
-  def getXml =
-    <query_result>
-      {if (job.isDefined) job.get.getXml}
-    </query_result>
-}
-
-object QueryResult {
-  implicit val writer = Json.writes[QueryResult]
 }
 
 case class Query(name: String,

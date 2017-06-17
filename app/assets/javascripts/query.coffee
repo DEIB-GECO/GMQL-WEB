@@ -78,7 +78,8 @@ runQuery = (fileKey, type) ->
         headers: {"X-AUTH-TOKEN": window.authToken}
         data: code
         success: (result, textStatus, jqXHR) ->
-          jobId = result.job.id
+          job = result
+          jobId = job.id
           $("#query-status").show()
           console.log("runQuery jobId:" + jobId)
           #      $("#result_pane").append "\n" + inputExampleScript + "\n"
@@ -109,17 +110,18 @@ compileQuery = () ->
     headers: {"X-AUTH-TOKEN": window.authToken}
     data: code
     success: (result, textStatus, jqXHR) ->
-      status = result.job.status
+      job = result
+      status = job.status
       $("#query-status").val status
       $("#query-status").show()
       $("#query-stop").hide()
       switch status
         when  "COMPILE_FAILED"
           console.log "COMPILE_FAILED"
-          jobLogDialog(result.job)
+          jobLogDialog(job)
         when  "COMPILE_SUCCESS"
           console.log "COMPILE_SUCCESS"
-#          jobLogDialog(result.job)
+#          jobLogDialog(job)
           compiled = true
         else
           BootstrapDialog.alert "Unknown compile result"
@@ -244,7 +246,7 @@ jobLogDialog = (job) ->
       divs.append ("<div class='form-group'>
             <label class='col-xs-2 control-label'>Execution time</label>
             <div class='col-xs-10'>
-              <p class='form-control-static'>#{job.executionTime?.replace /Execution Time: /, ""}</p>
+              <p class='form-control-static'>#{msToTime(job.executionTime)}</p>
             </div>
         </div>") unless not job.executionTime
       divs

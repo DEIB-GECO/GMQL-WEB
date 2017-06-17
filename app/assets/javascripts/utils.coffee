@@ -110,3 +110,18 @@ selectNode = (title) ->
     node.setActive()
   else
     BootstrapDialog.alert("There is no dataset available in the tree")
+
+@msToTime = (s) ->
+  ms = s % 1000
+  # Pad to 2 or 3 digits, default is 2
+
+  pad = (n, z) ->
+    z = z or 2
+    ('00' + n).slice -z
+
+  s = (s - ms) / 1000
+  secs = s % 60
+  s = (s - secs) / 60
+  mins = s % 60
+  hrs = (s - mins) / 60
+  pad(hrs) + ':' + pad(mins) + ':' + pad(secs) + '.' + pad(ms, 3)

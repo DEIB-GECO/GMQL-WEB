@@ -130,9 +130,8 @@ fillTable = (jobId,cell1, cell2, cell3, cell4, cell5, firstTime) ->
 
       cell4.html getDatasetList(jobStatus.datasets)
 
-      execTime = jobStatus.executionTime.replace /Execution Time: /, ""
-      if execTime == "Execution Under Progress"
-        execTime = ""
+      execTime = if jobStatus.executionTime then msToTime(jobStatus.executionTime) else ""
+
       cell5.html execTime
 #      console.log "cell1"
 #      console.log cell1

@@ -35,8 +35,7 @@ class QueryMan extends Controller {
   @ApiImplicitParams(Array(new ApiImplicitParam(
     name = "body",
     dataType = "string", paramType = "body"
-    //    , examples = new Example(Array(new ExampleProperty(value = "{\n\t\"schema_file\": \"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/HG19_ANN.schema\",\n\t\"data_files\": [\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/RefSeqGenesExons_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/RefSeqGenesExons_hg19.bed.meta\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/TSS_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/TSS_hg19.bed.meta\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/VistaEnhancers_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/VistaEnhancers_hg19.bed.meta\"\n\t]\n}")))
-  ),new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
+  ), new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
   def runQuery(queryName: String,
                @ApiParam(allowableValues = "tab, gtf") outputType: String) = AuthenticatedAction { implicit request =>
     val username = request.username.getOrElse("")
@@ -45,32 +44,33 @@ class QueryMan extends Controller {
     val queryOption = request.body.asText
 
 
-    lazy val queryResult: QueryResult = queryOption match {
+    lazy val queryResult = queryOption match {
       case None =>
-        Logger.error("Query must be send in the request body" + "\n" + username + " : " + queryName + "\n" + queryOption + "\n\n\n\n\n")
-        ResultUtils.renderedError(NOT_ACCEPTABLE, "Query must be send in the request body")
-        QueryResult(None)
+        None
       case Some(query) =>
         Logger.info("\n" + username + " : " + queryName + "\n" + queryOption + "\n\n\n\n\n")
         val compileResultJob = compileJob(username, query, queryName, outputFormat)
-        if(compileResultJob.getJobStatus == COMPILE_FAILED) {
-          QueryResult(Some(Job(compileResultJob.jobId, Some(compileResultJob.getJobStatus.toString), Some(compileResultJob.jobOutputMessages.toString()))))
-        }else {
-            val server = GMQLExecute()
-            val job = registerJob(username, query, queryName, outputFormat)
-            server.execute(job)
-            QueryResult(Some(Job(job.jobId, Some(job.getJobStatus.toString))))
-          }
+        if (compileResultJob.getJobStatus == COMPILE_FAILED) {
+          Some(Job(compileResultJob.jobId, Some(compileResultJob.getJobStatus.toString), Some(compileResultJob.jobOutputMessages.toString())))
+        } else {
+          val server = GMQLExecute()
+          val job = registerJob(username, query, queryName, outputFormat)
+          server.execute(job)
+          val datasets = server.getJobDatasets(job.jobId).map(Dataset(_))
+          Some(Job(job.jobId, Some(job.status.toString), Some(job.getMessage()), Some(datasets), {
+            if (job.getExecutionTime() < 0) None else Some(job.getExecutionTime())
+          }))
+        }
     }
 
     render {
       case Accepts.Xml() =>
-        if (queryResult.job.isEmpty)
+        if (queryResult.isEmpty)
           ResultUtils.renderedError(NOT_ACCEPTABLE, "Query must be send in the request body")
         else
-          Ok(scala.xml.Utility.trim(queryResult.getXml))
+          Ok(scala.xml.Utility.trim(queryResult.get.getXml))
       case Accepts.Json() =>
-        if (queryResult.job.isEmpty)
+        if (queryResult.isEmpty)
           ResultUtils.renderedError(NOT_ACCEPTABLE, "Query must be send in the request body")
         else
           Ok(Json.toJson(queryResult))
@@ -93,7 +93,7 @@ class QueryMan extends Controller {
     val binSize = new BinSize(5000, 5000, 1000)
     val emptyContext: SparkContext = null
     val gmqlContext = new GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat, binSize, username, emptyContext)
-    val job: GMQLJob = new GMQLJob(gmqlContext,gmqlScript,gmqlContext.username)
+    val job: GMQLJob = new GMQLJob(gmqlContext, gmqlScript, gmqlContext.username)
     job.compile()
     job
   }
@@ -106,31 +106,30 @@ class QueryMan extends Controller {
     name = "body",
     dataType = "string", paramType = "body"
     //    , examples = new Example(Array(new ExampleProperty(value = "{\n\t\"schema_file\": \"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/HG19_ANN.schema\",\n\t\"data_files\": [\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/RefSeqGenesExons_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/RefSeqGenesExons_hg19.bed.meta\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/TSS_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/TSS_hg19.bed.meta\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/VistaEnhancers_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/VistaEnhancers_hg19.bed.meta\"\n\t]\n}")))
-  ),new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
+  ), new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
   def compileQuery() = AuthenticatedAction { implicit request =>
     val username = request.username.getOrElse("")
     val queryOption = request.body.asText
     val outputFormat = GMQLSchemaFormat.TAB
     val queryName = "only_compile"
 
-    lazy val queryResult: QueryResult = queryOption match {
+    lazy val queryResult = queryOption match {
       case None =>
         Logger.error("Query must be send in the request body" + "\n" + username + " : " + queryName + "\n" + queryOption + "\n\n\n\n\n")
-        ResultUtils.renderedError(NOT_ACCEPTABLE, "Query must be send in the request body")
-        QueryResult(None)
+        None
       case Some(query) =>
         val job = compileJob(username, query, queryName, outputFormat)
-        QueryResult(Some(Job(job.jobId, Some(job.getJobStatus.toString), Some(job.jobOutputMessages.toString()))))
+        Some(Job(job.jobId, Some(job.getJobStatus.toString), Some(job.jobOutputMessages.toString())))
     }
 
     render {
       case Accepts.Xml() =>
-        if (queryResult.job.isEmpty)
+        if (queryResult.isEmpty)
           ResultUtils.renderedError(NOT_ACCEPTABLE, "Query must be send in the request body")
         else
-          Ok(scala.xml.Utility.trim(queryResult.getXml))
+          Ok(scala.xml.Utility.trim(queryResult.get.getXml))
       case Accepts.Json() =>
-        if (queryResult.job.isEmpty)
+        if (queryResult.isEmpty)
           ResultUtils.renderedError(NOT_ACCEPTABLE, "Query must be send in the request body")
         else
           Ok(Json.toJson(queryResult))
@@ -168,7 +167,9 @@ class QueryMan extends Controller {
     lazy val job = server.getGMQLJob(username, jobId)
 
     lazy val datasets = server.getJobDatasets(jobId).map(Dataset(_))
-    lazy val jobResult = Job(job.jobId, Some(job.status.toString), Some(job.getMessage()), Some(datasets), Some(job.getExecutionTime()))
+    lazy val jobResult = Job(job.jobId, Some(job.status.toString), Some(job.getMessage()), Some(datasets), {
+      if (job.getExecutionTime() < 0) None else Some(job.getExecutionTime())
+    })
 
     render {
       case Accepts.Xml() => Ok(jobResult.getXml)
@@ -176,68 +177,14 @@ class QueryMan extends Controller {
       case _ => NA
     }
 
-    //status
-    //message
-    //ds names
-    //execution time
 
-
-    //      var elapsed =/* "Compilation Time: "+job.getCompileTime()+"\n"+*/"Execution Time: "+job.getExecutionTime()/*+"\nCreate Result DataSet Time: "+job.getDSCreationTime()*/;
-    //
-    //      if(elapsed ==null)
-    //      {
-    //        System.out.println("\n\nNo exec Time preduced yet\n\n");
-    //        elapsed="";
-    //      }
-    //
-    //      lazy val datasets = (for (ds: IRDataSet <- GMQL_Globals().repository.listAllDSs(username)) yield Dataset(ds.position, Some(username))) ;
-    //
-    //
-    //      List<String> datasets;
-    //      String DSnames="";
-    //      StringBuilder Datasetsnames = new StringBuilder();
-    //      List<String> DSs = new LinkedList<String>();
-    //      try {
-    //        DSs = server.getJobDatasets(jobId);
-    //        if (!(datasets = server.getJobDatasets(jobId)).isEmpty()) {
-    //          for (String ds : datasets) {
-    //            Datasetsnames.append("," + ds);
-    //          }
-    //          try {
-    //            DSnames = Datasetsnames.toString().substring(1, Datasetsnames.toString().length());
-    //          } catch (Exception ex) {
-    //            System.out.println("There is no result to show " + ex.getMessage());
-    //          }
-    //        }
-    //      }catch (Exception ex){
-    //        System.out.println (ex.getMessage());
-    //      }
-    //
-    //      System.out.println("Datasets: "+DSnames);
-    //      GMQLJobStatusXML jobStateXml = new GMQLJobStatusXML(
-    //        new Date(),
-    //        job.getJobStatus().toString(),
-    //        job.getMessage(),
-    //        DSs,
-    //        DSnames,
-    //        elapsed
-    //      );
-    //
-    //      return Response.ok(jobStateXml).build();
-    //
-    //
-    //
-    //      val response = new QueryManager().traceJobv2(username, jobId)
-    //      //    val resAsString = ResultUtils.unMarshallClass(response, classOf[GMQLJobStatusXML], false)
-    //      //    Ok(resAsString).as("text/xml")
-    //      ResultUtils.renderJaxb(response)
   }
 
   @ApiOperation(value = "Get the log of the job", notes = "Returns the log of the job with job id")
   @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
   def getLog(jobId: String) = AuthenticatedAction { implicit request =>
     val username = request.username.getOrElse("")
-    lazy val jobLog = Log(GMQLExecute.getJobLog(username, jobId))
+    lazy val jobLog = Log(GMQLExecute().getGMQLJob(username, jobId).getLog)
 
     render {
       case Accepts.Xml() => Ok(jobLog.getXml)
@@ -256,7 +203,7 @@ class QueryMan extends Controller {
     */
   @ApiOperation(value = "Stop the job", notes = "Stops the job with the jobs id")
   @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
-    def stopJob(jobId: String) = AuthenticatedAction { implicit request =>
+  def stopJob(jobId: String) = AuthenticatedAction { implicit request =>
     val username = request.username.getOrElse("")
     val server = GMQLExecute()
     try {

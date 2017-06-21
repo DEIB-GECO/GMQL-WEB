@@ -437,6 +437,20 @@ showTable = (result, transposed) ->
         extend: 'colvis'
         columns: ':gt(0)'
         columnText: (dt, idx, title) -> title.split " "[-1..][0]
+#        collectionLayout: 'fixed'
+        prefixButtons: [
+          {
+            extend: 'colvisGroup',
+            text: 'Show all',
+            show: ':hidden'
+          }
+          {
+            extend: 'colvisGroup',
+            text: 'Show none',
+            hide: ':gt(0)'
+          }
+        ]
+
       }
       {
 #Transpose
@@ -455,7 +469,7 @@ showTable = (result, transposed) ->
 #                footer: true
     fixedColumns:
       leftColumns: 1
-    searchDelay: 10000
+    searchDelay: 1000
     searchHighlight: true
     lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]]
     scrollX: true

@@ -327,10 +327,11 @@ metadataTable = (dataSet, id, metadata) ->
 
 
 testSelect2 = ->
+  datasetName = window.lastSelectedDataSet
   console.log "testSelect2"
-  console.log("getQuery-> dataSetMame: #{window.lastSelectedDataSet}")
+  console.log("getQuery-> dataSetMame: #{datasetName}")
 
-  call = jsRoutes.controllers.gmql.MetadataBrowser.getFilteredMaxtrix window.lastSelectedDataSet
+  call = jsRoutes.controllers.gmql.MetadataBrowser.getFilteredMaxtrix datasetName
   $.ajax
     url: call.url
     type: call.type
@@ -350,7 +351,7 @@ testSelect2 = ->
         bsd = BootstrapDialog.show
           closeByBackdrop: false
           closeByKeyboard: true
-          title: 'Search result for ' + window.lastSelectedDataSet
+          title: 'Search result for ' + datasetName
           message: '<div id="tableDiv"><table id="displayTable" ></table></div>'
 #          size: BootstrapDialog.SIZE_WIDE
           cssClass: 'modal-wide'
@@ -366,22 +367,17 @@ testSelect2 = ->
           onshown: (dialogRef) ->
 # to define which direction will be the result
             window.tableResult = result
-            window.transposed = true
-            showTable(result, true)
-
+            showTable(result, true, datasetName)
       else
         BootstrapDialog.alert "No result"
 
-showTable = (result, transposed) ->
+showTable = (result, transposed, datasetName) ->
 #  $('#displayTable')?.DataTable()?.destroy(true)
   $('#tableDiv').empty()
   $('#tableDiv').append '<table id="displayTable" ><thead><tr></tr></thead><tfoot><tr></tr></tfoot></table>'
 
 
-  upperLeftTitle = 'attribute'
-  firstColumn = result.attributes.map (attribute) -> attribute.key.replace /\|/, " ".replace /__/, " "
-  columnNames = result.samples.map (sample) -> sample.name
-  data = cloneArray result.matrix
+
 
 
   if transposed
@@ -389,6 +385,11 @@ showTable = (result, transposed) ->
     columnNames = result.attributes.map (attribute) -> attribute.key.replace /\|/, " ".replace /__/, " "
     firstColumn = result.samples.map (sample) -> sample.name
     data = transpose result.matrix
+  else
+    upperLeftTitle = 'attribute'
+    firstColumn = result.attributes.map (attribute) -> attribute.key.replace /\|/, " ".replace /__/, " "
+    columnNames = result.samples.map (sample) -> sample.name
+    data = cloneArray result.matrix
 
   columnNames.unshift "#{upperLeftTitle[0].toUpperCase()}#{upperLeftTitle[1..-1].toLowerCase()}s"
 
@@ -424,6 +425,50 @@ showTable = (result, transposed) ->
 
   # show the table
   table = $('#displayTable').DataTable
+# begin state related
+    stateSave: true
+    stateDuration: -1
+    stateSaveCallback: (settings, data) ->
+#      delete data.search if data?.search?
+      localStorage.setItem "GMQL_DataTables_#{datasetName}", JSON.stringify(data)
+    stateLoadCallback: (settings) ->
+      JSON.parse localStorage.getItem("GMQL_DataTables_#{datasetName}")
+    stateSaveParams: (settings, data) ->
+      data?.search?.search = ""
+      for columnArr in zip(data.columns, settings.aoColumns)
+        console.log columnArr
+        columnArr[0].title = (columnArr[1].sTitle.split "<")[0]
+        console.log columnArr
+      console.log ""
+    stateLoadParams: (settings, data) ->
+      data?.search?.search = ""
+      console.log ""
+      if(data?.columns)
+        newColumns = []
+        dict = {} #hashmap column-title to column
+        data.columns.map (column) -> dict[column.title] = column
+        console.log dict
+        console.log dict
+        for col in settings.aoColumns
+          newTitle = (col.sTitle.split "<")[0]
+          newCol =
+            if dict[newTitle]
+              dict[newTitle]
+            else
+              {
+                "visible": true,
+                "search": {
+                  "search": "",
+                  "smart": true,
+                  "regex": false,
+                  "caseInsensitive": true
+                }
+              }
+          newColumns.push newCol
+
+        data.columns = newColumns
+
+
     columnDefs: [{"searchable": false, "targets": 0}]
     dom: '<"datatable-buttons"B><"datatable-lengths"l>ifrtip',
     buttons: [
@@ -457,8 +502,7 @@ showTable = (result, transposed) ->
         text: 'Transpose'
         action: (e, dt, node, config) ->
           $('#displayTable').DataTable().destroy(true)
-          window.transposed = !window.transposed
-          showTable(window.tableResult, window.transposed)
+          showTable(window.tableResult, !transposed, datasetName)
 
       }
     ]

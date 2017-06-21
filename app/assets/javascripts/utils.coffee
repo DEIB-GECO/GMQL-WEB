@@ -125,3 +125,12 @@ selectNode = (title) ->
   mins = s % 60
   hrs = (s - mins) / 60
   pad(hrs) + ':' + pad(mins) + ':' + pad(secs) + '.' + pad(ms, 3)
+
+
+
+# Usage: zip(arr1, arr2, arr3, ...)
+@zip = () ->
+  lengthArray = (arr.length for arr in arguments)
+  length = Math.min(lengthArray...)
+  for i in [0...length]
+    arr[i] for arr in arguments

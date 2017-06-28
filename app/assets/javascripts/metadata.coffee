@@ -423,11 +423,20 @@ showTable = (result, transposed, datasetName) ->
     column.visible false
     return
 
+  checkHiddenColumns = (settings) ->
+    if(settings.aoColumns.map((a) -> a.bVisible).reduce((a, b) -> a && b ))
+      $(".buttons-colvis").css("color","black")
+    else
+     $(".buttons-colvis").css("color","red")
+
+
   # show the table
   table = $('#displayTable').DataTable
 # begin state related
+    initComplete: (settings, json) ->
+      checkHiddenColumns(settings)
     stateSave: true
-    stateDuration: -1
+    stateDuration: 7 * 24 * 60 * 60
     stateSaveCallback: (settings, data) ->
 #      delete data.search if data?.search?
       localStorage.setItem "GMQL_DataTables_#{datasetName}", JSON.stringify(data)
@@ -554,6 +563,8 @@ showTable = (result, transposed, datasetName) ->
 #                    )
 #                    myCol.data().unique().sort().each (d, j) ->
 #                      select.append '<option value="' + d + '">' + d + '</option>'
+  table.on 'column-visibility.dt', (e, settings, column, state) ->
+    checkHiddenColumns(settings)
 
 
 #in case I need transpose
@@ -607,3 +618,6 @@ $ ->
   $('#metadata-copy-button').on 'click', ->
     editor = ace.edit("main-query-editor")
     editor.session.insert(editor.getCursorPosition(), ace.edit("metadata-query-editor").getValue() + "\n")
+
+
+hasHiddencColumns -> settings.aoColumns.map((a) -> a.bVisible).reduce((a, b) -> a && b )

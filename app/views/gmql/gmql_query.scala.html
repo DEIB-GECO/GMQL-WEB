@@ -15,49 +15,48 @@
     </div>
     <div class="panel-body panel-body-no-padding">
         <div id="main-query-editor" style="height: 100px;"></div>
-        @*HM = SELECT(assembly == "hg19") HG19_BED_ANNOTATION;
-        MATERIALIZE HM into hm1;*@
-        <div class='form-horizontal'>
-            <div class="form-group">
-                <label for="file-name" class="form-control-label col-sm-4">Query name</label>
-                <div class="col-sm-6">
-                    <input id="file-name"  class="" type="text" value="fileName">
-                </div>
+    </div>
+    <div class="panel-footer clearfix">
+        <div class="form-group">
+            <label for="file-name" class="form-control-label col-sm-3">Query name</label>
+            <div class="col-sm-9">
+                <input id="file-name"  class="" type="text" value="fileName">
             </div>
-            <div class="form-group">
-                <label class="col-sm-4">Output format</label>
-                <div class="col-sm-6">
-                    <label class="radio-inline">
-                        <input type="radio" name="optionsRadios" id="optionsRadios2" value="gtf" checked>
-                        GTF
-                    </label>
-                    <label class="radio-inline">
-                        <input type="radio" name="optionsRadios" id="optionsRadios1" value="tab" >
-                        Tab delimited
-                    </label>
-                </div>
+            <label class="col-sm-3">Output format</label>
+            <div class="col-sm-9">
+                <label class="radio-inline">
+                    <input type="radio" name="optionsRadios" id="optionsRadios1" value="tab" checked>
+                    Tab delimited
+                </label>
+                <label class="radio-inline">
+                    <input type="radio" name="optionsRadios" id="optionsRadios2" value="gtf" >
+                    GTF
+                </label>
             </div>
-
+        </div>
+        <div class="clearfix"></div>
+        <div>
+            <div class="input-group input-group-sm pull-left">
+                <button id="jobs-button" type="button" class="btn btn-primary btn-xs" >
+                    <span class="glyphicon glyphicon-tasks" aria-hidden="true"/> Show jobs
+                </button>
+                <input id="query-status" type="text" class="btn btn-info btn-xs" value="Java script problem" >
+                <button id="query-stop" data-toggle="tooltip" data-placement="bottom" title="Click to stop job" type="button" class="btn btn-danger btn-xs"><span class="glyphicon glyphicon-stop" aria-hidden="true"></span></button>
+            </div>
+            <div class="pull-right">
+                <button id="query-compile-button" type="button" class="btn btn-primary btn-xs" >
+                    <span class="glyphicon glyphicon-cog" aria-hidden="true"/> Compile
+                </button>
+                <button id="query-execute-button" type="button" class="btn btn-primary btn-xs" >
+                    <span class="glyphicon glyphicon-play" aria-hidden="true"/> Execute
+                </button>
+                <button class="btn-default btn-xs main-query-full-screen"><span class="glyphicon glyphicon glyphicon-resize-full" aria-hidden="true"></span></button>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="panel-footer">
-    <div class="input-group input-group-sm pull-left">
-        <input id="query-status" type="text" class="btn btn-info btn-xs" value="Java script problem" >
-        <button id="query-stop" data-toggle="tooltip" data-placement="bottom" title="Click to stop job" type="button" class="btn btn-danger btn-xs"><span class="glyphicon glyphicon-stop" aria-hidden="true"></span></button>
-    </div>
-    <div class="pull-right">
-        <button id="query-compile-button" type="button" class="btn btn-primary btn-xs" >
-            <span class="glyphicon glyphicon-cog" aria-hidden="true"/> Compile
-        </button>
-        <button id="query-execute-button" type="button" class="btn btn-primary btn-xs" >
-            <span class="glyphicon glyphicon-play" aria-hidden="true"/> Execute
-        </button>
-        <button class="btn-default btn-xs main-query-full-screen"><span class="glyphicon glyphicon glyphicon-resize-full" aria-hidden="true"></span></button>
-    </div>
-    <div class="clearfix"></div>
-</div>
+
 <script>
         ace.require("ace/src/ext/language_tools");
 
@@ -78,9 +77,3 @@
 
         // editorSetValue(editor, "Query window")
 </script>
-
-
-<button id="jobs-button" type="button" class="btn btn-primary btn-md" >
-    <span class="glyphicon glyphicon-tasks" aria-hidden="true"/> Show jobs
-</button>
-

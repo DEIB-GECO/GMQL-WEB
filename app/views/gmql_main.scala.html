@@ -20,29 +20,31 @@
     <body>
         <div>@views.html.gmql.gmql_navbar()</div>
         <div>@views.html.gmql.register_modal()</div>
+        <div class="container-fluid"> <!-- Adds 15px left/right padding -->
 
-        @*<div class="container">*@
-        <div class="row registered-user">
-            <div  id="col-tree" class="col-md-4">
-                <div>@views.html.gmql.gmql_tree()</div>
-            </div>
-            <div id="col-query" class="col-md-8">
-                <div >@views.html.gmql.gmql_query()</div>
-            </div>
+            @*<div class="container">*@
+            <div class="row registered-user">
+                <div id="col-tree" class="col-md-4">
+                    <div>@views.html.gmql.gmql_tree()</div>
+                </div>
+                <div id="col-query" class="col-md-8">
+                    <div >@views.html.gmql.gmql_query()</div>
+                </div>
 
-        </div>
-        @*</div>*@
+            </div>
+            @*</div>*@
 
-        @*<div class="container">*@
-        <div class="row registered-user">
-            <div class="col-md-4">
-                <div>@views.html.gmql.gmql_metadata_search()</div>
-            </div>
-            <div class="col-md-4">
-                <div>@views.html.gmql.gmql_metadata("Sample metadata")</div>
-            </div>
-            <div id="col-schema" class="col-md-4">
-                <div>@views.html.gmql.gmql_schema()</div>
+            @*<div class="container">*@
+            <div class="row registered-user">
+                <div class="col-md-4">
+                    <div>@views.html.gmql.gmql_metadata_search()</div>
+                </div>
+                <div class="col-md-4">
+                    <div>@views.html.gmql.gmql_metadata("Sample metadata")</div>
+                </div>
+                <div id="col-schema" class="col-md-4">
+                    <div>@views.html.gmql.gmql_schema()</div>
+                </div>
             </div>
         </div>
         <div id="login-problem"></div>

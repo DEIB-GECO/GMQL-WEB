@@ -4,9 +4,10 @@ import javax.inject.Singleton
 
 import controllers.gmql.ResultUtils.NA
 import io.swagger.annotations.{ApiImplicitParams, ApiOperation, _}
-import it.polimi.genomics.core.{BinSize, GMQLSchemaFormat, GMQLScript, ImplementationPlatform}
+import it.polimi.genomics.core._
+import it.polimi.genomics.core.exception.GMQLDagException
 import it.polimi.genomics.manager.Exceptions.{InvalidGMQLJobException, NoJobsFoundException}
-import it.polimi.genomics.manager.Launchers.GMQLSparkLauncher
+import it.polimi.genomics.manager.Status._
 import it.polimi.genomics.manager.{GMQLContext, GMQLExecute, GMQLJob}
 import org.apache.spark.SparkContext
 import play.api.Logger
@@ -15,8 +16,6 @@ import play.api.mvc.Controller
 import wrappers.authanticate.AuthenticatedAction
 
 import scala.collection.JavaConversions._
-
-import it.polimi.genomics.manager.Status._
 
 
 /**
@@ -74,6 +73,63 @@ class QueryMan extends Controller {
           ResultUtils.renderedError(NOT_ACCEPTABLE, "Query must be send in the request body")
         else
           Ok(Json.toJson(queryResult))
+      case _ => NA
+    }
+  }
+
+  @ApiOperation(value = "Execute the dag query",
+    notes = "Execute dag query and for the result user needs to check trace the job.",
+    consumes = "text/plain"
+  )
+  @ApiImplicitParams(Array(new ApiImplicitParam(
+    name = "body",
+    dataType = "string", paramType = "body"
+  ), new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
+  def runDag(//queryName: String,
+             @ApiParam(allowableValues = "tab, gtf") outputType: String) = AuthenticatedAction { implicit request =>
+    val username = request.username.getOrElse("")
+    val outputFormat = GMQLSchemaFormat.getType(outputType)
+
+    val queryOption = request.body.asText
+
+
+    lazy val queryResult = queryOption match {
+      case None =>
+        None
+      case Some(serializedDAG) =>
+        Logger.info("\n" + username + " : " + queryOption + "\n\n\n\n\n")
+
+        val server = GMQLExecute()
+        val script = GMQLScript("", "", serializedDAG)
+        val binsize = BinSize(5000, 1000)
+        val gmqlContext = GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat, binsize, username)
+        val job = server.registerDAG(script, gmqlContext)
+        server.execute(job)
+        val datasets = server.getJobDatasets(job.jobId).map(Dataset(_))
+        Some(Job(job.jobId, Some(job.status.toString), Some(job.getMessage()), Some(datasets), {
+          if (job.getExecutionTime() < 0) None else Some(job.getExecutionTime())
+        }))
+    }
+
+    render {
+      case Accepts.Xml() =>
+        try {
+          if (queryResult.isEmpty)
+            ResultUtils.renderedError(NOT_ACCEPTABLE, "Query must be send in the request body")
+          else
+            Ok(scala.xml.Utility.trim(queryResult.get.getXml))
+        } catch {
+          case e: GMQLDagException => ResultUtils.renderedError(NOT_ACCEPTABLE, "DAG error: " + e.getMessage)
+        }
+      case Accepts.Json() =>
+        try {
+          if (queryResult.isEmpty)
+            ResultUtils.renderedError(NOT_ACCEPTABLE, "Query must be send in the request body")
+          else
+            Ok(Json.toJson(queryResult))
+        } catch {
+          case e: GMQLDagException => ResultUtils.renderedError(NOT_ACCEPTABLE, "DAG error: " + e.getMessage)
+        }
       case _ => NA
     }
   }

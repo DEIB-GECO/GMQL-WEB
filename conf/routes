@@ -118,6 +118,9 @@ POST          /metadata/:datasetName/dataset/matrix              controllers.gmq
 POST          /queries/run/:fileName/:gtfOutput                  controllers.gmql.QueryMan.runQuery(fileName: String, gtfOutput: String)
 POST          /queries/compile                                   controllers.gmql.QueryMan.compileQuery
 
+POST           /queries/dag/:gtfOutput                  controllers.gmql.QueryMan.runDag(gtfOutput: String)
+
+
 #GET           /queries/read/:fileKey                                           controllers.gmql.QueryMan.readQuery(fileKey:String)
 #GET           /queries/delete/:fileKey                                         controllers.gmql.QueryMan.deleteQuery(fileKey:String)
 #POST          /queries/save/:fileName/:fileKey                                 controllers.gmql.QueryMan.saveQueryAs(fileName: String, fileKey: String)

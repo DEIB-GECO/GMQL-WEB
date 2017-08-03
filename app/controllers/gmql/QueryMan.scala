@@ -9,6 +9,7 @@ import it.polimi.genomics.core.exception.GMQLDagException
 import it.polimi.genomics.manager.Exceptions.{InvalidGMQLJobException, NoJobsFoundException}
 import it.polimi.genomics.manager.Status._
 import it.polimi.genomics.manager.{GMQLContext, GMQLExecute, GMQLJob}
+import it.polimi.genomics.repository.GMQLExceptions.GMQLDSNotFound
 import org.apache.spark.SparkContext
 import play.api.Logger
 import play.api.libs.json.Json
@@ -120,6 +121,7 @@ class QueryMan extends Controller {
             Ok(scala.xml.Utility.trim(queryResult.get.getXml))
         } catch {
           case e: GMQLDagException => ResultUtils.renderedError(NOT_ACCEPTABLE, "DAG error: " + e.getMessage)
+          case e: GMQLDSNotFound => ResultUtils.renderedError(NOT_ACCEPTABLE, "Dataset not found: " + e.getMessage)
         }
       case Accepts.Json() =>
         try {
@@ -129,6 +131,7 @@ class QueryMan extends Controller {
             Ok(Json.toJson(queryResult))
         } catch {
           case e: GMQLDagException => ResultUtils.renderedError(NOT_ACCEPTABLE, "DAG error: " + e.getMessage)
+          case e: GMQLDSNotFound => ResultUtils.renderedError(NOT_ACCEPTABLE, "Dataset not found: " + e.getMessage)
         }
       case _ => NA
     }

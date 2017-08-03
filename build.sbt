@@ -2,7 +2,7 @@ import sbt.ConflictWarning
 
 name := "GMQL-REST"
 
-version := "1.1"
+version := "1.1-dag"
 
 lazy val `GMQL-REST` = (project in file(".")).enablePlugins(PlayScala, SbtWeb)
 //lazy val `gmql_rest2` = (project in file(".")).enablePlugins(PlayScala, PlayEbean, PlayJava)
@@ -135,5 +135,5 @@ dependencyOverrides ++= Set(
 //libraryDependencies += "com.wordnik" %% "swagger-play2" % "1.3.12"
 
 
-libraryDependencies ~= { _.map(_.exclude("org.slf4j", "slf4j-log4j12")) }
+//libraryDependencies ~= { _.map(_.exclude("org.slf4j", "slf4j-log4j12")) }
 //libraryDependencies ~= { _.map(_.exclude("com.fasterxml.jackson.module", "jackson-module-scala_2.10")) }

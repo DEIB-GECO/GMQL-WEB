@@ -86,7 +86,7 @@ secondDropDown = ->
     .attr("data-style", "btn-info")
     .attr("data-live-search", "true")
     .attr("data-selected-text-format", "count > 3")
-    .attr("title", "First choose attribute")
+    .attr("title", "Choose attribute")
   select.change secondDropDownOnChange
   select
 

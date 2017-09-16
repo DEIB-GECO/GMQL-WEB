@@ -29,7 +29,7 @@ metadataAddButtonClick = ->
     #    $("html, body").animate({ scrollTop: (metadataSearchDivBottom - $( window ).height()) }) if(metadataSearchDivBottom>windowBottom)
     $(window).scrollTop(metadataSearchDivBottom - $(window).height()) if(metadataSearchDivBottom > windowBottom)
   else
-    alert('Please select a data set')
+    alert('Please select a dataset')
 
 
 rowDiv = () ->
@@ -163,7 +163,7 @@ getQuery = ->
   if window.lastSelectedDataSet?
     "DATA_SET_VAR = SELECT(#{reduced}) #{window.lastSelectedDataSet.replace /^public\./, ""};"
   else
-    "Please select data set to generate query"
+    "Please select dataset to generate query"
 
 
 ###

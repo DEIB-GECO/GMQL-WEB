@@ -178,7 +178,7 @@ glyph_opts = map:
       console.log 'beforeActivate'
       logEvent event, data
       if generateQuery()
-        BootstrapDialog.confirm 'Are sure to change the data set, query in the metadata browser will be lost?', (result) ->
+        BootstrapDialog.confirm 'Are sure to change the dataset, query in the metadata browser will be lost?', (result) ->
           if result
 #            alert 'Yup.'
             $(".del-button").click()
@@ -317,7 +317,7 @@ deleteSelectedNodes = ->
         }
       ]
   else
-    BootstrapDialog.alert "No data set or sample selected!"
+    BootstrapDialog.alert "No dataset or sample selected!"
 
 findSelectedNode = ->
   nodes = $('#tree').fancytree('getRootNode').tree.getSelectedNodes()
@@ -444,7 +444,7 @@ loadUcsc = ->
       newWin.location = ucscBaseLink + result
     error: (jqXHR, textStatus, errorThrown) ->
       BootstrapDialog.alert
-        message: "Cannot prepare UCSC links for data set #{dataSet}"
+        message: "Cannot prepare UCSC links for dataset #{dataSet}"
         type: BootstrapDialog.TYPE_WARNING
       newWin.close()
 

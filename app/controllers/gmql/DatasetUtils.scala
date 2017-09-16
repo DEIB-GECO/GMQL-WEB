@@ -28,10 +28,10 @@ object DatasetUtils {
   //    regionsUserFolderPath
   //  }
   /**
-    * Create or clean temp folder for the data set.
+    * Create or clean temp folder for the dataset.
     *
     * @param username    name of the user
-    * @param dataSetName name of the data set
+    * @param dataSetName name of the dataset
     * @return full path to the temporary directory
     */
   def createEmptyTempDirectory(username: String, dataSetName: String) = {

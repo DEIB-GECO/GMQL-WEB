@@ -71,9 +71,11 @@ class JavascriptRoute extends Controller {
         controllers.gmql.routes.javascript.QueryBrowser.getQueries,
         controllers.gmql.routes.javascript.QueryBrowser.getQuery,
         controllers.gmql.routes.javascript.QueryBrowser.deleteQuery,
-        controllers.gmql.routes.javascript.QueryBrowser.saveQuery
+        controllers.gmql.routes.javascript.QueryBrowser.saveQuery,
 
-      )
+        routes.javascript.Application.gecoQueries
+
+    )
     )
   }
 }

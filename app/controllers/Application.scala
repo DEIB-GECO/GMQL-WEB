@@ -53,4 +53,10 @@ class Application @Inject()(ws: WSClient) extends Controller {
     request =>
       Ok(views.html.swagger())
   }
+
+  def gecoQueries = Action { implicit request =>
+      Ok(views.html.geco_queries.table())
+  }
+
+
 }

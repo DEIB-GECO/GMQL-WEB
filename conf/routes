@@ -5,6 +5,7 @@
 GET           /swagger.json                                      controllers.ApiHelpController.getResources
 
 GET           /swagger                                           controllers.Application.swagger
+GET           /gecoQueries                                       controllers.Application.gecoQueries
 
 #
 #

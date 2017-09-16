@@ -1,0 +1,28 @@
+{
+  "data": [
+    {
+      "name": "query1_1",
+      "group": "group1",
+      "description": "desc1_1",
+      "query": "QUERY1_line1\nQUERY1_line2\nSELECT"
+    },
+    {
+      "name": "query1_3",
+      "group": "group1",
+      "description": "desc1_3",
+      "query": "test test "
+    },
+    {
+      "name": "query1_2",
+      "group": "group2",
+      "description": "desc1_2",
+      "query": "DIRECT SELECT"
+    },
+    {
+      "name": "query1_3",
+      "group": "group1",
+      "description": "desc1_4",
+      "query": "Long text\nsdsd sds dsd sddsdsd sdsd sds dsd sddsdsd sdsd sds dsd sddsdsd sdsd sds dsd sddsdsd sdsd sds dsd sddsdsd sdsd sds dsd sddsdsd sdsd sds dsd sddsdsd sdsd sds dsd sddsdsd sdsd sds dsd sddsdsd sdsd sds dsd sddsdsd sdsd sds dsd sddsdsd sdsd sds dsd sddsdsd sdsd sds dsd sddsdsd sdsd sds dsd sddsdsd sdsd sds dsd sddsdsd sdsd sds dsd sddsdsd sdsd sds dsd sddsdsd sdsd sds dsd sddsdsd sdsd sds dsd sddsdsd sdsd sds dsd sddsdsd sdsd sds dsd sddsdsd sdsd sds dsd sddsdsd "
+    }
+  ]
+}

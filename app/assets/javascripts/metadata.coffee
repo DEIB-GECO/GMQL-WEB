@@ -620,4 +620,3 @@ $ ->
     editor.session.insert(editor.getCursorPosition(), ace.edit("metadata-query-editor").getValue() + "\n")
 
 
-hasHiddencColumns -> settings.aoColumns.map((a) -> a.bVisible).reduce((a, b) -> a && b )

@@ -15,7 +15,6 @@ import play.api.mvc.Controller
 import wrappers.authanticate.AuthenticatedAction
 
 import scala.collection.JavaConversions._
-
 import it.polimi.genomics.manager.Status._
 
 
@@ -84,7 +83,7 @@ class QueryMan extends Controller {
     val gmqlScript = new GMQLScript(query, queryName)
     val binSize = new BinSize(5000, 5000, 1000)
     val emptyContext: SparkContext = null
-    val gmqlContext = new GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat, binSize, username, emptyContext)
+    val gmqlContext = new GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat, binSize = binSize, username = username, sc = emptyContext)
     server.registerJob(gmqlScript, gmqlContext, "")
   }
 
@@ -92,7 +91,7 @@ class QueryMan extends Controller {
     val gmqlScript = new GMQLScript(query, queryName)
     val binSize = new BinSize(5000, 5000, 1000)
     val emptyContext: SparkContext = null
-    val gmqlContext = new GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat, binSize, username, emptyContext)
+    val gmqlContext = new GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat, binSize = binSize, username = username, sc = emptyContext)
     val job: GMQLJob = new GMQLJob(gmqlContext, gmqlScript, gmqlContext.username)
     job.compile()
     job

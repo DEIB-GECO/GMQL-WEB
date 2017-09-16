@@ -456,6 +456,7 @@ class DSManager extends Controller {
     implicit val writerGmqlSchema = (
       (JsPath \ "name").write[String] and
         (JsPath \ "type").write[GMQLSchemaFormat.Value] and
+        (JsPath \ "coordinate_system").write[GMQLSchemaCoordinateSystem.Value] and
         (JsPath \ "fields").write[List[GMQLSchemaField]]
       ) (unlift(GMQLSchema.unapply))
 

@@ -61,7 +61,7 @@ libraryDependencies ++= Seq(
   /*, "org.webjars" % "bootstrap-filestyle" % "1.1.2"*/
   // USE from source code latest release
   , "org.webjars" % "bootstrap-notify" % "3.1.3"
-
+  , "org.webjars" % "datatables" % "1.10.15"
 )
 
 

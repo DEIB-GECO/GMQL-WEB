@@ -1,0 +1,19 @@
+@()(implicit request: play.api.mvc.Request[Any])
+<!DOCTYPE html>
+
+
+<html>
+    <head>
+        @head("GMQL")
+        @*My less*@
+        <link rel="stylesheet" href="@routes.Assets.at("stylesheets/login.css")">
+        <link rel="stylesheet" href="@routes.Assets.at("stylesheets/main.css")">
+        <link rel="stylesheet" href="@routes.Assets.at("stylesheets/tree.css")">
+        <link rel="stylesheet" href="@routes.Assets.at("stylesheets/geco_queries.css")">
+        <script src="@routes.Assets.at("javascripts/geco_queries.js")" type="text/javascript"></script>
+        <script src="@routes.Assets.at("javascripts/tree.js")" type="text/javascript"></script>
+    </head>
+    <body>
+        <div>@views.html.geco_queries.table()</div>
+    </body>
+</html>

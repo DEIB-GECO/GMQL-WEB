@@ -460,13 +460,13 @@ changeFullScreen = ->
 showQuery = (node) ->
   data = node.data
   type = data.type
-  value =
+  datasetName =
     switch type
       when "sample"   then node.parent.data.value
       when "data-set"  then data.value
 
-  if value?
-    call = jsRoutes.controllers.gmql.DSManager.getQueryStream(value)
+  if datasetName?
+    call = jsRoutes.controllers.gmql.DSManager.getQueryStream(datasetName)
     $.ajax
       url: call.url
       type: call.type
@@ -475,53 +475,55 @@ showQuery = (node) ->
       contentType: 'text'
       dataType: 'text'
       success: (result, textStatus, jqXHR) ->
-        window.result = result
-        BootstrapDialog.show
-          title: "Query of #{value}"
-          size: BootstrapDialog.SIZE_WIDE
-          message: "<div id='tree-query-editor' style='height: 100px;'></div>"
-          buttons: [
-            {
-              label: 'Download'
-              action: (dialogItself) ->
-                window.location = call.url
-            }
-            {
-              label: 'Copy to clipboard'
-              action: (dialogItself) ->
-                editor = ace.edit("tree-query-editor")
-                editor.selectAll()
-                editor.focus()
-                document.execCommand('copy')
-                editor.clearSelection()
-            }
-            {
-              label: 'Copy to query editor'
-              action: (dialogItself) ->
-                if(ace.edit("main-query-editor").getValue().length)
-                  BootstrapDialog.confirm 'Are you sure to overwrite to query editor?', (yesNo) ->
-                    if(yesNo)
-                      ace.edit("main-query-editor").setValue(result)
-                      dialogItself.close()
-                else
-                  ace.edit("main-query-editor").setValue(result)
-                  dialogItself.close()
-            }
-            {
-              label: 'Close'
-              action: (dialogItself) ->
-                dialogItself.close()
-            }
-          ]
-          onshown: ->
-            editor = ace.edit("tree-query-editor")
-            editorOption(editor, result, "gmql")
-            editor.getSession().setUseWrapMode(true)
+        showQueryBootstrapDialog("Query of #{datasetName}", result)
 
       error: (jqXHR, textStatus, errorThrown) ->
         BootstrapDialog.alert "There is no query for this dataset."
 # end showQuery: shows the query of the dataset.
 
+
+@showQueryBootstrapDialog = (title, query) ->
+  BootstrapDialog.show
+    title: title
+    size: BootstrapDialog.SIZE_WIDE
+    message: "<div id='tree-query-editor' style='height: 100px;'></div>"
+    buttons: [
+      {
+        label: 'Download'
+        action: (dialogItself) ->
+          window.location = call.url
+      }
+      {
+        label: 'Copy to clipboard'
+        action: (dialogItself) ->
+          editor = ace.edit("tree-query-editor")
+          editor.selectAll()
+          editor.focus()
+          document.execCommand('copy')
+          editor.clearSelection()
+      }
+      {
+        label: 'Copy to query editor'
+        action: (dialogItself) ->
+          if(ace.edit("main-query-editor").getValue().length)
+            BootstrapDialog.confirm 'Are you sure to overwrite to query editor?', (yesNo) ->
+              if(yesNo)
+                ace.edit("main-query-editor").setValue(query)
+                $.each BootstrapDialog.dialogs, (id, dialog) -> dialog.close() # close all dialogs
+          else
+            ace.edit("main-query-editor").setValue(query)
+            $.each BootstrapDialog.dialogs, (id, dialog) -> dialog.close() # close all dialogs
+      }
+      {
+        label: 'Close'
+        action: (dialogItself) ->
+          dialogItself.close()
+      }
+    ]
+    onshown: ->
+      editor = ace.edit("tree-query-editor")
+      editorOption(editor, query, "gmql")
+      editor.getSession().setUseWrapMode(true)
 
 # start showRegion: shows the first lines of the regions of sample
 showMetaRegion = (node, isMeta) ->

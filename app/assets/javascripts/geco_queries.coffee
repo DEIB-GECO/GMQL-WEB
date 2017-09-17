@@ -1,6 +1,8 @@
 helloWorld = () ->
+  ajaxUrl = jsRoutes.controllers.gmql.GecoQueries.gecoQueriesJson().url
   table = $('#geco_queries_table').DataTable(
-    'ajax': 'assets/geco_queries.json'
+    'crossDomain' : true,
+    'ajax': ajaxUrl
     'columns': [
       {'data': 'name'}
       {
@@ -41,12 +43,16 @@ helloWorld = () ->
     showQueryBootstrapDialog("Example query: #{name}", query)
 
 
-@showGecoQueriesTable = ->
-  call = jsRoutes.controllers.Application.gecoQueries()
+showGecoQueriesTable = ->
+  call = jsRoutes.controllers.gmql.GecoQueries.gecoQueries()
   BootstrapDialog.show
-    title: "Hello"
+    title: "Example Queries"
     size: BootstrapDialog.SIZE_WIDE
     message:       $('<div></div>').load(call.url)
     onshown: ->
       helloWorld()
 
+
+$ ->
+  $('#main-query-example').on 'click', (e) ->
+    showGecoQueriesTable()

@@ -509,10 +509,10 @@ showQuery = (node) ->
             BootstrapDialog.confirm 'Are you sure to overwrite to query editor?', (yesNo) ->
               if(yesNo)
                 ace.edit("main-query-editor").setValue(query)
-                dialogItself.close()
+                $.each BootstrapDialog.dialogs, (id, dialog) -> dialog.close() # close all dialogs
           else
             ace.edit("main-query-editor").setValue(query)
-            dialogItself.close()
+            $.each BootstrapDialog.dialogs, (id, dialog) -> dialog.close() # close all dialogs
       }
       {
         label: 'Close'

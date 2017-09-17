@@ -3,7 +3,7 @@ package controllers
 import javax.inject.Singleton
 
 import play.api.mvc.{Action, Controller}
-import play.api.routing.JavaScriptReverseRouter
+import play.api.routing.{JavaScriptReverseRoute, JavaScriptReverseRouter}
 
 @Singleton
 class JavascriptRoute extends Controller {
@@ -73,7 +73,27 @@ class JavascriptRoute extends Controller {
         controllers.gmql.routes.javascript.QueryBrowser.deleteQuery,
         controllers.gmql.routes.javascript.QueryBrowser.saveQuery,
 
-        routes.javascript.Application.gecoQueries
+        controllers.gmql.routes.javascript.GecoQueries.gecoQueries,
+
+          controllers.gmql.routes.javascript.GecoQueries.gecoQueriesJson
+
+
+
+
+
+//        ,
+//
+//
+//        //TODO read from Application.conf
+//        JavaScriptReverseRoute(
+//          "exampleQueries",
+//          """
+//            function() {
+//              return _wA({method:"GET", url:"http://www.bioinformatics.deib.polimi.it/geco_queries/geco_queries.json"})
+//            }
+//          """
+//        )
+
 
     )
     )

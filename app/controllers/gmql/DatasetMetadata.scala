@@ -153,7 +153,7 @@ class DatasetMetadata(username: String, datasetName: String) {
           null
       }
     }
-    val res = MatrixResult(sampleList, sortedKeys.map(Attribute(_)), matrix/*.transpose*/)
+    val res = MatrixResult(sampleList, sortedKeys.map(Attribute(_)), matrix /*.transpose*/)
     //temp += attributeList -> res
     res
   }
@@ -233,7 +233,7 @@ object DatasetMetadata {
     for (ds <- utils.GmqlGlobal.repository.listAllDSs(username)) {
       // in order to load all public dataset in pararllel run as a future execution
       //Future {
-      DatasetMetadata(username, ds.position)
+        DatasetMetadata(username, ds.position)
       //}
     }
   }
@@ -247,7 +247,7 @@ object DatasetMetadata {
 
 
   def apply(username: String, datasetName: String): DatasetMetadata =
-    if (username == "public" || username == "canakoglu")
+    if (username == "public")
       Cache.getOrElse(s"$username->$datasetName")(new DatasetMetadata(username: String, datasetName: String))
     else
       Cache.getOrElse(s"$username->$datasetName", 600)(new DatasetMetadata(username: String, datasetName: String))

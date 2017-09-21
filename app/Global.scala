@@ -3,14 +3,19 @@
   */
 
 
-import controllers.gmql.{AttributeList, DatasetMetadata}
+import controllers.gmql._
 import play.api._
+import utils.GmqlGlobal.repository
+
 
 object Global extends GlobalSettings {
 
 
   override def beforeStart(app: Application) {
     Logger.info("Global.beforeStart")
+    try {
+      repository.registerUser(SecurityControllerDefaults.PUBLIC_USER)
+    }
   }
 
   override def onStart(app: Application) {

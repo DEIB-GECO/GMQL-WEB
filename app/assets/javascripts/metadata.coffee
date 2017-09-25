@@ -535,8 +535,8 @@ showTable = (result, transposed, datasetName) ->
       decimal: ''
       emptyTable: 'No data available in table'
       info: "Showing _START_ to _END_ of _TOTAL_ #{upperLeftTitle}s"
-      infoEmpty: 'Showing 0 to 0 of 0 #{upperLeftTitle}'
-      infoFiltered: "(filtered from _MAX_ total #{upperLeftTitle})s"
+      infoEmpty: "Showing 0 to 0 of 0 #{upperLeftTitle}"
+      infoFiltered: "(filtered from _MAX_ total #{upperLeftTitle}s)"
       infoPostFix: ''
       thousands: ','
       lengthMenu: "Show _MENU_ #{upperLeftTitle}s"

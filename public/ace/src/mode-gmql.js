@@ -19,7 +19,7 @@ var GmqlHighlightRules = function() {
 			+ "|and|or|not|as|in|allbut"
 			+ "|count|bag|sum|avg|min|max|median|std"
 			+ "|cat|contig" 
-            + "|dist|dg|dg|bagd"
+            + "|dist|dg|dg|bagd|dl"
             + "|left_distinct|right_distinct|both"
     );
 

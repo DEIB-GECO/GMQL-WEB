@@ -7,15 +7,15 @@ import controllers.gmql._
 import play.api._
 import utils.GmqlGlobal.repository
 
+import scala.util.Try
+
 
 object Global extends GlobalSettings {
 
 
   override def beforeStart(app: Application) {
     Logger.info("Global.beforeStart")
-    try {
-      repository.registerUser(SecurityControllerDefaults.PUBLIC_USER)
-    }
+    Try(repository.registerUser(SecurityControllerDefaults.PUBLIC_USER))
   }
 
   override def onStart(app: Application) {

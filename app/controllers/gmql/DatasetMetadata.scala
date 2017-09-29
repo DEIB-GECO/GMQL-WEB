@@ -8,7 +8,7 @@ import play.api.cache.Cache
 import utils.GmqlGlobal
 
 import scala.collection.JavaConversions._
-import scala.collection.mutable
+import scala.concurrent.duration._
 
 
 /**
@@ -233,7 +233,7 @@ object DatasetMetadata {
     for (ds <- utils.GmqlGlobal.repository.listAllDSs(username)) {
       // in order to load all public dataset in pararllel run as a future execution
       //Future {
-        DatasetMetadata(username, ds.position)
+      DatasetMetadata(username, ds.position)
       //}
     }
   }
@@ -250,6 +250,6 @@ object DatasetMetadata {
     if (username == "public")
       Cache.getOrElse(s"$username->$datasetName")(new DatasetMetadata(username: String, datasetName: String))
     else
-      Cache.getOrElse(s"$username->$datasetName", 600)(new DatasetMetadata(username: String, datasetName: String))
+      Cache.getOrElse(s"$username->$datasetName", 10.minutes)(new DatasetMetadata(username: String, datasetName: String))
 }
 

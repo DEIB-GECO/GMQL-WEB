@@ -207,8 +207,9 @@ class DSManager extends Controller {
   private def getStream(datasetName: String, sampleName: String, isMeta: Boolean) = AuthenticatedAction { implicit request =>
     import scala.util.Try
     var dsName = datasetName
-    val topK: Option[Int] = request.getQueryString("top").flatMap(s => Try(s.toInt).toOption)
-    val header: Option[Boolean] = request.getQueryString("header").flatMap(s => Try(s.toBoolean).toOption)
+    val topK: Int = request.getQueryString("top").flatMap(s => Try(s.toInt).toOption).getOrElse(Integer.MAX_VALUE)
+    val header: Boolean = request.getQueryString("header").flatMap(s => Try(s.toBoolean).toOption).getOrElse(false)
+    val bed6: Boolean = request.getQueryString("bed6").flatMap(s => Try(s.toBoolean).toOption).getOrElse(false)
 
     import scala.concurrent.ExecutionContext.Implicits.global
     val transform = Enumeratee.map[String] { line =>
@@ -221,18 +222,23 @@ class DSManager extends Controller {
       username = "public"
       dsName = dsName.replace("public.", "")
     }
+
+    val bed6Headers = Array("chr", "left", "right", "name", "score", "strand")
+
     //    else {
     try {
       //TODO use ARM solution, if it is possible
       val (streamRegion, streamMeta) = repository.sampleStreams(dsName, username, sampleName)
       val headerContent: Enumerator[Array[Byte]] =
-        if (header.getOrElse(false)) {
+        if (header) {
           val headerString =
             if (isMeta)
               "Attribute\tValue"
             else {
-              val gmqlSchema: GMQLSchema = repository.getSchema(dsName, username)
-              gmqlSchema.fields.map(_.name).mkString("\t")
+              if (bed6)
+                bed6Headers.mkString("\t")
+              else
+                repository.getSchema(dsName, username).fields.map(_.name).mkString("\t")
             }
           Enumerator(headerString).through(transform)
         }
@@ -246,30 +252,55 @@ class DSManager extends Controller {
         streamMeta.close
         streamRegion
       }
-      val fileContent: Enumerator[Array[Byte]] =
-        if (topK.isDefined) {
-          import play.api.libs.iteratee._
-          lazy val bufferedReader = new BufferedReader(new InputStreamReader(stream))
-          var count = topK.get
-          val fileStream: Enumerator[String] = Enumerator.generateM[String] {
-            scala.concurrent.Future {
-              val line: String =
-                if (count > 0)
-                  bufferedReader.readLine()
-                else {
-                  bufferedReader.close()
-                  null
-                }
-              count -= 1
-              Option(line)
-            }
+
+      object Foo {
+        val MY_STRINGS = Array("chr", "left", "right", "name", "score", "strand")
+      }
+
+
+
+      def parseAndCorrect(line: String): String = {
+        val gmqlSchema: GMQLSchema = repository.getSchema(dsName, username)
+        if (bed6 && line != null && line.nonEmpty)
+          gmqlSchema.schemaType match {
+            case GMQLSchemaFormat.GTF =>
+              line + """ str="""" + line.split("\t")(6) + """"; """
+            case GMQLSchemaFormat.TAB =>
+              val zipped = (gmqlSchema.fields.map(_.name) zip line.split("\t")).toMap
+              bed6Headers.map { columnName =>
+                var value = zipped.getOrElse(columnName, ".")
+                if (columnName == "strand" && (value == "*"))
+                  value = "."
+                value
+              }.mkString("\t")
           }
+        else
+          line
+      }
 
-          fileStream.through(transform)
+      val fileContent: Enumerator[Array[Byte]] = {
+        import play.api.libs.iteratee._
+        lazy val bufferedReader = new BufferedReader(new InputStreamReader(stream))
+        var count = topK
+        val fileStream: Enumerator[String] = Enumerator.generateM[String] {
+          scala.concurrent.Future {
+            val line: String =
+              if (count > 0) {
+                val temp = bufferedReader.readLine()
+                if (!isMeta)
+                  parseAndCorrect(temp)
+                else
+                  temp
+              } else {
+                bufferedReader.close()
+                null
+              }
+            count -= 1
+            Option(line)
+          }
         }
-        else //if topK not defined then stream all directly
-          Enumerator.fromStream(stream)
-
+        fileStream.through(transform)
+      }
       Ok.chunked(headerContent >>> fileContent).withHeaders(
         "Content-Type" -> "text/plain",
         "Content-Disposition" -> s"attachment; filename=$dsName-$sampleName${if (isMeta) ".meta" else ""}"
@@ -512,11 +543,11 @@ class DSManager extends Controller {
 
       for (sample <- sampleList) {
         //      Logger.debug("file asd:" + file)
-        val trackName: String = sample.name
+        val trackName: String = datasetName + "-" + sample.name
         val description = trackName
         buf ++= s"""track name=\"$trackName\" description=\"$description\"  useScore=1 visibility=\"3\" $lineSeparator"""
         //      buf ++= s"""track name=\"$trackName\" $newLine"""
-        buf ++= s"${controllers.gmql.routes.DSManager.getRegionStream(datasetName, trackName).absoluteURL()}?authToken=$token $lineSeparator"
+        buf ++= s"${controllers.gmql.routes.DSManager.getRegionStream(datasetName, sample.name).absoluteURL()}?authToken=$token&bed6=true $lineSeparator"
       }
       Ok(buf.toString)
     }

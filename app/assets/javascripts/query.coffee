@@ -156,7 +156,7 @@ compileQuery = () ->
             setTimeout reloadComponents, 1000
             #          alert('job finished');
             $("#query-stop").hide()
-          when  "COMPILE_SUCCESS"
+          when  "COMPILE_SUCCESS", "EXEC_STOPPED"
             $("#query-stop").hide()
           else
   #alert('job error status(TODO SHOW IN A BETTER FORMAT): ' + JSON.stringify(result, null, "\t") )

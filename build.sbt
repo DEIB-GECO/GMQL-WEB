@@ -126,7 +126,7 @@ libraryDependencies += "io.swagger" % "swagger-core" % "1.5.10"
 
 dependencyOverrides ++= Set(
   "com.fasterxml.jackson.core" % "jackson-databind" % "2.6.7",
-  "com.fasterxml.jackson.core" % "jackson-module-scala" % "2.6.7"
+  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.6.7"
 )
 
 

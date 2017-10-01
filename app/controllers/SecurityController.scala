@@ -8,6 +8,7 @@ import javax.inject.{Inject, Singleton}
 import controllers.gmql.SecurityControllerDefaults._
 import controllers.gmql.SwaggerUtils
 import io.swagger.annotations.{ApiImplicitParams, _}
+import it.polimi.genomics.core.GDMSUserClass
 import models.{AuthenticationDao, AuthenticationModel, UserDao, UserModel}
 import play.api.Play.current
 import play.api.libs.json._
@@ -28,7 +29,20 @@ import scala.concurrent.duration.Duration
 @Api(value = SwaggerUtils.swaggerSecurityController, produces = "application/json, application/xml")
 class SecurityController @Inject()(mailerClient: MailerClient) extends Controller {
 
+  def hasAdmin = {
+    //    object admin{
+    //      var adminAdded = false
+    //    }
+    //    if(!admin.adminAdded)
+    //      admin.adminAdded  =
+    (Await.result(UserDao.count, Duration.Inf) > 0)
+    //    admin.adminAdded
+  }
+
+
   import utils.GmqlGlobal._
+
+  //  private val hasUser =
 
   private val guestCounter: AtomicInteger = new AtomicInteger
 
@@ -70,7 +84,14 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
       BadRequest(flattenErrorList)
     else {
       try {
-        val user: UserModel = UserModel(username, email, getSha512(password), firstName, lastName)
+        val userType =
+          if (hasAdmin)
+            GDMSUserClass.BASIC
+          else
+            GDMSUserClass.ADMIN
+
+
+        val user: UserModel = UserModel(username, userType, email, getSha512(password), firstName, lastName)
         val userId = Await.result(UserDao.add(user), Duration.Inf)
         repository.registerUser(username)
         val token = createToken(userId)
@@ -128,7 +149,7 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
     while (Await.result(UserDao.getByUsername(username), Duration.Inf).nonEmpty) {
       username = GUEST_USER + guestCounter.incrementAndGet
     }
-    val user: UserModel = UserModel(username, username + "@demo.com", getSha512("password"), "Guest", "")
+    val user: UserModel = UserModel(username, GDMSUserClass.GUEST, username + "@demo.com", getSha512("password"), "Guest", "")
     val userId = Await.result(UserDao.add(user), Duration.Inf)
     repository.registerUser(username)
     val token = createToken(userId)
@@ -146,8 +167,10 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
     authentication match {
       case Some(authentication) =>
         invalidateToken(authentication.id)
-        if (username.startsWith(GUEST_USER))
+        if (user.get.userType == GDMSUserClass.GUEST) {
           repository.unregisterUser(username)
+          UserDao.disable(user.get)
+        }
         Ok("Logout")
       case None =>
         NotFound("User not found")
@@ -157,7 +180,7 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
   def loginResult(authToken: Option[String], user: Option[UserModel])(implicit request: RequestHeader): Result = {
     loginResult(authToken,
       user match {
-        case Some(u) if !u.username.startsWith(GUEST_USER) => Some(u.username)
+        case Some(u) if !(user.get.userType == GDMSUserClass.GUEST) => Some(u.username)
         case _ => None
       },
       user match {
@@ -249,7 +272,7 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
     dataType = "string", paramType = "body",
     examples = new Example(Array(new ExampleProperty(value =
       """{"password": "password_text"}""")))
-  ),new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
+  ), new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
   def updatePassword = AuthenticatedAction(parse.json) { implicit request =>
     val username = request.username.get
     val user = request.user.get

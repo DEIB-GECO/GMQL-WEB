@@ -502,7 +502,7 @@ showVocabulary = (node) ->
         showQueryBootstrapDialog("Vocabulary of #{datasetName}", result, call, 'vocabulary')
 
       error: (jqXHR, textStatus, errorThrown) ->
-        BootstrapDialog.alert "There is no query for this dataset."
+        BootstrapDialog.alert "There is no vocabulary for this dataset."
 
 
 @showQueryBootstrapDialog = (title, query, call, type) ->
@@ -547,6 +547,57 @@ showVocabulary = (node) ->
       editor = ace.edit("tree-query-editor")
       editorOption(editor, query, "gmql")
       editor.getSession().setUseWrapMode(true)
+
+renameDataset = (node) ->
+  data = node.data
+  type = data.type
+  datasetName =
+    switch type
+      when "sample"   then node.parent.data.value
+      when "data-set"  then data.value
+
+  if datasetName?
+    BootstrapDialog.show
+      title: "Change dataset name of #{datasetName}"
+      message: "<div style='height: 100px;'>Please enter new name: <input id='dataset-new-name'></input></div>"
+      buttons: [
+        {
+          label: 'Rename'
+          action: (dialogItself) ->
+            rename(datasetName, $('#dataset-new-name').val() )
+        }
+        {
+          label: 'Close'
+          action: (dialogItself) ->
+            dialogItself.close()
+        }
+      ]
+
+
+rename = (datasetName, datasetNewName) ->
+  call = jsRoutes.controllers.gmql.DSManager.renameDataset(datasetName, datasetNewName)
+  $.ajax
+    url: call.url
+    type: call.type
+    method: call.method
+    headers: {'X-AUTH-TOKEN': window.authToken}
+    contentType: 'json'
+    dataType: 'json'
+    success: (result, textStatus, jqXHR) ->
+      BootstrapDialog.show
+        message: 'Done!'
+        buttons: [
+          {
+            label: 'Close'
+            action: (dialogItself) ->
+              $.each BootstrapDialog.dialogs, (id, dialog) -> dialog.close() # close all dialogs
+          }
+        ]
+      resetPrivate()
+    error: (jqXHR, textStatus, errorThrown) ->
+      BootstrapDialog.alert jqXHR.responseJSON.error
+      resetPrivate()
+
 
 # start showRegion: shows the first lines of the regions of sample
 showMetaRegion = (node, isMeta) ->
@@ -617,6 +668,11 @@ loadContext = -> $('#tree').contextmenu
   autoFocus: true
   menu: [
     {
+      title: 'Rename'
+      cmd: 'renameDataset'
+      uiIcon: 'ui-icon-pencil'
+    }
+    {
       title: 'Show query'
       cmd: 'showQuery'
       uiIcon: 'ui-icon-note'
@@ -626,6 +682,7 @@ loadContext = -> $('#tree').contextmenu
       cmd: 'showVocabulary'
       uiIcon: 'ui-icon-note'
     }
+    {title: "----"}
     {
       title: 'Show region data'
       cmd: 'showRegion'
@@ -683,10 +740,13 @@ loadContext = -> $('#tree').contextmenu
     node = $.ui.fancytree.getNode(ui.target)
     # Modify menu entries depending on node status
     #    $('#tree').contextmenu 'enableEntry', 'paste', node.isFolder()
-    $('#tree').contextmenu 'enableEntry', 'showRegion', node.data.type == 'sample'
-    $('#tree').contextmenu 'enableEntry', 'showMeta', node.data.type == 'sample'
-    $('#tree').contextmenu 'enableEntry', 'showQuery', node.parent.data.value == 'private-data-set'
-    $('#tree').contextmenu 'enableEntry', 'showVocabulary', node.parent.data.value == 'private-data-set'
+    isSample = node.data.type == 'sample'
+    isPrivateDs = node.parent.data.value == 'private-data-set'
+    $('#tree').contextmenu 'enableEntry', 'showRegion', isSample
+    $('#tree').contextmenu 'enableEntry', 'showMeta', isSample
+    $('#tree').contextmenu 'enableEntry', 'showQuery', isPrivateDs
+    $('#tree').contextmenu 'enableEntry', 'showVocabulary', isPrivateDs
+    $('#tree').contextmenu 'enableEntry', 'renameDataset', isPrivateDs
     # Show/hide single entries
     #            $("#tree").contextmenu("showEntry", "cut", false);
     # Activate node on right-click
@@ -715,8 +775,10 @@ loadContext = -> $('#tree').contextmenu
     switch ui.cmd
       when 'showQuery' then showQuery(node)
       when 'showVocabulary' then showVocabulary(node)
+      when 'renameDataset' then renameDataset(node)
       when 'showRegion' then showMetaRegion(node, false)
       when 'showMeta' then showMetaRegion(node, true)
+
 
 $ ->
   $('#popover-anchor-tree').popover html: true

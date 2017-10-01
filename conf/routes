@@ -2,105 +2,105 @@
 ## This file defines all application routes (Higher priority routes first)
 ## ~~~~
 #
-GET           /swagger.json                                      controllers.ApiHelpController.getResources
+GET           /swagger.json                                        controllers.ApiHelpController.getResources
 
-GET           /swagger                                           controllers.Application.swagger
-GET           /gecoQueries                                       controllers.gmql.GecoQueries.gecoQueries
+GET           /swagger                                             controllers.Application.swagger
+GET           /gecoQueries                                         controllers.gmql.GecoQueries.gecoQueries
 
-GET           /gecoQueriesJson                                   controllers.gmql.GecoQueries.gecoQueriesJson
+GET           /gecoQueriesJson                                     controllers.gmql.GecoQueries.gecoQueriesJson
 
 #
 #
 #
 #
 ### Home page
-GET           /                                                  controllers.Application.gmql
+GET           /                                                    controllers.Application.gmql
 ## GMQL REST help page
-GET           /help                                              controllers.Application.gmqlRestHelp
+GET           /help                                                controllers.Application.gmqlRestHelp
 ## GMQL help/documantation page
-GET           /gmqlHelp                                          controllers.Application.gmqlHelp
+GET           /gmqlHelp                                            controllers.Application.gmqlHelp
 #
 #
 ## java script reverse router, all the javascript ajax call url load from the file below
 ## documentation: https://www.playframework.com/documentation/2.4.x/ScalaJavascriptRouting#router-resource
-GET           /javascriptRoutes                                  controllers.JavascriptRoute.javascriptRoutes
+GET           /javascriptRoutes                                    controllers.JavascriptRoute.javascriptRoutes
 #
 #
 ## Map static resources from the /public folder to the /assets URL path
-GET           /assets/*file                                      controllers.Assets.at(path="/public", file)
+GET           /assets/*file                                        controllers.Assets.at(path="/public", file)
 ## Map web jar resources from the /public folder to the /assets URL path
-GET           /webjars/*file                                     controllers.WebJarAssets.at(file)
+GET           /webjars/*file                                       controllers.WebJarAssets.at(file)
 #
 #
 ## USER RELATED ROUTES
 ## get authanticated user information(
-GET           /user                                              controllers.SecurityController.getUser
-GET           /guest                                             controllers.SecurityController.loginGuest
-GET           /logout                                            controllers.SecurityController.logout
-POST          /login                                             controllers.SecurityController.login
-POST          /register                                          controllers.SecurityController.registerUser
-GET           /recovery/:username                                controllers.SecurityController.passwordRecoveryEmail(username)
-GET           /recovery                                          controllers.SecurityController.passwordRecovery
-POST          /password                                          controllers.SecurityController.updatePassword
+GET           /user                                                controllers.SecurityController.getUser
+GET           /guest                                               controllers.SecurityController.loginGuest
+GET           /logout                                              controllers.SecurityController.logout
+POST          /login                                               controllers.SecurityController.login
+POST          /register                                            controllers.SecurityController.registerUser
+GET           /recovery/:username                                  controllers.SecurityController.passwordRecoveryEmail(username)
+GET           /recovery                                            controllers.SecurityController.passwordRecovery
+POST          /password                                            controllers.SecurityController.updatePassword
 #
 #
 #
 ##multipart
 #
 ##dataSet
-GET           /datasets                                          controllers.gmql.DSManager.getDatasets
+GET           /datasets                                            controllers.gmql.DSManager.getDatasets
 ##returns the samples of the dataset
-GET           /datasets/:datasetName                             controllers.gmql.DSManager.getSamples(datasetName)
+GET           /datasets/:datasetName                               controllers.gmql.DSManager.getSamples(datasetName)
 ##delete dataset
-DELETE        /datasets/:datasetName                             controllers.gmql.DSManager.deleteDataset(datasetName)
+DELETE        /datasets/:datasetName                               controllers.gmql.DSManager.deleteDataset(datasetName)
 ##this could be alternative
 ##GET           /datasets/:datasetName/delete                                     controllers.gmql.DSManager.deleteDataset(datasetName)
 
-
-PATCH         /datasets/:datasetName                             controllers.gmql.DSManager.modifyDataset(datasetName)
+GET           /datasets/:datasetName/rename/:newDatasetName        controllers.gmql.DSManager.renameDataset(datasetName, newDatasetName)
+PATCH         /datasets/:datasetName                               controllers.gmql.DSManager.modifyDataset(datasetName)
 
 #
 ## get single sample file, region or meta
 #GET           /datasets/:datasetName/:sampleName/:isMeta          controllers.gmql.DSManager.getFile(datasetName, sampleName, isMeta)
-GET           /datasets/:datasetName/:sampleName/region          controllers.gmql.DSManager.getRegionStream(datasetName, sampleName)
-GET           /datasets/:datasetName/:sampleName/metadata        controllers.gmql.DSManager.getMetadataStream(datasetName, sampleName)
+GET           /datasets/:datasetName/:sampleName/region            controllers.gmql.DSManager.getRegionStream(datasetName, sampleName)
+GET           /datasets/:datasetName/:sampleName/metadata          controllers.gmql.DSManager.getMetadataStream(datasetName, sampleName)
 
-GET           /datasets/:datasetName/zip                         controllers.gmql.DSManager.zip(datasetName:String)
+GET           /datasets/:datasetName/zip                           controllers.gmql.DSManager.zip(datasetName:String)
 
 
-GET           /datasets/:datasetName/getUCSCList                 controllers.gmql.DSManager.getUcscList(datasetName:String)
+GET           /datasets/:datasetName/getUCSCList                   controllers.gmql.DSManager.getUcscList(datasetName:String)
 #GET           /datasets/:datasetName/getSampleFile/:sample        controllers.gmql.DSManager.getRegionStream(datasetName:String, sample:String)
-GET           /datasets/:datasetName/getUCSCLink                 controllers.gmql.DSManager.getUcscLink(datasetName:String)
+GET           /datasets/:datasetName/getUCSCLink                   controllers.gmql.DSManager.getUcscLink(datasetName:String)
 
-GET           /datasets/:datasetName/schema                      controllers.gmql.DSManager.dataSetSchema(datasetName)
+GET           /datasets/:datasetName/schema                        controllers.gmql.DSManager.dataSetSchema(datasetName)
 # get generation query of dataset
-GET           /datasets/:datasetName/query                       controllers.gmql.DSManager.getQueryStream(datasetName)
-GET           /datasets/:datasetName/vocabulary                  controllers.gmql.DSManager.getVocabularyStream(datasetName)
+GET           /datasets/:datasetName/query                         controllers.gmql.DSManager.getQueryStream(datasetName)
+GET           /datasets/:datasetName/vocabulary                    controllers.gmql.DSManager.getVocabularyStream(datasetName)
 
 
 #    val schemaNameOption = request.getQueryString("schemaName")
-POST          /datasets/:datasetName/uploadSample                controllers.gmql.DSManager.uploadSample(datasetName: String)
+POST          /datasets/:datasetName/uploadSample                  controllers.gmql.DSManager.uploadSample(datasetName: String)
 #    val schemaNameOption = request.getQueryString("schemaName")
-POST          /datasets/:datasetName/uploadSampleUrls            controllers.gmql.DSManager.uploadSamplesFromUrls(datasetName: String)
+POST          /datasets/:datasetName/uploadSampleUrls              controllers.gmql.DSManager.uploadSamplesFromUrls(datasetName: String)
 #TODO change can be problem with upper one
-GET           /datasets/:datasetName/:columnName/parse           controllers.gmql.DSManager.parseFiles(datasetName:String, columnName: String)
+GET           /datasets/:datasetName/:columnName/parse             controllers.gmql.DSManager.parseFiles(datasetName:String, columnName: String)
 
 
 
 
-GET           /metadata/:datasetName/sample/:sampleName          controllers.gmql.MetadataBrowser.getSampleMetadata(datasetName, sampleName)
+GET           /metadata/:datasetName/sample/:sampleName            controllers.gmql.MetadataBrowser.getSampleMetadata(datasetName, sampleName)
 
 
-GET           /metadata/:datasetName/all                         controllers.gmql.MetadataBrowser.getKeys(datasetName)
-POST          /metadata/:datasetName/filter                      controllers.gmql.MetadataBrowser.getFilteredKeys(datasetName)
+GET           /metadata/:datasetName/all                           controllers.gmql.MetadataBrowser.getKeys(datasetName)
+POST          /metadata/:datasetName/filter                        controllers.gmql.MetadataBrowser.getFilteredKeys(datasetName)
 
-GET           /metadata/:datasetName/all/:key                    controllers.gmql.MetadataBrowser.getValues(datasetName,key)
-POST          /metadata/:datasetName/filter/:key                 controllers.gmql.MetadataBrowser.getFilteredValues(datasetName,key)
+GET           /metadata/:datasetName/all/:key                      controllers.gmql.MetadataBrowser.getValues(datasetName,key)
+POST          /metadata/:datasetName/filter/:key                   controllers.gmql.MetadataBrowser.getFilteredValues(datasetName,key)
 
-POST          /metadata/:datasetName/dataset/filter              controllers.gmql.MetadataBrowser.getFilteredDataset(datasetName)
+POST          /metadata/:datasetName/dataset/filter                controllers.gmql.MetadataBrowser.getFilteredDataset(datasetName)
 
 
-POST          /metadata/:datasetName/dataset/matrix              controllers.gmql.MetadataBrowser.getFilteredMaxtrix(datasetName)
+POST          /metadata/:datasetName/dataset/matrix                controllers.gmql.MetadataBrowser.getFilteredMaxtrix(datasetName)
 
 
 #
@@ -119,8 +119,8 @@ POST          /metadata/:datasetName/dataset/matrix              controllers.gmq
 #
 #
 ##Query
-POST          /queries/run/:fileName/:gtfOutput                  controllers.gmql.QueryMan.runQuery(fileName: String, gtfOutput: String)
-POST          /queries/compile                                   controllers.gmql.QueryMan.compileQuery
+POST          /queries/run/:fileName/:gtfOutput                    controllers.gmql.QueryMan.runQuery(fileName: String, gtfOutput: String)
+POST          /queries/compile                                     controllers.gmql.QueryMan.compileQuery
 
 #GET           /queries/read/:fileKey                                           controllers.gmql.QueryMan.readQuery(fileKey:String)
 #GET           /queries/delete/:fileKey                                         controllers.gmql.QueryMan.deleteQuery(fileKey:String)
@@ -129,10 +129,10 @@ POST          /queries/compile                                   controllers.gmq
 #GET           /queries/compilev2/:fileKey/:execType                            controllers.gmql.QueryMan.compileQueryV2File(fileKey: String, execType: String)
 #
 ##Jobs
-GET           /jobs                                              controllers.gmql.QueryMan.getJobs
-GET           /jobs/:id/trace                                    controllers.gmql.QueryMan.traceJob(id: String)
-GET           /jobs/:id/log                                      controllers.gmql.QueryMan.getLog(id: String)
-GET           /jobs/:id/stop                                     controllers.gmql.QueryMan.stopJob(id: String)
+GET           /jobs                                                controllers.gmql.QueryMan.getJobs
+GET           /jobs/:id/trace                                      controllers.gmql.QueryMan.traceJob(id: String)
+GET           /jobs/:id/log                                        controllers.gmql.QueryMan.getLog(id: String)
+GET           /jobs/:id/stop                                       controllers.gmql.QueryMan.stopJob(id: String)
 #
 #
 ###COMPILE
@@ -170,10 +170,10 @@ GET           /jobs/:id/stop                                     controllers.gmq
 #
 #
 #
-GET           /query                                             controllers.gmql.QueryBrowser.getQueries
-GET           /query/:queryName                                  controllers.gmql.QueryBrowser.getQuery(queryName)
-POST          /query/:queryName/save                             controllers.gmql.QueryBrowser.saveQuery(queryName)
-DELETE        /query/:queryName                                  controllers.gmql.QueryBrowser.deleteQuery(queryName)
+GET           /query                                               controllers.gmql.QueryBrowser.getQueries
+GET           /query/:queryName                                    controllers.gmql.QueryBrowser.getQuery(queryName)
+POST          /query/:queryName/save                               controllers.gmql.QueryBrowser.saveQuery(queryName)
+DELETE        /query/:queryName                                    controllers.gmql.QueryBrowser.deleteQuery(queryName)
 
 #
 #
@@ -183,7 +183,7 @@ DELETE        /query/:queryName                                  controllers.gmq
 #
 ## VIEW CREATION
 ## to create metadata result page, this will be obsolete
-GET           /metadata/:totalCount/:list                        controllers.Application.sampleMetadata(totalCount:Int, list)
+GET           /metadata/:totalCount/:list                          controllers.Application.sampleMetadata(totalCount:Int, list)
 #
 ## TEST PAGES
 ## heatmap test page

@@ -3,7 +3,7 @@ package controllers
 import javax.inject.Singleton
 
 import play.api.mvc.{Action, Controller}
-import play.api.routing.{JavaScriptReverseRoute, JavaScriptReverseRouter}
+import play.api.routing.JavaScriptReverseRouter
 
 @Singleton
 class JavascriptRoute extends Controller {
@@ -21,7 +21,7 @@ class JavascriptRoute extends Controller {
         //
         //
         controllers.routes.javascript.Application.sampleMetadata,
-                controllers.routes.javascript.Application.gmql,
+        controllers.routes.javascript.Application.gmql,
         //
         controllers.gmql.routes.javascript.DSManager.getDatasets,
         controllers.gmql.routes.javascript.DSManager.getSamples,
@@ -30,6 +30,8 @@ class JavascriptRoute extends Controller {
         controllers.gmql.routes.javascript.DSManager.uploadSample,
         controllers.gmql.routes.javascript.DSManager.uploadSamplesFromUrls,
         controllers.gmql.routes.javascript.DSManager.deleteDataset,
+        controllers.gmql.routes.javascript.DSManager.renameDataset,
+
         controllers.gmql.routes.javascript.DSManager.zip,
         //        controllers.gmql.routes.javascript.DSManager.zipFilePreparation,
         //        controllers.gmql.routes.javascript.DSManager.downloadFileZip,
@@ -68,7 +70,6 @@ class JavascriptRoute extends Controller {
         controllers.gmql.routes.javascript.MetadataBrowser.getFilteredMaxtrix,
 
 
-
         controllers.gmql.routes.javascript.QueryBrowser.getQueries,
         controllers.gmql.routes.javascript.QueryBrowser.getQuery,
         controllers.gmql.routes.javascript.QueryBrowser.deleteQuery,
@@ -76,27 +77,27 @@ class JavascriptRoute extends Controller {
 
         controllers.gmql.routes.javascript.GecoQueries.gecoQueries,
 
-          controllers.gmql.routes.javascript.GecoQueries.gecoQueriesJson
+        controllers.gmql.routes.javascript.GecoQueries.gecoQueriesJson
 
 
 
 
 
-//        ,
-//
-//
-//        //TODO read from Application.conf
-//        JavaScriptReverseRoute(
-//          "exampleQueries",
-//          """
-//            function() {
-//              return _wA({method:"GET", url:"http://www.bioinformatics.deib.polimi.it/geco_queries/geco_queries.json"})
-//            }
-//          """
-//        )
+        //        ,
+        //
+        //
+        //        //TODO read from Application.conf
+        //        JavaScriptReverseRoute(
+        //          "exampleQueries",
+        //          """
+        //            function() {
+        //              return _wA({method:"GET", url:"http://www.bioinformatics.deib.polimi.it/geco_queries/geco_queries.json"})
+        //            }
+        //          """
+        //        )
 
 
-    )
+      )
     )
   }
 }

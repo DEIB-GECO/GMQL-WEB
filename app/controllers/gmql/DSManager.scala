@@ -21,7 +21,7 @@ import play.api.libs.json._
 import play.api.mvc._
 import play.api.{Logger, Play}
 import utils.{VocabularyCount, ZipEnumerator}
-import wrappers.authanticate.AuthenticatedAction
+import wrappers.authanticate.{AuthenticatedAction, AuthenticatedRequest}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
@@ -154,7 +154,7 @@ class DSManager extends Controller {
     *                    If starts with <i>"public."</i> then it is about public dataset, which is forbidden to rename.
     * @return
     */
-  @ApiOperation(value = "Rename the dataset",
+  @ApiOperation(value = "Rename the dataset - 2",
     notes = "Rename the input dataset")
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name = "newName", paramType = "query", dataType = "string", required = true),
@@ -165,6 +165,30 @@ class DSManager extends Controller {
     new ApiResponse(code = 404, message = "Dataset is not found for the user")))
   def modifyDataset(datasetName: String) = AuthenticatedAction(parse.empty) { implicit request =>
     val newDatasetNameOption = request.getQueryString("newName")
+    modifyCommon(request, datasetName, newDatasetNameOption)
+  }
+
+  /**
+    * Rename the dataset.
+    *
+    * @param datasetName name of the dataset.
+    *                    If starts with <i>"public."</i> then it is about public dataset, which is forbidden to rename.
+    * @return
+    */
+  @ApiOperation(value = "Rename the dataset - 1",
+    notes = "Rename the input dataset")
+  @ApiImplicitParams(Array(
+//    new ApiImplicitParam(name = "newName", paramType = "query", dataType = "string", required = true),
+    new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
+  @ApiResponses(value = Array(
+    new ApiResponse(code = 401, message = "User is not authenticated"),
+    new ApiResponse(code = 403, message = "Public datasets cannot be modified by user"),
+    new ApiResponse(code = 404, message = "Dataset is not found for the user")))
+  def renameDataset(datasetName: String, newDatasetName: String) = AuthenticatedAction(parse.empty) { implicit request =>
+    modifyCommon(request, datasetName, Some(newDatasetName))
+  }
+
+  def modifyCommon[A](implicit request: AuthenticatedRequest[A], datasetName: String, newDatasetNameOption: Option[String]) = {
     val username: String = request.username.get
     if (datasetName.startsWith("public."))
       renderedError(FORBIDDEN, "Public dataset cannot be modified.")

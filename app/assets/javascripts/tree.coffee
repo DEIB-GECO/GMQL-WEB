@@ -252,6 +252,7 @@ schemaTable = (schema) ->
   div = $("<div id='schema-table-div-#{schema.name}'>")
   #  div.append "<h4><b>Schema name:</b> #{schema.name}</h4>" if schema.name?.length
   div.append "<h4><b>Schema type:</b> #{schema.type}</h4>" if schema.type?.length
+  div.append "<b>Coordinate system:</b> #{schema.coordinate_system}" if schema.coordinate_system?.length and schema.coordinate_system != 'default'
   div.append table = $("
             <table id='schema-table-#{schema.name}' class='table table-striped table-bordered'>
                 <thead>
@@ -559,7 +560,7 @@ renameDataset = (node) ->
   if datasetName?
     BootstrapDialog.show
       title: "Change dataset name of #{datasetName}"
-      message: "<div style='height: 100px;'>Please enter new name: <input id='dataset-new-name'></input></div>"
+      message: "<div style='height: 100px;'><label>New name:</label> <input id='dataset-new-name'></input></div>"
       buttons: [
         {
           label: 'Rename'

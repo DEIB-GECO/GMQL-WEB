@@ -386,6 +386,49 @@ class DSManager extends Controller {
   }
 
 
+  @ApiOperation(value = "Download dataset vocabulary",
+    notes = "Download dataset vocabulary if exists as stream",
+    produces = "file",
+    tags = Array("Download repository", SwaggerUtils.swaggerRepository))
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
+  @ApiResponses(value = Array(
+    new ApiResponse(code = 401, message = "User is not authenticated"),
+    new ApiResponse(code = 403, message = "Public datasets cannot be downloaded by user"),
+    new ApiResponse(code = 404, message = "Dataset or its sample is not found for the user")))
+  def getVocabularyStream(datasetName: String) = AuthenticatedAction {
+    implicit request =>
+      val username: String = request.username.get
+      if (datasetName.startsWith("public."))
+        renderedError(FORBIDDEN, "Public dataset cannot be downloaded.")
+      else {
+        import scala.concurrent.ExecutionContext.Implicits.global
+        try {
+          val scriptStreamOption = try {
+            Some(repository.getVocabularyStream(datasetName, username))
+          } catch {
+            case _: Throwable => None
+          }
+
+          if (scriptStreamOption.isDefined) {
+            val fileContent: Enumerator[Array[Byte]] = Enumerator.fromStream(scriptStreamOption.get)
+            Ok.chunked(fileContent).withHeaders(
+              "Content-Type" -> "text/plain",
+              "Content-Disposition" -> s"attachment; filename=$datasetName.vocabulary"
+            )
+          }
+          else
+            renderedError(NOT_FOUND, s"Dataset query not found: $datasetName")
+        } catch {
+          case _: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found: $datasetName")
+        }
+        //        Ok("N/A yet").withHeaders(
+        //          "Content-Type" -> "text/plain",
+        //          "Content-Disposition" -> s"attachment; filename=$datasetName.gmql"
+        //        )
+      }
+  }
+
+
   /**
     * returns the sample
     *

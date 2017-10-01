@@ -38,6 +38,7 @@ class JavascriptRoute extends Controller {
         controllers.gmql.routes.javascript.DSManager.getUcscList,
         //        controllers.gmql.routes.javascript.DSManager.getSampleFile,
         controllers.gmql.routes.javascript.DSManager.getQueryStream,
+        controllers.gmql.routes.javascript.DSManager.getVocabularyStream,
         controllers.gmql.routes.javascript.DSManager.getRegionStream,
         controllers.gmql.routes.javascript.DSManager.getMetadataStream,
 

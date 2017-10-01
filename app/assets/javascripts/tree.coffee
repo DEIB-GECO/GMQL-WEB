@@ -475,51 +475,74 @@ showQuery = (node) ->
       contentType: 'text'
       dataType: 'text'
       success: (result, textStatus, jqXHR) ->
-        showQueryBootstrapDialog("Query of #{datasetName}", result)
+        showQueryBootstrapDialog("Query of #{datasetName}", result, call)
 
       error: (jqXHR, textStatus, errorThrown) ->
         BootstrapDialog.alert "There is no query for this dataset."
 # end showQuery: shows the query of the dataset.
 
+showVocabulary = (node) ->
+  data = node.data
+  type = data.type
+  datasetName =
+    switch type
+      when "sample"   then node.parent.data.value
+      when "data-set"  then data.value
 
-@showQueryBootstrapDialog = (title, query) ->
+  if datasetName?
+    call = jsRoutes.controllers.gmql.DSManager.getVocabularyStream(datasetName)
+    $.ajax
+      url: call.url
+      type: call.type
+      method: call.method
+      headers: {'X-AUTH-TOKEN': window.authToken}
+      contentType: 'text'
+      dataType: 'text'
+      success: (result, textStatus, jqXHR) ->
+        showQueryBootstrapDialog("Vocabulary of #{datasetName}", result, call, 'vocabulary')
+
+      error: (jqXHR, textStatus, errorThrown) ->
+        BootstrapDialog.alert "There is no query for this dataset."
+
+
+@showQueryBootstrapDialog = (title, query, call, type) ->
+  buttons = []
+  if(call?)
+    buttons.push
+      label: 'Download'
+      action: (dialogItself) ->
+        window.location = call.url
+  buttons.push
+    label: 'Copy to clipboard'
+    action: (dialogItself) ->
+      editor = ace.edit("tree-query-editor")
+      editor.selectAll()
+      editor.focus()
+      document.execCommand('copy')
+      editor.clearSelection()
+  if(type != 'vocabulary')
+    buttons.push
+      label: 'Copy to query editor'
+      action: (dialogItself) ->
+        if(ace.edit("main-query-editor").getValue().length)
+          BootstrapDialog.confirm 'Are you sure to overwrite to query editor?', (yesNo) ->
+            if(yesNo)
+              ace.edit("main-query-editor").setValue(query)
+              $.each BootstrapDialog.dialogs, (id, dialog) -> dialog.close() # close all dialogs
+        else
+          ace.edit("main-query-editor").setValue(query)
+          $.each BootstrapDialog.dialogs, (id, dialog) -> dialog.close() # close all dialogs
+  buttons.push
+    label: 'Close'
+    action: (dialogItself) ->
+      dialogItself.close()
+
+
   BootstrapDialog.show
     title: title
     size: BootstrapDialog.SIZE_WIDE
     message: "<div id='tree-query-editor' style='height: 100px;'></div>"
-    buttons: [
-      {
-        label: 'Download'
-        action: (dialogItself) ->
-          window.location = call.url
-      }
-      {
-        label: 'Copy to clipboard'
-        action: (dialogItself) ->
-          editor = ace.edit("tree-query-editor")
-          editor.selectAll()
-          editor.focus()
-          document.execCommand('copy')
-          editor.clearSelection()
-      }
-      {
-        label: 'Copy to query editor'
-        action: (dialogItself) ->
-          if(ace.edit("main-query-editor").getValue().length)
-            BootstrapDialog.confirm 'Are you sure to overwrite to query editor?', (yesNo) ->
-              if(yesNo)
-                ace.edit("main-query-editor").setValue(query)
-                $.each BootstrapDialog.dialogs, (id, dialog) -> dialog.close() # close all dialogs
-          else
-            ace.edit("main-query-editor").setValue(query)
-            $.each BootstrapDialog.dialogs, (id, dialog) -> dialog.close() # close all dialogs
-      }
-      {
-        label: 'Close'
-        action: (dialogItself) ->
-          dialogItself.close()
-      }
-    ]
+    buttons: buttons
     onshown: ->
       editor = ace.edit("tree-query-editor")
       editorOption(editor, query, "gmql")
@@ -599,6 +622,11 @@ loadContext = -> $('#tree').contextmenu
       uiIcon: 'ui-icon-note'
     }
     {
+      title: 'Show vocabulary'
+      cmd: 'showVocabulary'
+      uiIcon: 'ui-icon-note'
+    }
+    {
       title: 'Show region data'
       cmd: 'showRegion'
       uiIcon: 'ui-icon-circle-zoomin'
@@ -657,7 +685,8 @@ loadContext = -> $('#tree').contextmenu
     #    $('#tree').contextmenu 'enableEntry', 'paste', node.isFolder()
     $('#tree').contextmenu 'enableEntry', 'showRegion', node.data.type == 'sample'
     $('#tree').contextmenu 'enableEntry', 'showMeta', node.data.type == 'sample'
-    $('#tree').contextmenu 'enableEntry', 'showQuery', node.data.value == 'private-data-set' || node.parent.data.value == 'private-data-set' || node.parent.parent.data.value == 'private-data-set'
+    $('#tree').contextmenu 'enableEntry', 'showQuery', node.parent.data.value == 'private-data-set'
+    $('#tree').contextmenu 'enableEntry', 'showVocabulary', node.parent.data.value == 'private-data-set'
     # Show/hide single entries
     #            $("#tree").contextmenu("showEntry", "cut", false);
     # Activate node on right-click
@@ -685,6 +714,7 @@ loadContext = -> $('#tree').contextmenu
     console.log 'select ' + ui.cmd + ' on ' + node
     switch ui.cmd
       when 'showQuery' then showQuery(node)
+      when 'showVocabulary' then showVocabulary(node)
       when 'showRegion' then showMetaRegion(node, false)
       when 'showMeta' then showMetaRegion(node, true)
 

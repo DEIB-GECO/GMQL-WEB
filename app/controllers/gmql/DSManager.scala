@@ -178,7 +178,7 @@ class DSManager extends Controller {
   @ApiOperation(value = "Rename the dataset - 1",
     notes = "Rename the input dataset")
   @ApiImplicitParams(Array(
-//    new ApiImplicitParam(name = "newName", paramType = "query", dataType = "string", required = true),
+    //    new ApiImplicitParam(name = "newName", paramType = "query", dataType = "string", required = true),
     new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
   @ApiResponses(value = Array(
     new ApiResponse(code = 401, message = "User is not authenticated"),
@@ -288,7 +288,9 @@ class DSManager extends Controller {
         if (bed6 && line != null && line.nonEmpty)
           gmqlSchema.schemaType match {
             case GMQLSchemaFormat.GTF =>
-              line + """ str="""" + line.split("\t")(6) + """"; """
+              val splitLine: Array[String] = line.split("\t")
+              //0:chr 6:strand
+              line + s""" id=${splitLine(0)}${splitLine(6)}; """
             case GMQLSchemaFormat.TAB =>
               val zipped = (gmqlSchema.fields.map(_.name) zip line.split("\t")).toMap
               bed6Headers.map { columnName =>

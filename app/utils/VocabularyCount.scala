@@ -16,9 +16,11 @@ class VocabularyCount {
 
   //key value count
   def addVocabulary(stream: InputStream): InputStream = {
-    val pis = new PipedInputStream(1024*1024)
+    //piped into the output. The cache size is small in order to send quickly
+    val pis = new PipedInputStream(1024)
     val pos = new PipedOutputStream(pis)
 
+    //getting the vocabulary counts.
     val pis2 = new PipedInputStream(1024*1024)
     val pos2 = new PipedOutputStream(pis2)
 

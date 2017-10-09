@@ -200,8 +200,8 @@ class DSManager extends Controller {
   /**
     *
     * @param datasetName name of the dataset
-    * @param sampleName name of the sample
-    * @param isMeta is it meta or region file
+    * @param sampleName  name of the sample
+    * @param isMeta      is it meta or region file
     * @return the result as text file to the user. The header contains also
     */
   private def getStream(datasetName: String, sampleName: String, isMeta: Boolean) = AuthenticatedAction { implicit request =>
@@ -221,64 +221,64 @@ class DSManager extends Controller {
       username = "public"
       dsName = dsName.replace("public.", "")
     }
-//    else {
-      try {
-        //TODO use ARM solution, if it is possible
-        val (streamRegion, streamMeta) = repository.sampleStreams(dsName, username, sampleName)
-        val headerContent: Enumerator[Array[Byte]] =
-          if (header.getOrElse(false)) {
-            val headerString =
-              if (isMeta)
-                "Attribute\tValue"
-              else {
-                val gmqlSchema: GMQLSchema = repository.getSchema(dsName, username)
-                gmqlSchema.fields.map(_.name).mkString("\t")
-              }
-            Enumerator(headerString).through(transform)
-          }
-          else
-            Enumerator.empty
-
-        val stream: InputStream = if (isMeta) {
-          streamRegion.close
-          streamMeta
-        } else {
-          streamMeta.close
-          streamRegion
-        }
-        val fileContent: Enumerator[Array[Byte]] =
-          if (topK.isDefined) {
-            import play.api.libs.iteratee._
-            lazy val bufferedReader = new BufferedReader(new InputStreamReader(stream))
-            var count = topK.get
-            val fileStream: Enumerator[String] = Enumerator.generateM[String] {
-              scala.concurrent.Future {
-                val line: String =
-                  if (count > 0)
-                    bufferedReader.readLine()
-                  else {
-                    bufferedReader.close()
-                    null
-                  }
-                count -= 1
-                Option(line)
-              }
+    //    else {
+    try {
+      //TODO use ARM solution, if it is possible
+      val (streamRegion, streamMeta) = repository.sampleStreams(dsName, username, sampleName)
+      val headerContent: Enumerator[Array[Byte]] =
+        if (header.getOrElse(false)) {
+          val headerString =
+            if (isMeta)
+              "Attribute\tValue"
+            else {
+              val gmqlSchema: GMQLSchema = repository.getSchema(dsName, username)
+              gmqlSchema.fields.map(_.name).mkString("\t")
             }
+          Enumerator(headerString).through(transform)
+        }
+        else
+          Enumerator.empty
 
-            fileStream.through(transform)
-          }
-          else //if topK not defined then stream all directly
-            Enumerator.fromStream(stream)
-
-        Ok.chunked(headerContent >>> fileContent).withHeaders(
-          "Content-Type" -> "text/plain",
-          "Content-Disposition" -> s"attachment; filename=$dsName-$sampleName${if(isMeta) ".meta" else ""}"
-        )
-      } catch {
-        case _: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found: $dsName")
-        case _: GMQLSampleNotFound => renderedError(NOT_FOUND, s"Sample not found: $dsName-$sampleName")
+      val stream: InputStream = if (isMeta) {
+        streamRegion.close
+        streamMeta
+      } else {
+        streamMeta.close
+        streamRegion
       }
-//    }
+      val fileContent: Enumerator[Array[Byte]] =
+        if (topK.isDefined) {
+          import play.api.libs.iteratee._
+          lazy val bufferedReader = new BufferedReader(new InputStreamReader(stream))
+          var count = topK.get
+          val fileStream: Enumerator[String] = Enumerator.generateM[String] {
+            scala.concurrent.Future {
+              val line: String =
+                if (count > 0)
+                  bufferedReader.readLine()
+                else {
+                  bufferedReader.close()
+                  null
+                }
+              count -= 1
+              Option(line)
+            }
+          }
+
+          fileStream.through(transform)
+        }
+        else //if topK not defined then stream all directly
+          Enumerator.fromStream(stream)
+
+      Ok.chunked(headerContent >>> fileContent).withHeaders(
+        "Content-Type" -> "text/plain",
+        "Content-Disposition" -> s"attachment; filename=$dsName-$sampleName${if (isMeta) ".meta" else ""}"
+      )
+    } catch {
+      case _: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found: $dsName")
+      case _: GMQLSampleNotFound => renderedError(NOT_FOUND, s"Sample not found: $dsName-$sampleName")
+    }
+    //    }
   }
 
   /**
@@ -770,6 +770,10 @@ class DSManager extends Controller {
       importDataset(username, dataSetName, schemaPathOption, tempDirPath, files.toSet)
     }
     catch {
+      case e: GMQLNotValidDatasetNameException =>
+        Logger.error("error", e)
+        val message = " \n" + e.getMessage
+        BadRequest(message)
       case e: SAXException =>
         Logger.error("error", e)
         val message = " The dataset schema does not confirm the schema style (XSD) \n" + e.getMessage

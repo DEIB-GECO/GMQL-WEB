@@ -30,7 +30,7 @@ object ZipEnumerator {
       }
     }
 
-    val buffer = new ZipBuffer(1024*1024*8)
+    val buffer = new ZipBuffer(1024)
     val finalBits = Enumerator.generateM(Future {
       if (buffer.isClosed) None
       else {

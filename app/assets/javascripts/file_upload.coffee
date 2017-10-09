@@ -58,12 +58,9 @@ buttonClick = ->
       $("#file-upload-progress").width("100%")
       $('#upload_result').empty()
       window.lastResult = result
-      if(result.imported?.length)
-        $('#upload_result').append($("<div><label>Correctly imported samples: #{result.imported.length}</label> Samples: #{item.name for item in result.imported} </div>"))
-      if(result.autoMetadata?.length)
-        $('#upload_result').append($("<div><label>Imported with auto generated metadata samples: #{result.autoMetadata.length}</label> Samples: #{item.name for item in result.autoMetadata} </div>"))
-      if(result.regionProblem?.length)
-        $('#upload_result').append($("<div><label>Only metadata files, not imported: #{result.regionProblem.length}</label> Samples: #{item.name for item in result.regionProblem} </div>"))
+      $('#upload_result').append(editSampleList('Correctly imported samples',result.imported))
+      $('#upload_result').append(editSampleList('Imported with auto generated metadata samples',result.autoMetadata))
+      $('#upload_result').append(editSampleList('Only metadata files, not imported',result.regionProblem))
 
       #      alert(result)
       resetPrivate()
@@ -83,6 +80,14 @@ buttonClick = ->
       $("#file-upload-progress").text("ERROR")
       $("#file-upload-progress").width("100%")
 
+
+editSampleList = (header, list) ->
+  if(list?.length)
+    $("<div>
+          <label>#{header} (#{list.length}):</label>
+          <br>
+          <span>#{(item.name for item in list).join(', ')} </span>
+        </div>")
 
 progress = (e) ->
   if e.lengthComputable

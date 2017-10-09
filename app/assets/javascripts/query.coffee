@@ -128,41 +128,43 @@ compileQuery = () ->
     error: (jqXHR, textStatus, errorThrown) ->
       console.log("error:" + "runQuery: " + jqXHR + "&" + textStatus + "&" + errorThrown)
       displayError("runQuery: " + jqXHR + "&" + textStatus + "&" + errorThrown)
+  window.lastJobId = undefined
   compiled
 
 
 @checkLastJob = () ->
   jobId = window.lastJobId
-  call = jsRoutes.controllers.gmql.QueryMan.traceJob(jobId)
-  $.ajax
-    url: call.url
-    type: call.type
-    method: call.method
-    headers: {'X-AUTH-TOKEN': window.authToken}
-    contentType: 'json'
-    dataType: 'json'
-    success: (result, textStatus, jqXHR) ->
-      console.log result
-      window.result = result
-      status = result.status
-      $("#query-status").val status
-      switch status
-        when "PENDING", "RUNNING", "EXEC_SUCCESS", "COMPILING", "DS_CREATION_RUNNING", "DS_CREATION_SUCCESS"
-          setTimeout checkLastJob, 5000
-          $("#query-stop").show()
-        when  "SUCCESS"
-          setTimeout reloadComponents, 1000
-          #          alert('job finished');
-          $("#query-stop").hide()
-        when  "COMPILE_SUCCESS"
-          $("#query-stop").hide()
-        else
-#alert('job error status(TODO SHOW IN A BETTER FORMAT): ' + JSON.stringify(result, null, "\t") )
-          jobLog(jobId)
-          $("#query-stop").hide()
-#          setTimeout(checkLastJob, 1000)
-    error: (jqXHR, textStatus, errorThrown)->
-      console.log("error checkLastJob:" + "runQuery: " + jqXHR + "&" + textStatus + "&" + errorThrown)
+  if jobId
+    call = jsRoutes.controllers.gmql.QueryMan.traceJob(jobId)
+    $.ajax
+      url: call.url
+      type: call.type
+      method: call.method
+      headers: {'X-AUTH-TOKEN': window.authToken}
+      contentType: 'json'
+      dataType: 'json'
+      success: (result, textStatus, jqXHR) ->
+        console.log result
+        window.result = result
+        status = result.status
+        $("#query-status").val status
+        switch status
+          when "PENDING", "RUNNING", "EXEC_SUCCESS", "COMPILING", "DS_CREATION_RUNNING", "DS_CREATION_SUCCESS"
+            setTimeout checkLastJob, 5000
+            $("#query-stop").show()
+          when  "SUCCESS"
+            setTimeout reloadComponents, 1000
+            #          alert('job finished');
+            $("#query-stop").hide()
+          when  "COMPILE_SUCCESS"
+            $("#query-stop").hide()
+          else
+  #alert('job error status(TODO SHOW IN A BETTER FORMAT): ' + JSON.stringify(result, null, "\t") )
+            jobLog(jobId)
+            $("#query-stop").hide()
+  #          setTimeout(checkLastJob, 1000)
+      error: (jqXHR, textStatus, errorThrown)->
+        console.log("error checkLastJob:" + "runQuery: " + jqXHR + "&" + textStatus + "&" + errorThrown)
 
 
 reloadComponents = ->
@@ -203,16 +205,17 @@ lastJobLog = () ->
 
 @jobLog = (jobId) ->
   console.log jobId
-  call = jsRoutes.controllers.gmql.QueryMan.traceJob jobId
-  $.ajax
-    url: call.url
-    type: call.type
-    method: call.method
-    headers: {'X-AUTH-TOKEN': window.authToken}
-    contentType: 'json'
-    dataType: 'json'
-    success: (result, textStatus, jqXHR) ->
-      jobLogDialog(result)
+  if jobId
+    call = jsRoutes.controllers.gmql.QueryMan.traceJob jobId
+    $.ajax
+      url: call.url
+      type: call.type
+      method: call.method
+      headers: {'X-AUTH-TOKEN': window.authToken}
+      contentType: 'json'
+      dataType: 'json'
+      success: (result, textStatus, jqXHR) ->
+        jobLogDialog(result)
 
 jobLogDialog = (job) ->
   console.log job

@@ -105,7 +105,8 @@ class QueryMan extends Controller {
         val server = GMQLExecute()
         val script = GMQLScript("", "", serializedDAG)
         val binsize = BinSize(5000, 1000)
-        val gmqlContext = GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat, binsize, username)
+        val emptyContext: SparkContext = null
+        val gmqlContext = new GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat, binSize = binsize, username = username, sc = emptyContext)
         val job = server.registerDAG(script, gmqlContext)
         server.execute(job)
         val datasets = server.getJobDatasets(job.jobId).map(Dataset(_))

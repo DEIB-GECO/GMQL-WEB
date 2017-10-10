@@ -18,7 +18,9 @@ var GmqlHighlightRules = function() {
         "true|false|distance|mindist|mindistance|dle|dge|md|any|all|start|stop|chr|strand|left|right|up|down|downstream|upstream"
 			+ "|and|or|not|as|in|allbut"
 			+ "|count|bag|sum|avg|min|max|median|std"
-			+ "|cat|contig"
+			+ "|cat|contig" 
+            + "|dist|dg|dg|bagd|dl"
+            + "|left_distinct|right_distinct|both"
     );
 
     var builtinFunctions = (

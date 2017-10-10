@@ -1,12 +1,12 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <gmqlSchemaCollection name="HG19_ENCODE_BED" xmlns="http://genomic.elet.polimi.it/entities">
-        <gmqlSchema type="DEL">
-           <field type="STRING">chrom</field>
-           <field type="LONG">start</field>
-           <field type="LONG">stop</field>
-           <field type="STRING">name</field>
-           <field type="DOUBLE">score</field>
-           <field type="CHAR">strand</field>
-        </gmqlSchema>
+    <gmqlSchema type="TAB">
+        <field type="STRING">chrom</field>
+        <field type="LONG">start</field>
+        <field type="LONG">end</field>
+        <field type="STRING">name</field>
+        <field type="DOUBLE">score</field>
+        <field type="CHAR">strand</field>
+    </gmqlSchema>
 </gmqlSchemaCollection>
 

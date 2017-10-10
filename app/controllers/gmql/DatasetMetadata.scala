@@ -8,7 +8,7 @@ import play.api.cache.Cache
 import utils.GmqlGlobal
 
 import scala.collection.JavaConversions._
-import scala.collection.mutable
+import scala.concurrent.duration._
 
 
 /**
@@ -153,7 +153,7 @@ class DatasetMetadata(username: String, datasetName: String) {
           null
       }
     }
-    val res = MatrixResult(sampleList, sortedKeys.map(Attribute(_)), matrix/*.transpose*/)
+    val res = MatrixResult(sampleList, sortedKeys.map(Attribute(_)), matrix /*.transpose*/)
     //temp += attributeList -> res
     res
   }
@@ -247,9 +247,9 @@ object DatasetMetadata {
 
 
   def apply(username: String, datasetName: String): DatasetMetadata =
-    if (username == "public" || username == "canakoglu")
+    if (username == "public")
       Cache.getOrElse(s"$username->$datasetName")(new DatasetMetadata(username: String, datasetName: String))
     else
-      Cache.getOrElse(s"$username->$datasetName", 600)(new DatasetMetadata(username: String, datasetName: String))
+      Cache.getOrElse(s"$username->$datasetName", 10.minutes)(new DatasetMetadata(username: String, datasetName: String))
 }
 

@@ -29,7 +29,7 @@ metadataAddButtonClick = ->
     #    $("html, body").animate({ scrollTop: (metadataSearchDivBottom - $( window ).height()) }) if(metadataSearchDivBottom>windowBottom)
     $(window).scrollTop(metadataSearchDivBottom - $(window).height()) if(metadataSearchDivBottom > windowBottom)
   else
-    alert('Please select a data set')
+    alert('Please select a dataset')
 
 
 rowDiv = () ->
@@ -163,7 +163,7 @@ getQuery = ->
   if window.lastSelectedDataSet?
     "DATA_SET_VAR = SELECT(#{reduced}) #{window.lastSelectedDataSet.replace /^public\./, ""};"
   else
-    "Please select data set to generate query"
+    "Please select dataset to generate query"
 
 
 ###
@@ -535,8 +535,8 @@ showTable = (result, transposed, datasetName) ->
       decimal: ''
       emptyTable: 'No data available in table'
       info: "Showing _START_ to _END_ of _TOTAL_ #{upperLeftTitle}s"
-      infoEmpty: 'Showing 0 to 0 of 0 #{upperLeftTitle}'
-      infoFiltered: "(filtered from _MAX_ total #{upperLeftTitle})s"
+      infoEmpty: "Showing 0 to 0 of 0 #{upperLeftTitle}"
+      infoFiltered: "(filtered from _MAX_ total #{upperLeftTitle}s)"
       infoPostFix: ''
       thousands: ','
       lengthMenu: "Show _MENU_ #{upperLeftTitle}s"
@@ -620,4 +620,3 @@ $ ->
     editor.session.insert(editor.getCursorPosition(), ace.edit("metadata-query-editor").getValue() + "\n")
 
 
-hasHiddencColumns -> settings.aoColumns.map((a) -> a.bVisible).reduce((a, b) -> a && b )

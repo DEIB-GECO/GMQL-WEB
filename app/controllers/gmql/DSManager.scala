@@ -21,7 +21,7 @@ import play.api.libs.json._
 import play.api.mvc._
 import play.api.{Logger, Play}
 import utils.{VocabularyCount, ZipEnumerator}
-import wrappers.authanticate.AuthenticatedAction
+import wrappers.authanticate.{AuthenticatedAction, AuthenticatedRequest}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
@@ -154,7 +154,7 @@ class DSManager extends Controller {
     *                    If starts with <i>"public."</i> then it is about public dataset, which is forbidden to rename.
     * @return
     */
-  @ApiOperation(value = "Rename the dataset",
+  @ApiOperation(value = "Rename the dataset - 2",
     notes = "Rename the input dataset")
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name = "newName", paramType = "query", dataType = "string", required = true),
@@ -165,6 +165,30 @@ class DSManager extends Controller {
     new ApiResponse(code = 404, message = "Dataset is not found for the user")))
   def modifyDataset(datasetName: String) = AuthenticatedAction(parse.empty) { implicit request =>
     val newDatasetNameOption = request.getQueryString("newName")
+    modifyCommon(request, datasetName, newDatasetNameOption)
+  }
+
+  /**
+    * Rename the dataset.
+    *
+    * @param datasetName name of the dataset.
+    *                    If starts with <i>"public."</i> then it is about public dataset, which is forbidden to rename.
+    * @return
+    */
+  @ApiOperation(value = "Rename the dataset - 1",
+    notes = "Rename the input dataset")
+  @ApiImplicitParams(Array(
+    //    new ApiImplicitParam(name = "newName", paramType = "query", dataType = "string", required = true),
+    new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
+  @ApiResponses(value = Array(
+    new ApiResponse(code = 401, message = "User is not authenticated"),
+    new ApiResponse(code = 403, message = "Public datasets cannot be modified by user"),
+    new ApiResponse(code = 404, message = "Dataset is not found for the user")))
+  def renameDataset(datasetName: String, newDatasetName: String) = AuthenticatedAction(parse.empty) { implicit request =>
+    modifyCommon(request, datasetName, Some(newDatasetName))
+  }
+
+  def modifyCommon[A](implicit request: AuthenticatedRequest[A], datasetName: String, newDatasetNameOption: Option[String]) = {
     val username: String = request.username.get
     if (datasetName.startsWith("public."))
       renderedError(FORBIDDEN, "Public dataset cannot be modified.")
@@ -207,8 +231,9 @@ class DSManager extends Controller {
   private def getStream(datasetName: String, sampleName: String, isMeta: Boolean) = AuthenticatedAction { implicit request =>
     import scala.util.Try
     var dsName = datasetName
-    val topK: Option[Int] = request.getQueryString("top").flatMap(s => Try(s.toInt).toOption)
-    val header: Option[Boolean] = request.getQueryString("header").flatMap(s => Try(s.toBoolean).toOption)
+    val topK: Int = request.getQueryString("top").flatMap(s => Try(s.toInt).toOption).getOrElse(Integer.MAX_VALUE)
+    val header: Boolean = request.getQueryString("header").flatMap(s => Try(s.toBoolean).toOption).getOrElse(false)
+    val bed6: Boolean = request.getQueryString("bed6").flatMap(s => Try(s.toBoolean).toOption).getOrElse(false)
 
     import scala.concurrent.ExecutionContext.Implicits.global
     val transform = Enumeratee.map[String] { line =>
@@ -221,18 +246,23 @@ class DSManager extends Controller {
       username = "public"
       dsName = dsName.replace("public.", "")
     }
+
+    val bed6Headers = Array("chr", "left", "right", "name", "score", "strand")
+
     //    else {
     try {
       //TODO use ARM solution, if it is possible
       val (streamRegion, streamMeta) = repository.sampleStreams(dsName, username, sampleName)
       val headerContent: Enumerator[Array[Byte]] =
-        if (header.getOrElse(false)) {
+        if (header) {
           val headerString =
             if (isMeta)
               "Attribute\tValue"
             else {
-              val gmqlSchema: GMQLSchema = repository.getSchema(dsName, username)
-              gmqlSchema.fields.map(_.name).mkString("\t")
+              if (bed6)
+                bed6Headers.mkString("\t")
+              else
+                repository.getSchema(dsName, username).fields.map(_.name).mkString("\t")
             }
           Enumerator(headerString).through(transform)
         }
@@ -246,30 +276,57 @@ class DSManager extends Controller {
         streamMeta.close
         streamRegion
       }
-      val fileContent: Enumerator[Array[Byte]] =
-        if (topK.isDefined) {
-          import play.api.libs.iteratee._
-          lazy val bufferedReader = new BufferedReader(new InputStreamReader(stream))
-          var count = topK.get
-          val fileStream: Enumerator[String] = Enumerator.generateM[String] {
-            scala.concurrent.Future {
-              val line: String =
-                if (count > 0)
-                  bufferedReader.readLine()
-                else {
-                  bufferedReader.close()
-                  null
-                }
-              count -= 1
-              Option(line)
-            }
+
+      object Foo {
+        val MY_STRINGS = Array("chr", "left", "right", "name", "score", "strand")
+      }
+
+
+
+      def parseAndCorrect(line: String): String = {
+        val gmqlSchema: GMQLSchema = repository.getSchema(dsName, username)
+        if (bed6 && line != null && line.nonEmpty)
+          gmqlSchema.schemaType match {
+            case GMQLSchemaFormat.GTF =>
+              val splitLine: Array[String] = line.split("\t")
+              //0:chr 6:strand
+              line + s""" id=${splitLine(0)}${splitLine(6)}; """
+            case GMQLSchemaFormat.TAB =>
+              val zipped = (gmqlSchema.fields.map(_.name) zip line.split("\t")).toMap
+              bed6Headers.map { columnName =>
+                var value = zipped.getOrElse(columnName, ".")
+                if (columnName == "strand" && (value == "*"))
+                  value = "."
+                value
+              }.mkString("\t")
           }
+        else
+          line
+      }
 
-          fileStream.through(transform)
+      val fileContent: Enumerator[Array[Byte]] = {
+        import play.api.libs.iteratee._
+        lazy val bufferedReader = new BufferedReader(new InputStreamReader(stream))
+        var count = topK
+        val fileStream: Enumerator[String] = Enumerator.generateM[String] {
+          scala.concurrent.Future {
+            val line: String =
+              if (count > 0) {
+                val temp = bufferedReader.readLine()
+                if (!isMeta)
+                  parseAndCorrect(temp)
+                else
+                  temp
+              } else {
+                bufferedReader.close()
+                null
+              }
+            count -= 1
+            Option(line)
+          }
         }
-        else //if topK not defined then stream all directly
-          Enumerator.fromStream(stream)
-
+        fileStream.through(transform)
+      }
       Ok.chunked(headerContent >>> fileContent).withHeaders(
         "Content-Type" -> "text/plain",
         "Content-Disposition" -> s"attachment; filename=$dsName-$sampleName${if (isMeta) ".meta" else ""}"
@@ -351,6 +408,49 @@ class DSManager extends Controller {
         } catch {
           case _: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found: $datasetName")
         }
+      }
+  }
+
+
+  @ApiOperation(value = "Download dataset vocabulary",
+    notes = "Download dataset vocabulary if exists as stream",
+    produces = "file",
+    tags = Array("Download repository", SwaggerUtils.swaggerRepository))
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
+  @ApiResponses(value = Array(
+    new ApiResponse(code = 401, message = "User is not authenticated"),
+    new ApiResponse(code = 403, message = "Public datasets cannot be downloaded by user"),
+    new ApiResponse(code = 404, message = "Dataset or its sample is not found for the user")))
+  def getVocabularyStream(datasetName: String) = AuthenticatedAction {
+    implicit request =>
+      val username: String = request.username.get
+      if (datasetName.startsWith("public."))
+        renderedError(FORBIDDEN, "Public dataset cannot be downloaded.")
+      else {
+        import scala.concurrent.ExecutionContext.Implicits.global
+        try {
+          val scriptStreamOption = try {
+            Some(repository.getVocabularyStream(datasetName, username))
+          } catch {
+            case _: Throwable => None
+          }
+
+          if (scriptStreamOption.isDefined) {
+            val fileContent: Enumerator[Array[Byte]] = Enumerator.fromStream(scriptStreamOption.get)
+            Ok.chunked(fileContent).withHeaders(
+              "Content-Type" -> "text/plain",
+              "Content-Disposition" -> s"attachment; filename=$datasetName.vocabulary"
+            )
+          }
+          else
+            renderedError(NOT_FOUND, s"Dataset query not found: $datasetName")
+        } catch {
+          case _: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found: $datasetName")
+        }
+        //        Ok("N/A yet").withHeaders(
+        //          "Content-Type" -> "text/plain",
+        //          "Content-Disposition" -> s"attachment; filename=$datasetName.gmql"
+        //        )
       }
   }
 
@@ -456,6 +556,7 @@ class DSManager extends Controller {
     implicit val writerGmqlSchema = (
       (JsPath \ "name").write[String] and
         (JsPath \ "type").write[GMQLSchemaFormat.Value] and
+        (JsPath \ "coordinate_system").write[GMQLSchemaCoordinateSystem.Value] and
         (JsPath \ "fields").write[List[GMQLSchemaField]]
       ) (unlift(GMQLSchema.unapply))
 
@@ -511,11 +612,11 @@ class DSManager extends Controller {
 
       for (sample <- sampleList) {
         //      Logger.debug("file asd:" + file)
-        val trackName: String = sample.name
+        val trackName: String = datasetName + "-" + sample.name
         val description = trackName
         buf ++= s"""track name=\"$trackName\" description=\"$description\"  useScore=1 visibility=\"3\" $lineSeparator"""
         //      buf ++= s"""track name=\"$trackName\" $newLine"""
-        buf ++= s"${controllers.gmql.routes.DSManager.getRegionStream(datasetName, trackName).absoluteURL()}?authToken=$token $lineSeparator"
+        buf ++= s"${controllers.gmql.routes.DSManager.getRegionStream(datasetName, sample.name).absoluteURL()}?authToken=$token&bed6=true $lineSeparator"
       }
       Ok(buf.toString)
     }

@@ -178,7 +178,7 @@ glyph_opts = map:
       console.log 'beforeActivate'
       logEvent event, data
       if generateQuery()
-        BootstrapDialog.confirm 'Are sure to change the data set, query in the metadata browser will be lost?', (result) ->
+        BootstrapDialog.confirm 'Are sure to change the dataset, query in the metadata browser will be lost?', (result) ->
           if result
 #            alert 'Yup.'
             $(".del-button").click()
@@ -252,6 +252,7 @@ schemaTable = (schema) ->
   div = $("<div id='schema-table-div-#{schema.name}'>")
   #  div.append "<h4><b>Schema name:</b> #{schema.name}</h4>" if schema.name?.length
   div.append "<h4><b>Schema type:</b> #{schema.type}</h4>" if schema.type?.length
+  div.append "<b>Coordinate system:</b> #{schema.coordinate_system}" if schema.coordinate_system?.length and schema.coordinate_system != 'default'
   div.append table = $("
             <table id='schema-table-#{schema.name}' class='table table-striped table-bordered'>
                 <thead>
@@ -317,7 +318,7 @@ deleteSelectedNodes = ->
         }
       ]
   else
-    BootstrapDialog.alert "No data set or sample selected!"
+    BootstrapDialog.alert "No dataset or sample selected!"
 
 findSelectedNode = ->
   nodes = $('#tree').fancytree('getRootNode').tree.getSelectedNodes()
@@ -444,7 +445,7 @@ loadUcsc = ->
       newWin.location = ucscBaseLink + result
     error: (jqXHR, textStatus, errorThrown) ->
       BootstrapDialog.alert
-        message: "Cannot prepare UCSC links for data set #{dataSet}"
+        message: "Cannot prepare UCSC links for dataset #{dataSet}"
         type: BootstrapDialog.TYPE_WARNING
       newWin.close()
 
@@ -460,13 +461,13 @@ changeFullScreen = ->
 showQuery = (node) ->
   data = node.data
   type = data.type
-  value =
+  datasetName =
     switch type
       when "sample"   then node.parent.data.value
       when "data-set"  then data.value
 
-  if value?
-    call = jsRoutes.controllers.gmql.DSManager.getQueryStream(value)
+  if datasetName?
+    call = jsRoutes.controllers.gmql.DSManager.getQueryStream(datasetName)
     $.ajax
       url: call.url
       type: call.type
@@ -475,52 +476,128 @@ showQuery = (node) ->
       contentType: 'text'
       dataType: 'text'
       success: (result, textStatus, jqXHR) ->
-        window.result = result
-        BootstrapDialog.show
-          title: "Query of #{value}"
-          size: BootstrapDialog.SIZE_WIDE
-          message: "<div id='tree-query-editor' style='height: 100px;'></div>"
-          buttons: [
-            {
-              label: 'Download'
-              action: (dialogItself) ->
-                window.location = call.url
-            }
-            {
-              label: 'Copy to clipboard'
-              action: (dialogItself) ->
-                editor = ace.edit("tree-query-editor")
-                editor.selectAll()
-                editor.focus()
-                document.execCommand('copy')
-                editor.clearSelection()
-            }
-            {
-              label: 'Copy to query editor'
-              action: (dialogItself) ->
-                if(ace.edit("main-query-editor").getValue().length)
-                  BootstrapDialog.confirm 'Are you sure to overwrite to query editor?', (yesNo) ->
-                    if(yesNo)
-                      ace.edit("main-query-editor").setValue(result)
-                      dialogItself.close()
-                else
-                  ace.edit("main-query-editor").setValue(result)
-                  dialogItself.close()
-            }
-            {
-              label: 'Close'
-              action: (dialogItself) ->
-                dialogItself.close()
-            }
-          ]
-          onshown: ->
-            editor = ace.edit("tree-query-editor")
-            editorOption(editor, result, "gmql")
-            editor.getSession().setUseWrapMode(true)
+        showQueryBootstrapDialog("Query of #{datasetName}", result, call)
 
       error: (jqXHR, textStatus, errorThrown) ->
         BootstrapDialog.alert "There is no query for this dataset."
 # end showQuery: shows the query of the dataset.
+
+showVocabulary = (node) ->
+  data = node.data
+  type = data.type
+  datasetName =
+    switch type
+      when "sample"   then node.parent.data.value
+      when "data-set"  then data.value
+
+  if datasetName?
+    call = jsRoutes.controllers.gmql.DSManager.getVocabularyStream(datasetName)
+    $.ajax
+      url: call.url
+      type: call.type
+      method: call.method
+      headers: {'X-AUTH-TOKEN': window.authToken}
+      contentType: 'text'
+      dataType: 'text'
+      success: (result, textStatus, jqXHR) ->
+        showQueryBootstrapDialog("Vocabulary of #{datasetName}", result, call, 'vocabulary')
+
+      error: (jqXHR, textStatus, errorThrown) ->
+        BootstrapDialog.alert "There is no vocabulary for this dataset."
+
+
+@showQueryBootstrapDialog = (title, query, call, type) ->
+  buttons = []
+  if(call?)
+    buttons.push
+      label: 'Download'
+      action: (dialogItself) ->
+        window.location = call.url
+  buttons.push
+    label: 'Copy to clipboard'
+    action: (dialogItself) ->
+      editor = ace.edit("tree-query-editor")
+      editor.selectAll()
+      editor.focus()
+      document.execCommand('copy')
+      editor.clearSelection()
+  if(type != 'vocabulary')
+    buttons.push
+      label: 'Copy to query editor'
+      action: (dialogItself) ->
+        if(ace.edit("main-query-editor").getValue().length)
+          BootstrapDialog.confirm 'Are you sure to overwrite to query editor?', (yesNo) ->
+            if(yesNo)
+              ace.edit("main-query-editor").setValue(query)
+              $.each BootstrapDialog.dialogs, (id, dialog) -> dialog.close() # close all dialogs
+        else
+          ace.edit("main-query-editor").setValue(query)
+          $.each BootstrapDialog.dialogs, (id, dialog) -> dialog.close() # close all dialogs
+  buttons.push
+    label: 'Close'
+    action: (dialogItself) ->
+      dialogItself.close()
+
+
+  BootstrapDialog.show
+    title: title
+    size: BootstrapDialog.SIZE_WIDE
+    message: "<div id='tree-query-editor' style='height: 100px;'></div>"
+    buttons: buttons
+    onshown: ->
+      editor = ace.edit("tree-query-editor")
+      editorOption(editor, query, "gmql")
+      editor.getSession().setUseWrapMode(true)
+
+renameDataset = (node) ->
+  data = node.data
+  type = data.type
+  datasetName =
+    switch type
+      when "sample"   then node.parent.data.value
+      when "data-set"  then data.value
+
+  if datasetName?
+    BootstrapDialog.show
+      title: "Change dataset name of #{datasetName}"
+      message: "<div style='height: 100px;'><label>New name:</label> <input id='dataset-new-name'></input></div>"
+      buttons: [
+        {
+          label: 'Rename'
+          action: (dialogItself) ->
+            rename(datasetName, $('#dataset-new-name').val() )
+        }
+        {
+          label: 'Close'
+          action: (dialogItself) ->
+            dialogItself.close()
+        }
+      ]
+
+
+rename = (datasetName, datasetNewName) ->
+  call = jsRoutes.controllers.gmql.DSManager.renameDataset(datasetName, datasetNewName)
+  $.ajax
+    url: call.url
+    type: call.type
+    method: call.method
+    headers: {'X-AUTH-TOKEN': window.authToken}
+    contentType: 'json'
+    dataType: 'json'
+    success: (result, textStatus, jqXHR) ->
+      BootstrapDialog.show
+        message: 'Done!'
+        buttons: [
+          {
+            label: 'Close'
+            action: (dialogItself) ->
+              $.each BootstrapDialog.dialogs, (id, dialog) -> dialog.close() # close all dialogs
+          }
+        ]
+      resetPrivate()
+    error: (jqXHR, textStatus, errorThrown) ->
+      BootstrapDialog.alert jqXHR.responseJSON.error
+      resetPrivate()
 
 
 # start showRegion: shows the first lines of the regions of sample
@@ -592,10 +669,21 @@ loadContext = -> $('#tree').contextmenu
   autoFocus: true
   menu: [
     {
+      title: 'Rename'
+      cmd: 'renameDataset'
+      uiIcon: 'ui-icon-pencil'
+    }
+    {
       title: 'Show query'
       cmd: 'showQuery'
       uiIcon: 'ui-icon-note'
     }
+    {
+      title: 'Show vocabulary'
+      cmd: 'showVocabulary'
+      uiIcon: 'ui-icon-note'
+    }
+    {title: "----"}
     {
       title: 'Show region data'
       cmd: 'showRegion'
@@ -653,9 +741,13 @@ loadContext = -> $('#tree').contextmenu
     node = $.ui.fancytree.getNode(ui.target)
     # Modify menu entries depending on node status
     #    $('#tree').contextmenu 'enableEntry', 'paste', node.isFolder()
-    $('#tree').contextmenu 'enableEntry', 'showRegion', node.data.type == 'sample'
-    $('#tree').contextmenu 'enableEntry', 'showMeta', node.data.type == 'sample'
-    $('#tree').contextmenu 'enableEntry', 'showQuery', node.data.value == 'private-data-set' || node.parent.data.value == 'private-data-set' || node.parent.parent.data.value == 'private-data-set'
+    isSample = node.data.type == 'sample'
+    isPrivateDs = node.parent.data.value == 'private-data-set'
+    $('#tree').contextmenu 'enableEntry', 'showRegion', isSample
+    $('#tree').contextmenu 'enableEntry', 'showMeta', isSample
+    $('#tree').contextmenu 'enableEntry', 'showQuery', isPrivateDs
+    $('#tree').contextmenu 'enableEntry', 'showVocabulary', isPrivateDs
+    $('#tree').contextmenu 'enableEntry', 'renameDataset', isPrivateDs
     # Show/hide single entries
     #            $("#tree").contextmenu("showEntry", "cut", false);
     # Activate node on right-click
@@ -683,8 +775,11 @@ loadContext = -> $('#tree').contextmenu
     console.log 'select ' + ui.cmd + ' on ' + node
     switch ui.cmd
       when 'showQuery' then showQuery(node)
+      when 'showVocabulary' then showVocabulary(node)
+      when 'renameDataset' then renameDataset(node)
       when 'showRegion' then showMetaRegion(node, false)
       when 'showMeta' then showMetaRegion(node, true)
+
 
 $ ->
   $('#popover-anchor-tree').popover html: true

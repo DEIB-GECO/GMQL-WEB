@@ -43,6 +43,8 @@ class JavascriptRoute extends Controller {
         controllers.gmql.routes.javascript.DSManager.getVocabularyStream,
         controllers.gmql.routes.javascript.DSManager.getRegionStream,
         controllers.gmql.routes.javascript.DSManager.getMetadataStream,
+        controllers.gmql.routes.javascript.DSManager.getDatasetInfo,
+        controllers.gmql.routes.javascript.DSManager.getSampleInfo,
 
         //
         //

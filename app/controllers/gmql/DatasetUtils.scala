@@ -11,6 +11,7 @@ import utils.GmqlGlobal
 
 import scala.collection.JavaConversions._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Try
 import scala.xml.Elem
 import scalax.file.Path
 
@@ -62,17 +63,47 @@ object DatasetUtils {
       Sample(temp.ID,
         //TODO check the correctness
         temp.name.split("/").last.split("\\.").head, /*name is the last part of the file*/
-        Some(temp.name))
+        Some(temp.name),
+        info = Some(getInfo(username, datasetName)))
     ).sorted
   }
 
+  def getInfo(username: String, datasetName: String) = {
+    Try(Info((repository.getDatasetMeta(datasetName, username) ++ repository.getDatasetProfile(datasetName, username)).toList.sorted)).getOrElse(Info())
+  }
+
+  def getInfo(username: String, datasetName: String, sampleName: String) = {
+    Try(Info(repository.getSampleProfile(datasetName, sampleName, username).toList.sorted)).getOrElse(Info())
+  }
+
+}
+
+
+case class Info(infoList: List[(String, String)] = List.empty) {
+  @ApiModelProperty(hidden = true)
+  def getXml = <info_list>
+    {infoList.map { el =>
+      <info><key>{el._1}</key><value>{el._2}</value></info>
+    }}
+  </info_list>
+}
+
+object Info {
+  implicit val writerTuple = new Writes[(String, String)] {
+    def writes(t: (String, String)) = Json.obj(
+      "key" -> t._1,
+      "value" -> t._2
+    )
+  }
+  implicit val writer = Json.writes[Info]
 }
 
 
 case class Sample(id: String,
                   name: String,
                   @ApiModelProperty(dataType = "string", required = false) path: Option[String] = None,
-                  @ApiModelProperty(dataType = "string", required = false) dataset: Option[String] = None) extends Ordered[Sample] {
+                  @ApiModelProperty(dataType = "string", required = false) dataset: Option[String] = None,
+                  @ApiModelProperty(dataType = "controllers.gmql.Info", required = false) info: Option[Info] = None) extends Ordered[Sample] {
   def compare(that: Sample): Int = this.name.toLowerCase compare that.name.toLowerCase
 
   @ApiModelProperty(hidden = true)
@@ -82,6 +113,7 @@ case class Sample(id: String,
         <name>{name}</name>
         {if (path.isDefined) <path>{path.get}</path>}
         {if (dataset.isDefined) <dataset>{dataset.get}</dataset>}
+        {if (info.isDefined) <info>{info.get}</info>}
       </sample>
 }
 
@@ -92,7 +124,8 @@ object Sample {
 case class Dataset(var name: String,
                    @ApiModelProperty(dataType = "string", required = false) owner: Option[String] = None,
                    @ApiModelProperty(dataType = "string", required = false) group: Option[String] = None,
-                   @ApiModelProperty(dataType = "List[controllers.gmql.Sample]", required = false) samples: Option[Seq[Sample]] = None) extends Ordered[Dataset] {
+                   @ApiModelProperty(dataType = "List[controllers.gmql.Sample]", required = false) samples: Option[Seq[Sample]] = None,
+                   @ApiModelProperty(dataType = "controllers.gmql.Info", required = false) info: Option[Info] = None) extends Ordered[Dataset] {
   def compare(that: Dataset): Int = Ordering.Tuple2[Option[String], String].compare((this.owner, this.name.toLowerCase), (that.owner, that.name.toLowerCase))
 
   @ApiModelProperty(hidden = true)
@@ -101,6 +134,7 @@ case class Dataset(var name: String,
         <name>{name}</name>
         {if (owner.isDefined) <owner>{owner.get}</owner>}
         {if (group.isDefined) <group>{group.get}</group>}
+        {if (info.isDefined) <info>{info.get}</info>}
         {if (samples.isDefined) <samples>{samples.get.map(_.getXml)}</samples>}
       </dataset>
 }
@@ -343,3 +377,5 @@ object MatrixResult {
   val lineSeparator = new DSManager().lineSeparator
   implicit val writer = Json.writes[MatrixResult]
 }
+
+

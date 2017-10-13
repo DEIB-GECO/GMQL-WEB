@@ -31,6 +31,46 @@ $ ->
   $('.tree-full-screen').click changeFullScreen
   loadContext()
 
+  loadUsage()
+
+@loadUsage = ->
+  memUsage = $('#memory-usage')
+  usageBar = $('.usage-bar')
+  call = jsRoutes.controllers.gmql.DSManager.getMemoryUsage()
+  $.ajax
+    url: call.url
+    type: call.type
+    method: call.method
+    headers: {'X-AUTH-TOKEN': window.authToken}
+    contentType: 'json'
+    dataType: 'json'
+    success: (result, textStatus, jqXHR) ->
+      used_percantage = (item.value  for item in result.infoList when item.key == 'used_percentage')
+      quotaExceeded = (item.value  for item in result.infoList when item.key == 'quotaExceeded')
+
+
+      memUsage.width(used_percantage + "%")
+      memUsage.text(used_percantage + "%")
+
+      memUsage.removeClass("progress-bar-success")
+      memUsage.removeClass("progress-bar-info")
+      memUsage.removeClass("progress-bar-warning")
+      memUsage.removeClass("progress-bar-danger")
+      if quotaExceeded == "true"
+        memUsage.addClass("progress-bar-danger")
+      else if used_percantage > 75
+        memUsage.addClass("progress-bar-warning")
+      else if used_percantage > 50
+        memUsage.addClass("progress-bar-info")
+      else
+        memUsage.addClass("progress-bar-success")
+      used_percantage
+      usageBar.show()
+    error: (jqXHR, textStatus, errorThrown) ->
+      memUsage.addClass("progress-bar-danger")
+      memUsage.width(100 + "%")
+      memUsage.text("Cannot load usage data")
+      usageBar.show()
 
 @resetPrivate = ->
   $("#tree").fancytree("getRootNode").children[0].resetLazy()

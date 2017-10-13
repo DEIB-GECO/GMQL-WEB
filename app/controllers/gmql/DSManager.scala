@@ -1093,5 +1093,43 @@ class DSManager extends Controller {
   }
 
 
+  @ApiOperation(value = "Get memory usage",
+    notes = "Get memory usage",
+    response = classOf[Info])
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
+  @ApiResponses(value = Array(
+    new ApiResponse(code = 401, message = "User is not authenticated"),
+    new ApiResponse(code = 404, message = "Dataset or its is not found for the user")))
+  def getMemoryUsage() = AuthenticatedAction { implicit request =>
+    val username: String = request.username.get
+    val userClass = request.user.get.userType
+
+
+    try {
+      lazy val result = {
+        val (occupied, available) = repository.getUserQuotaInfo(username, userClass)
+        val isUserQuotaExceeded = repository.isUserQuotaExceeded(username, userClass)
+        val map = mutable.Map.empty[String, AnyVal]
+        map.put("occupied", occupied)
+        map.put("available", available)
+        map.put("total", occupied + available)
+        map.put("quotaExceeded", isUserQuotaExceeded)
+        map.put("used_percentage", (occupied / (occupied + available) * 10000).toInt / 100.0)
+
+        Info(map.toList.map(a => (a._1, a._2.toString)).sorted)
+      }
+
+
+      render {
+        case Accepts.Xml() => Ok(scala.xml.Utility.trim(result.getXml))
+        case Accepts.Json() => Ok(Json.toJson(result))
+        case _ => NA
+      }
+    } catch {
+      case _: GMQLDSNotFound => renderedError(NOT_FOUND, "Dataset not found")
+      case _: GMQLSampleNotFound => renderedError(NOT_FOUND, "Sample not found")
+    }
+  }
+
 }
 

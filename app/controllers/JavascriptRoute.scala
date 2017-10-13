@@ -45,6 +45,8 @@ class JavascriptRoute extends Controller {
         controllers.gmql.routes.javascript.DSManager.getMetadataStream,
         controllers.gmql.routes.javascript.DSManager.getDatasetInfo,
         controllers.gmql.routes.javascript.DSManager.getSampleInfo,
+        controllers.gmql.routes.javascript.DSManager.getMemoryUsage,
+
 
         //
         //

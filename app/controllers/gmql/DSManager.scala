@@ -1113,7 +1113,7 @@ class DSManager extends Controller {
         map.put("occupied", occupied)
         map.put("available", available)
         map.put("total", occupied + available)
-        map.put("quotaExceeded", isUserQuotaExceeded)
+        map.put("quota_exceeded", isUserQuotaExceeded)
         map.put("used_percentage", (occupied / (occupied + available) * 10000).toInt / 100.0)
 
         Info(map.toList.map(a => (a._1, a._2.toString)).sorted)

@@ -30,10 +30,9 @@ $ ->
 
   $('.tree-full-screen').click changeFullScreen
   loadContext()
-
   loadUsage()
 
-@loadUsage = ->
+@loadUsage = (formFunction) ->
   memUsage = $('#memory-usage')
   usageBar = $('.usage-bar')
   call = jsRoutes.controllers.gmql.DSManager.getMemoryUsage()
@@ -45,8 +44,8 @@ $ ->
     contentType: 'json'
     dataType: 'json'
     success: (result, textStatus, jqXHR) ->
-      used_percantage = (item.value  for item in result.infoList when item.key == 'used_percentage')
-      quotaExceeded = (item.value  for item in result.infoList when item.key == 'quotaExceeded')
+      used_percantage = (item.value  for item in result.infoList when item.key == 'used_percentage')[0]
+      quotaExceeded = (item.value  for item in result.infoList when item.key == 'quota_exceeded')[0]
 
 
       memUsage.width(used_percantage + "%")
@@ -56,17 +55,25 @@ $ ->
       memUsage.removeClass("progress-bar-info")
       memUsage.removeClass("progress-bar-warning")
       memUsage.removeClass("progress-bar-danger")
-      if quotaExceeded == "true"
+      if quotaExceeded is "true"
         memUsage.addClass("progress-bar-danger")
-      else if used_percantage > 75
-        memUsage.addClass("progress-bar-warning")
-      else if used_percantage > 50
-        memUsage.addClass("progress-bar-info")
+        if formFunction
+
+          BootstrapDialog.alert "User quota is not enough for the operation"
+
       else
-        memUsage.addClass("progress-bar-success")
+        if used_percantage > 75
+          memUsage.addClass("progress-bar-warning")
+        else
+        if used_percantage > 50
+          memUsage.addClass("progress-bar-info")
+        else
+          memUsage.addClass("progress-bar-success")
+        if formFunction
+          formFunction()
       used_percantage
       usageBar.show()
-    error: (jqXHR, textStatus, errorThrown) ->
+    error: ->
       memUsage.addClass("progress-bar-danger")
       memUsage.width(100 + "%")
       memUsage.text("Cannot load usage data")
@@ -75,6 +82,7 @@ $ ->
 @resetPrivate = ->
   $("#tree").fancytree("getRootNode").children[0].resetLazy()
   expandPrivate()
+  loadUsage()
 
 expandPrivate = ->
   $("#tree").fancytree("getRootNode").children[0]?.setExpanded(true)

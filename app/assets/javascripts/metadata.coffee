@@ -163,7 +163,7 @@ getQuery = ->
   if window.lastSelectedDataSet?
     "DATA_SET_VAR = SELECT(#{reduced}) #{window.lastSelectedDataSet.replace /^public\./, ""};"
   else
-    "Please select dataset to generate query"
+    "Please choose dataset for data selection"
 
 
 ###

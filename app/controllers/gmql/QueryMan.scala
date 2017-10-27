@@ -4,6 +4,7 @@ import javax.inject.Singleton
 
 import controllers.gmql.ResultUtils.{NA, renderedError}
 import io.swagger.annotations.{ApiImplicitParams, ApiOperation, _}
+import it.polimi.genomics.core.GDMSUserClass.GDMSUserClass
 import it.polimi.genomics.core.{BinSize, GMQLSchemaFormat, GMQLScript, ImplementationPlatform}
 import it.polimi.genomics.manager.Exceptions.{InvalidGMQLJobException, NoJobsFoundException, UserQuotaExceeded}
 import it.polimi.genomics.manager.Status._
@@ -37,6 +38,7 @@ class QueryMan extends Controller {
   def runQuery(queryName: String,
                @ApiParam(allowableValues = "tab, gtf") outputType: String) = AuthenticatedAction { implicit request =>
     val username = request.username.getOrElse("")
+    val userClass = request.user.get.userType
     val outputFormat = GMQLSchemaFormat.getType(outputType)
 
     val queryOption = request.body.asText
@@ -53,7 +55,7 @@ class QueryMan extends Controller {
             Some(Job(compileResultJob.jobId, Some(compileResultJob.getJobStatus.toString), Some(compileResultJob.jobOutputMessages.toString())))
           } else {
             val server = GMQLExecute()
-            val job = registerJob(username, query, queryName, outputFormat)
+            val job = registerJob(username, userClass, query, queryName, outputFormat)
             server.execute(job)
             val datasets = server.getJobDatasets(job.jobId).map(Dataset(_))
             Some(Job(job.jobId, Some(job.status.toString), Some(job.getMessage()), Some(datasets), {
@@ -81,12 +83,12 @@ class QueryMan extends Controller {
   }
 
 
-  private def registerJob(username: String, query: String, queryName: String, outputFormat: GMQLSchemaFormat.Value) = {
+  private def registerJob(username: String, userClass: GDMSUserClass, query: String, queryName: String, outputFormat: GMQLSchemaFormat.Value) = {
     val server = GMQLExecute()
     val gmqlScript = new GMQLScript(query, queryName)
     val binSize = new BinSize(5000, 5000, 1000)
     val emptyContext: SparkContext = null
-    val gmqlContext = new GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat, binSize = binSize, username = username, sc = emptyContext, checkQuota = true)
+    val gmqlContext = new GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat, binSize = binSize, username = username, sc = emptyContext, userClass = userClass, checkQuota = true)
     server.registerJob(gmqlScript, gmqlContext, "")
   }
 

@@ -91,7 +91,7 @@ runQuery = (fileKey, type) ->
           console.log("error:" + "runQuery: " + jqXHR + "&" + textStatus + "&" + errorThrown)
           if job?
             status = job.status
-          $("#query-status").val jqXHR.error
+          $("#query-status").val $.parseJSON(jqXHR.responseText).error
           $("#query-status").show()
 
           displayError("runQuery: " + jqXHR + "&" + textStatus + "&" + errorThrown)

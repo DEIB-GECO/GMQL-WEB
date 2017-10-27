@@ -10,7 +10,7 @@ import io.swagger.annotations.{ApiImplicitParams, _}
 import it.polimi.genomics.core.DataStructures.IRDataSet
 import it.polimi.genomics.core.{GNull, _}
 import it.polimi.genomics.repository.FSRepository.FS_Utilities
-import it.polimi.genomics.repository.GMQLExceptions.{GMQLDSNotFound, GMQLNotValidDatasetNameException, GMQLSampleNotFound}
+import it.polimi.genomics.repository.GMQLExceptions.{GMQLDSExceedsQuota, GMQLDSNotFound, GMQLNotValidDatasetNameException, GMQLSampleNotFound}
 import it.polimi.genomics.repository._
 import it.polimi.genomics.spark.implementation.loaders.CustomParser
 import org.xml.sax.SAXException
@@ -878,6 +878,10 @@ class DSManager extends Controller {
       case e: SAXException =>
         Logger.error("error", e)
         val message = " The dataset schema does not confirm the schema style (XSD) \n" + e.getMessage
+        BadRequest(message)
+      case e: GMQLDSExceedsQuota =>
+        Logger.error("error", e)
+        val message = " User quota exceeded  \n" + e.getMessage
         BadRequest(message)
       case e: Exception =>
         Logger.error("Upload Error", e)

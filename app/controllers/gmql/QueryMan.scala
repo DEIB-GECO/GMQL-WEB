@@ -2,11 +2,11 @@ package controllers.gmql
 
 import javax.inject.Singleton
 
-import controllers.gmql.ResultUtils.NA
+import controllers.gmql.ResultUtils.{NA, renderedError}
 import io.swagger.annotations.{ApiImplicitParams, ApiOperation, _}
 import it.polimi.genomics.core.{BinSize, GMQLSchemaFormat, GMQLScript, ImplementationPlatform}
-import it.polimi.genomics.manager.Exceptions.{InvalidGMQLJobException, NoJobsFoundException}
-import it.polimi.genomics.manager.Launchers.GMQLSparkLauncher
+import it.polimi.genomics.manager.Exceptions.{InvalidGMQLJobException, NoJobsFoundException, UserQuotaExceeded}
+import it.polimi.genomics.manager.Status._
 import it.polimi.genomics.manager.{GMQLContext, GMQLExecute, GMQLJob}
 import org.apache.spark.SparkContext
 import play.api.Logger
@@ -15,7 +15,6 @@ import play.api.mvc.Controller
 import wrappers.authanticate.AuthenticatedAction
 
 import scala.collection.JavaConversions._
-import it.polimi.genomics.manager.Status._
 
 
 /**
@@ -43,37 +42,41 @@ class QueryMan extends Controller {
     val queryOption = request.body.asText
 
 
-    lazy val queryResult = queryOption match {
-      case None =>
-        None
-      case Some(query) =>
-        Logger.info("\n" + username + " : " + queryName + "\n" + queryOption + "\n\n\n\n\n")
-        val compileResultJob = compileJob(username, query, queryName, outputFormat)
-        if (compileResultJob.getJobStatus == COMPILE_FAILED) {
-          Some(Job(compileResultJob.jobId, Some(compileResultJob.getJobStatus.toString), Some(compileResultJob.jobOutputMessages.toString())))
-        } else {
-          val server = GMQLExecute()
-          val job = registerJob(username, query, queryName, outputFormat)
-          server.execute(job)
-          val datasets = server.getJobDatasets(job.jobId).map(Dataset(_))
-          Some(Job(job.jobId, Some(job.status.toString), Some(job.getMessage()), Some(datasets), {
-            if (job.getExecutionTime() < 0) None else Some(job.getExecutionTime())
-          }))
-        }
-    }
+    try {
+      lazy val queryResult = queryOption match {
+        case None =>
+          None
+        case Some(query) =>
+          Logger.info("\n" + username + " : " + queryName + "\n" + queryOption + "\n\n\n\n\n")
+          val compileResultJob = compileJob(username, query, queryName, outputFormat)
+          if (compileResultJob.getJobStatus == COMPILE_FAILED) {
+            Some(Job(compileResultJob.jobId, Some(compileResultJob.getJobStatus.toString), Some(compileResultJob.jobOutputMessages.toString())))
+          } else {
+            val server = GMQLExecute()
+            val job = registerJob(username, query, queryName, outputFormat)
+            server.execute(job)
+            val datasets = server.getJobDatasets(job.jobId).map(Dataset(_))
+            Some(Job(job.jobId, Some(job.status.toString), Some(job.getMessage()), Some(datasets), {
+              if (job.getExecutionTime() < 0) None else Some(job.getExecutionTime())
+            }))
+          }
+      }
 
-    render {
-      case Accepts.Xml() =>
-        if (queryResult.isEmpty)
-          ResultUtils.renderedError(NOT_ACCEPTABLE, "Query must be send in the request body")
-        else
-          Ok(scala.xml.Utility.trim(queryResult.get.getXml))
-      case Accepts.Json() =>
-        if (queryResult.isEmpty)
-          ResultUtils.renderedError(NOT_ACCEPTABLE, "Query must be send in the request body")
-        else
-          Ok(Json.toJson(queryResult))
-      case _ => NA
+      render {
+        case Accepts.Xml() =>
+          if (queryResult.isEmpty)
+            ResultUtils.renderedError(NOT_ACCEPTABLE, "Query must be send in the request body")
+          else
+            Ok(scala.xml.Utility.trim(queryResult.get.getXml))
+        case Accepts.Json() =>
+          if (queryResult.isEmpty)
+            ResultUtils.renderedError(NOT_ACCEPTABLE, "Query must be send in the request body")
+          else
+            Ok(Json.toJson(queryResult))
+        case _ => NA
+      }
+    } catch {
+      case _: UserQuotaExceeded => renderedError(BAD_REQUEST, "User quota is exceeded")
     }
   }
 
@@ -83,7 +86,7 @@ class QueryMan extends Controller {
     val gmqlScript = new GMQLScript(query, queryName)
     val binSize = new BinSize(5000, 5000, 1000)
     val emptyContext: SparkContext = null
-    val gmqlContext = new GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat, binSize = binSize, username = username, sc = emptyContext)
+    val gmqlContext = new GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat, binSize = binSize, username = username, sc = emptyContext, checkQuota = true)
     server.registerJob(gmqlScript, gmqlContext, "")
   }
 

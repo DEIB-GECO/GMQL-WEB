@@ -89,7 +89,8 @@ runQuery = (fileKey, type) ->
           BootstrapDialog.alert("Execution started with ID: #{jobId}") if type == "execute"
         error: (jqXHR, textStatus, errorThrown) ->
           console.log("error:" + "runQuery: " + jqXHR + "&" + textStatus + "&" + errorThrown)
-          status = job.status
+          if job?
+            status = job.status
           $("#query-status").val jqXHR.error
           $("#query-status").show()
 

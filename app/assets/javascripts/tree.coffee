@@ -76,7 +76,7 @@ $ ->
     error: ->
       memUsage.addClass("progress-bar-danger")
       memUsage.width(100 + "%")
-      memUsage.text("Cannot load usage data")
+      memUsage.text("Data usage NA")
       usageBar.show()
 
 @resetPrivate = ->

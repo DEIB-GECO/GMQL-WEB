@@ -570,8 +570,8 @@ showInfoTable = (result) ->
   thead = $('#displayInfoTable thead tr')
   tfoot = $('#displayInfoTable tfoot tr')
 
-  thead.append $("<th>Key</th>")
-  tfoot.append $("<th>Key</th>")
+  thead.append $("<th>Attribute</th>")
+  tfoot.append $("<th>Attribute</th>")
   thead.append $("<th>Value</th>")
   tfoot.append $("<th>Value</th>")
 

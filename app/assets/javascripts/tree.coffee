@@ -188,7 +188,7 @@ glyph_opts = map:
 
           res = for att in list
             hideCheckBox = ("public-data-set" == data.node.data.value) || ("public-data-set" == data.node.parent?.data.value)
-            result = (item.value  for item in att?.info?.infoList? when item.key == 'Number of samples')
+            result = (item.value  for item in att?.info?.infoList when item.key == 'Number of samples')
             result = if(result?.length) then result = " (#{result})" else ""
             temp = {
               key: if newType == "data-set" then att.name.replace /^public\./, "" else att.name.split("/").pop()

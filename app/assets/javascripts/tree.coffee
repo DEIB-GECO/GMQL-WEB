@@ -190,6 +190,9 @@ glyph_opts = map:
             hideCheckBox = ("public-data-set" == data.node.data.value) || ("public-data-set" == data.node.parent?.data.value)
             result = (item.value  for item in att?.info?.infoList when item.key == 'Number of samples')
             result = if(result?.length) then result = " (#{result})" else ""
+            #TODO title should not be used anymore from the other functions, only key should be used
+            result = ""
+
             temp = {
               key: if newType == "data-set" then att.name.replace /^public\./, "" else att.name.split("/").pop()
               title: if newType == "data-set" then ( att.name.replace /^public\./, "") + result else att.name.split("/").pop()

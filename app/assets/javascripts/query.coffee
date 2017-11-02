@@ -89,6 +89,11 @@ runQuery = (fileKey, type) ->
           BootstrapDialog.alert("Execution started with ID: #{jobId}") if type == "execute"
         error: (jqXHR, textStatus, errorThrown) ->
           console.log("error:" + "runQuery: " + jqXHR + "&" + textStatus + "&" + errorThrown)
+          if job?
+            status = job.status
+          $("#query-status").val $.parseJSON(jqXHR.responseText).error
+          $("#query-status").show()
+
           displayError("runQuery: " + jqXHR + "&" + textStatus + "&" + errorThrown)
 #TODO reload only if it is not in the list
   else

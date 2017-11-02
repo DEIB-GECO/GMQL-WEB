@@ -30,11 +30,59 @@ $ ->
 
   $('.tree-full-screen').click changeFullScreen
   loadContext()
+  loadUsage()
 
+@loadUsage = (formFunction) ->
+  memUsage = $('#memory-usage')
+  usageBar = $('.usage-bar')
+  call = jsRoutes.controllers.gmql.DSManager.getMemoryUsage()
+  $.ajax
+    url: call.url
+    type: call.type
+    method: call.method
+    headers: {'X-AUTH-TOKEN': window.authToken}
+    contentType: 'json'
+    dataType: 'json'
+    success: (result, textStatus, jqXHR) ->
+      used_percantage = (item.value  for item in result.infoList when item.key == 'used_percentage')[0]
+      quotaExceeded = (item.value  for item in result.infoList when item.key == 'quota_exceeded')[0]
+
+
+      memUsage.width(used_percantage + "%")
+      memUsage.text(used_percantage + "%")
+
+      memUsage.removeClass("progress-bar-success")
+      memUsage.removeClass("progress-bar-info")
+      memUsage.removeClass("progress-bar-warning")
+      memUsage.removeClass("progress-bar-danger")
+      if quotaExceeded is "true"
+        memUsage.addClass("progress-bar-danger")
+        if formFunction
+
+          BootstrapDialog.alert "User quota is not enough for the operation"
+
+      else
+        if used_percantage > 75
+          memUsage.addClass("progress-bar-warning")
+        else
+        if used_percantage > 50
+          memUsage.addClass("progress-bar-info")
+        else
+          memUsage.addClass("progress-bar-success")
+        if formFunction
+          formFunction()
+      used_percantage
+      usageBar.show()
+    error: ->
+      memUsage.addClass("progress-bar-danger")
+      memUsage.width(100 + "%")
+      memUsage.text("Data usage NA")
+      usageBar.show()
 
 @resetPrivate = ->
   $("#tree").fancytree("getRootNode").children[0].resetLazy()
   expandPrivate()
+  loadUsage()
 
 expandPrivate = ->
   $("#tree").fancytree("getRootNode").children[0]?.setExpanded(true)
@@ -140,9 +188,14 @@ glyph_opts = map:
 
           res = for att in list
             hideCheckBox = ("public-data-set" == data.node.data.value) || ("public-data-set" == data.node.parent?.data.value)
+            result = (item.value  for item in att?.info?.infoList when item.key == 'Number of samples')
+            result = if(result?.length) then result = " (#{result})" else ""
+            #TODO title should not be used anymore from the other functions, only key should be used
+            result = ""
+
             temp = {
               key: if newType == "data-set" then att.name.replace /^public\./, "" else att.name.split("/").pop()
-              title: if newType == "data-set" then att.name.replace /^public\./, "" else att.name.split("/").pop()
+              title: if newType == "data-set" then ( att.name.replace /^public\./, "") + result else att.name.split("/").pop()
               folder: false
               lazy: lazy
               hideCheckbox: hideCheckBox
@@ -457,6 +510,83 @@ changeFullScreen = ->
   $('.tree-full-screen span').toggleClass('glyphicon-resize-full glyphicon-resize-small');
   ace.edit("main-query-editor").resize()
 
+
+showInfo = (node) ->
+  data = node.data
+  type = data.type
+  datasetName =
+    switch type
+      when "sample"   then node.parent.data.value
+      when "data-set"  then data.value
+
+  sampleName =
+    switch type
+      when "sample"   then data.value
+
+  call =
+    switch type
+      when "sample"   then jsRoutes.controllers.gmql.DSManager.getSampleInfo(datasetName, sampleName)
+      when "data-set"  then jsRoutes.controllers.gmql.DSManager.getDatasetInfo(datasetName)
+
+
+  if datasetName?
+    $.ajax
+      url: call.url
+      type: call.type
+      method: call.method
+      headers: {'X-AUTH-TOKEN': window.authToken}
+      contentType: 'json'
+      dataType: 'json'
+      success: (result, textStatus, jqXHR) ->
+        showInfoBootstrapDialog("Info of #{datasetName}", result)
+
+      error: (jqXHR, textStatus, errorThrown) ->
+        BootstrapDialog.alert "Error"
+
+showInfoBootstrapDialog = (title, result) ->
+  buttons = []
+  BootstrapDialog.show
+    closeByBackdrop: false
+    closeByKeyboard: true
+    title: title
+    size: BootstrapDialog.SIZE_WIDE
+    message: '<div id="infoTableDiv"><table id="displayInfoTable" ></table></div>'
+    buttons: [
+      {
+        label: 'Close'
+        action: (dialogItself) ->
+          dialogItself.close()
+      }
+    ]
+    onhide: ->
+      $('#displayTable').DataTable().destroy(true)
+      window.tableResult = null
+    onshown: (dialogRef) ->
+    # to define which direction will be the result
+      window.tableResult = result
+      showInfoTable(result)
+
+showInfoTable = (result) ->
+  $('#infoTableDiv').empty()
+  $('#infoTableDiv').append '<table id="displayInfoTable" ><thead><tr></tr></thead><tfoot><tr></tr></tfoot></table>'
+
+  thead = $('#displayInfoTable thead tr')
+  tfoot = $('#displayInfoTable tfoot tr')
+
+  thead.append $("<th>Attribute</th>")
+  tfoot.append $("<th>Attribute</th>")
+  thead.append $("<th>Value</th>")
+  tfoot.append $("<th>Value</th>")
+
+
+
+
+  data = result.infoList.map (info) -> [info.key, info.value]
+
+
+  table = $('#displayInfoTable').DataTable
+    data: data
+
 # start showQuery: shows the query of the dataset.
 showQuery = (node) ->
   data = node.data
@@ -565,7 +695,7 @@ renameDataset = (node) ->
         {
           label: 'Rename'
           action: (dialogItself) ->
-            rename(datasetName, $('#dataset-new-name').val() )
+            rename(datasetName, $('#dataset-new-name').val())
         }
         {
           label: 'Close'
@@ -669,10 +799,11 @@ loadContext = -> $('#tree').contextmenu
   autoFocus: true
   menu: [
     {
-      title: 'Rename'
-      cmd: 'renameDataset'
-      uiIcon: 'ui-icon-pencil'
+      title: 'Show info'
+      cmd: 'showInfo'
+      uiIcon: 'ui-icon-info'
     }
+    {title: "----"}
     {
       title: 'Show query'
       cmd: 'showQuery'
@@ -682,6 +813,11 @@ loadContext = -> $('#tree').contextmenu
       title: 'Show vocabulary'
       cmd: 'showVocabulary'
       uiIcon: 'ui-icon-note'
+    }
+    {
+      title: 'Rename'
+      cmd: 'renameDataset'
+      uiIcon: 'ui-icon-pencil'
     }
     {title: "----"}
     {
@@ -748,6 +884,7 @@ loadContext = -> $('#tree').contextmenu
     $('#tree').contextmenu 'enableEntry', 'showQuery', isPrivateDs
     $('#tree').contextmenu 'enableEntry', 'showVocabulary', isPrivateDs
     $('#tree').contextmenu 'enableEntry', 'renameDataset', isPrivateDs
+
     # Show/hide single entries
     #            $("#tree").contextmenu("showEntry", "cut", false);
     # Activate node on right-click
@@ -774,6 +911,7 @@ loadContext = -> $('#tree').contextmenu
     node = $.ui.fancytree.getNode(ui.target)
     console.log 'select ' + ui.cmd + ' on ' + node
     switch ui.cmd
+      when 'showInfo' then showInfo(node)
       when 'showQuery' then showQuery(node)
       when 'showVocabulary' then showVocabulary(node)
       when 'renameDataset' then renameDataset(node)

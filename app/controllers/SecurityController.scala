@@ -305,7 +305,7 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
         val userEmail = user.emailAddress
         val email = Email(
           subject = "GMQL password recovery"
-          , from = "Polimi bioinformatics group <bioinformatics.polimi.it@gmail.com>"
+          , from = "PoliMI Bioinformatics Group <bioinformatics.polimi.it@gmail.com>"
           , to = Seq(userEmail)
           // adds attachment
           //      attachments = Seq(

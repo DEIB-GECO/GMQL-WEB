@@ -42,6 +42,11 @@ POST          /register                                            controllers.S
 GET           /recovery/:username                                  controllers.SecurityController.passwordRecoveryEmail(username)
 GET           /recovery                                            controllers.SecurityController.passwordRecovery
 POST          /password                                            controllers.SecurityController.updatePassword
+
+GET           /getMemoryUsage                                      controllers.gmql.DSManager.getMemoryUsage
+
+
+
 #
 #
 #
@@ -65,6 +70,9 @@ PATCH         /datasets/:datasetName                               controllers.g
 GET           /datasets/:datasetName/:sampleName/region            controllers.gmql.DSManager.getRegionStream(datasetName, sampleName)
 GET           /datasets/:datasetName/:sampleName/metadata          controllers.gmql.DSManager.getMetadataStream(datasetName, sampleName)
 
+GET           /datasets/:datasetName/:sampleName/info              controllers.gmql.DSManager.getSampleInfo(datasetName, sampleName)
+
+
 GET           /datasets/:datasetName/zip                           controllers.gmql.DSManager.zip(datasetName:String)
 
 
@@ -76,6 +84,9 @@ GET           /datasets/:datasetName/schema                        controllers.g
 # get generation query of dataset
 GET           /datasets/:datasetName/query                         controllers.gmql.DSManager.getQueryStream(datasetName)
 GET           /datasets/:datasetName/vocabulary                    controllers.gmql.DSManager.getVocabularyStream(datasetName)
+
+GET           /datasets/:datasetName/info                          controllers.gmql.DSManager.getDatasetInfo(datasetName)
+
 
 
 #    val schemaNameOption = request.getQueryString("schemaName")

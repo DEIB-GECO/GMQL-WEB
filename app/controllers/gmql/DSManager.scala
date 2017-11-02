@@ -10,7 +10,7 @@ import io.swagger.annotations.{ApiImplicitParams, _}
 import it.polimi.genomics.core.DataStructures.IRDataSet
 import it.polimi.genomics.core.{GNull, _}
 import it.polimi.genomics.repository.FSRepository.FS_Utilities
-import it.polimi.genomics.repository.GMQLExceptions.{GMQLDSNotFound, GMQLNotValidDatasetNameException, GMQLSampleNotFound}
+import it.polimi.genomics.repository.GMQLExceptions.{GMQLDSExceedsQuota, GMQLDSNotFound, GMQLNotValidDatasetNameException, GMQLSampleNotFound}
 import it.polimi.genomics.repository._
 import it.polimi.genomics.spark.implementation.loaders.CustomParser
 import org.xml.sax.SAXException
@@ -56,10 +56,10 @@ class DSManager extends Controller {
   def getDatasets = AuthenticatedAction { implicit request =>
     val username: String = request.username.get
 
-    lazy val datasets = {
-      val datasetList = (for (ds: IRDataSet <- repository.listAllDSs(username)) yield Dataset(ds.position, Some(username))) ++
+    lazy val datasets: Datasets = {
+      val datasetList = (for (ds: IRDataSet <- repository.listAllDSs(username)) yield Dataset(ds.position, Some(username), info = Some(DatasetUtils.getInfo(username, ds.position)))) ++
         // public dataset
-        (for (ds: IRDataSet <- repository.listAllDSs("public")) yield Dataset(ds.position, Some("public")))
+        (for (ds: IRDataSet <- repository.listAllDSs("public")) yield Dataset(ds.position, Some("public"), info = Some(DatasetUtils.getInfo("public", ds.position))))
       Datasets(datasetList.sorted)
     }
 
@@ -879,6 +879,10 @@ class DSManager extends Controller {
         Logger.error("error", e)
         val message = " The dataset schema does not confirm the schema style (XSD) \n" + e.getMessage
         BadRequest(message)
+      case e: GMQLDSExceedsQuota =>
+        Logger.error("error", e)
+        val message = " User quota exceeded  \n" + e.getMessage
+        BadRequest(message)
       case e: Exception =>
         Logger.error("Upload Error", e)
         val message =
@@ -1030,5 +1034,106 @@ class DSManager extends Controller {
     Logger.debug("result1:" + result)
     newFile.getAbsolutePath
   }
+
+
+  @ApiOperation(value = "Get dataset info",
+    notes = "Get dataset info",
+    response = classOf[Info])
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
+  @ApiResponses(value = Array(
+    new ApiResponse(code = 401, message = "User is not authenticated"),
+    new ApiResponse(code = 404, message = "Dataset is not found for the user")))
+  def getDatasetInfo(datasetName: String) = AuthenticatedAction { implicit request =>
+    var username: String = request.username.get
+    var dsName = datasetName
+    // if public then user name is public and get the correct dataset name
+    if (datasetName.startsWith("public.")) {
+      username = "public"
+      dsName = dsName.substring("public.".length)
+    }
+
+
+    try {
+      lazy val datasetsInfo = DatasetUtils.getInfo(username, dsName)
+
+
+      render {
+        case Accepts.Xml() => Ok(scala.xml.Utility.trim(datasetsInfo.getXml))
+        case Accepts.Json() => Ok(Json.toJson(datasetsInfo))
+        case _ => NA
+      }
+    } catch {
+      case _: GMQLDSNotFound => renderedError(NOT_FOUND, "Dataset not found")
+    }
+  }
+
+  @ApiOperation(value = "Get sample info",
+    notes = "Get sample info",
+    response = classOf[Info])
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
+  @ApiResponses(value = Array(
+    new ApiResponse(code = 401, message = "User is not authenticated"),
+    new ApiResponse(code = 404, message = "Dataset or its is not found for the user")))
+  def getSampleInfo(datasetName: String, sampleName: String) = AuthenticatedAction { implicit request =>
+    var dsName = datasetName
+    var username: String = request.username.get
+    if (dsName.startsWith("public.")) {
+      username = "public"
+      dsName = dsName.replace("public.", "")
+    }
+
+    try {
+      lazy val sampleInfo = DatasetUtils.getInfo(username, dsName, sampleName)
+
+      render {
+        case Accepts.Xml() => Ok(scala.xml.Utility.trim(sampleInfo.getXml))
+        case Accepts.Json() => Ok(Json.toJson(sampleInfo))
+        case _ => NA
+      }
+    } catch {
+      case _: GMQLDSNotFound => renderedError(NOT_FOUND, "Dataset not found")
+      case _: GMQLSampleNotFound => renderedError(NOT_FOUND, "Sample not found")
+    }
+  }
+
+
+  @ApiOperation(value = "Get memory usage",
+    notes = "Get memory usage",
+    response = classOf[Info])
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
+  @ApiResponses(value = Array(
+    new ApiResponse(code = 401, message = "User is not authenticated"),
+    new ApiResponse(code = 404, message = "Dataset or its is not found for the user")))
+  def getMemoryUsage() = AuthenticatedAction { implicit request =>
+    val username: String = request.username.get
+    val userClass = request.user.get.userType
+
+
+    try {
+      lazy val result = {
+        val (occupied, available) = repository.getUserQuotaInfo(username, userClass)
+        val isUserQuotaExceeded = repository.isUserQuotaExceeded(username, userClass)
+        val map = mutable.Map.empty[String, AnyVal]
+        map.put("occupied", occupied)
+        map.put("available", available)
+        map.put("total", occupied + available)
+        map.put("quota_exceeded", isUserQuotaExceeded)
+        map.put("used_percentage", (occupied / (occupied + available) * 10000).toInt / 100.0)
+
+        Info(map.toList.map(a => (a._1, a._2.toString)).sorted)
+      }
+
+
+      render {
+        case Accepts.Xml() => Ok(scala.xml.Utility.trim(result.getXml))
+        case Accepts.Json() => Ok(Json.toJson(result))
+        case _ => NA
+      }
+    } catch {
+      case _: GMQLDSNotFound => renderedError(NOT_FOUND, "Dataset not found")
+      case _: GMQLSampleNotFound => renderedError(NOT_FOUND, "Sample not found")
+    }
+  }
+
 }
 

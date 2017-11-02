@@ -18,9 +18,9 @@ var GmqlHighlightRules = function() {
         "true|false|distance|mindist|mindistance|dle|dge|md|any|all|start|stop|chr|strand|left|right|up|down|downstream|upstream"
 			+ "|and|or|not|as|in|allbut"
 			+ "|count|bag|sum|avg|min|max|median|std"
-			+ "|cat|contig" 
-            + "|dist|dg|dg|bagd|dl"
-            + "|left_distinct|right_distinct|both"
+			+ "|cat|contig"
+			+ "|dist|dg|dg|bagd|dl|sqrt"
+			+ "|left_distinct|right_distinct|both"
     );
 
     var builtinFunctions = (
@@ -76,7 +76,7 @@ var GmqlHighlightRules = function() {
             regex : "[a-zA-Z_$][a-zA-Z0-9_$]*\\b"
         }, {
             token : "keyword.operator",
-            regex : "\\+|\\-|\\/|\\/\\/|%|<@>|@>|<@|&|\\^|~|<|>|<=|=>|==|!=|<>|=|,|;|:" 
+            regex : "\\+|\\-|\\/|\\/\\/|%|<@>|@>|<@|&|\\^|~|<|>|<=|=>|==|!=|<>|=|,|;|:"
         }, {
             token : "paren.lparen",
             regex : "[\\(]"

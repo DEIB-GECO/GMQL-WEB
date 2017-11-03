@@ -9,9 +9,11 @@ import controllers.gmql.ResultUtils._
 import io.swagger.annotations.{ApiImplicitParams, _}
 import it.polimi.genomics.core.DataStructures.IRDataSet
 import it.polimi.genomics.core.GDMSUserClass.GDMSUserClass
+import it.polimi.genomics.core.exception.UserExceedsQuota
 import it.polimi.genomics.core.{GNull, _}
+import it.polimi.genomics.manager.ProfilerLauncher
 import it.polimi.genomics.repository.FSRepository.FS_Utilities
-import it.polimi.genomics.repository.GMQLExceptions.{GMQLDSExceedsQuota, GMQLDSNotFound, GMQLNotValidDatasetNameException, GMQLSampleNotFound}
+import it.polimi.genomics.repository.GMQLExceptions.{GMQLDSNotFound, GMQLNotValidDatasetNameException, GMQLSampleNotFound}
 import it.polimi.genomics.repository._
 import it.polimi.genomics.spark.implementation.loaders.CustomParser
 import org.xml.sax.SAXException
@@ -513,7 +515,7 @@ class DSManager extends Controller {
 
         sources += ZipEnumerator.Source(s"$datasetName/vocabulary.txt", { () => Future(Some(vocabularyCount.getStream)) })
 
-//        Logger.debug(s"Before zip enumerator: $username->$datasetName")
+        //        Logger.debug(s"Before zip enumerator: $username->$datasetName")
         Ok.chunked(ZipEnumerator(sources))(play.api.http.Writeable.wBytes).withHeaders(
           CONTENT_TYPE -> "application/zip",
           CONTENT_DISPOSITION -> s"attachment; filename=$datasetName.zip"
@@ -884,7 +886,7 @@ class DSManager extends Controller {
         Logger.error("error", e)
         val message = " The dataset schema does not confirm the schema style (XSD) \n" + e.getMessage
         BadRequest(message)
-      case e: GMQLDSExceedsQuota =>
+      case e: UserExceedsQuota =>
         Logger.error("error", e)
         val message = " User quota exceeded  \n" + e.getMessage
         BadRequest(message)
@@ -954,7 +956,7 @@ class DSManager extends Controller {
           Logger.error("error", e)
           val message = " The dataset schema does not confirm the schema style (XSD) \n" + e.getMessage
           BadRequest(message)
-        case e: GMQLDSExceedsQuota =>
+        case e: UserExceedsQuota =>
           Logger.error("error", e)
           val message = " User quota exceeded  \n" + e.getMessage
           BadRequest(message)
@@ -988,6 +990,7 @@ class DSManager extends Controller {
         //      val dataset = IRDataSet(dataSetName, repository.readSchemaFile(schemaPath).fields.map(field => (field.name, field.fieldType)))
         val samples: util.List[GMQLSample] = samplesToImport.toList.map(fileName => GMQLSample(fileName, fileName + ".meta"))
         repository.importDs(dataSetName, username, userType, samples, schemaPath)
+        ProfilerLauncher.profileDS(username, dataSetName)
 
         def stringToSample(set: Set[String]) = if (set.isEmpty) None else Some(set.toSeq.map((file: String) => Sample("", file.split("/").last)))
 

@@ -1126,14 +1126,14 @@ class DSManager extends Controller {
 
     try {
       lazy val result = {
-        val (occupied, available) = repository.getUserQuotaInfo(username, userClass)
+        val (occupied, total) = repository.getUserQuotaInfo(username, userClass)
         val isUserQuotaExceeded = repository.isUserQuotaExceeded(username, userClass)
         val map = mutable.Map.empty[String, AnyVal]
         map.put("occupied", occupied)
-        map.put("available", available)
-        map.put("total", occupied + available)
+        map.put("available", if(total-occupied > 0) total-occupied else 0 )
+        map.put("total", total)
         map.put("quota_exceeded", isUserQuotaExceeded)
-        map.put("used_percentage", (occupied / (occupied + available) * 10000).toInt / 100.0)
+        map.put("used_percentage", (occupied.toFloat / total * 10000).toInt / 100.0)
 
         Info(map.toList.map(a => (a._1, a._2.toString)).sorted)
       }

@@ -510,7 +510,7 @@ class DSManager extends Controller {
 
         if (scriptStreamTest.isDefined) {
           lazy val scriptStream = repository.getScriptStream(datasetName, username)
-          sources += ZipEnumerator.Source(s"$datasetName/query.gmql", { () => Future(Some(scriptStream)) })
+          sources += ZipEnumerator.Source(s"$datasetName/query.txt", { () => Future(Some(scriptStream)) })
         }
 
         sources += ZipEnumerator.Source(s"$datasetName/vocabulary.txt", { () => Future(Some(vocabularyCount.getStream)) })

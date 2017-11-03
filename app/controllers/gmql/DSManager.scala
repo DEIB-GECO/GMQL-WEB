@@ -8,6 +8,7 @@ import javax.inject.Singleton
 import controllers.gmql.ResultUtils._
 import io.swagger.annotations.{ApiImplicitParams, _}
 import it.polimi.genomics.core.DataStructures.IRDataSet
+import it.polimi.genomics.core.GDMSUserClass.GDMSUserClass
 import it.polimi.genomics.core.{GNull, _}
 import it.polimi.genomics.repository.FSRepository.FS_Utilities
 import it.polimi.genomics.repository.GMQLExceptions.{GMQLDSExceedsQuota, GMQLDSNotFound, GMQLNotValidDatasetNameException, GMQLSampleNotFound}
@@ -493,7 +494,10 @@ class DSManager extends Controller {
           )
         }
         lazy val schemaStream = repository.getSchemaStream(datasetName, username)
-        sources += ZipEnumerator.Source(s"$datasetName/files/${datasetName}.schema", { () => Future(Some(schemaStream)) })
+        sources += ZipEnumerator.Source(s"$datasetName/files/schema.xml", { () => Future(Some(schemaStream)) })
+
+        lazy val infoStream = repository.getInfoStream(datasetName, username)
+        sources += ZipEnumerator.Source(s"$datasetName/info.txt", { () => Future(Some(infoStream)) })
 
 
         val scriptStreamTest = try {
@@ -504,12 +508,12 @@ class DSManager extends Controller {
 
         if (scriptStreamTest.isDefined) {
           lazy val scriptStream = repository.getScriptStream(datasetName, username)
-          sources += ZipEnumerator.Source(s"$datasetName/$datasetName.gmql", { () => Future(Some(scriptStream)) })
+          sources += ZipEnumerator.Source(s"$datasetName/query.gmql", { () => Future(Some(scriptStream)) })
         }
 
         sources += ZipEnumerator.Source(s"$datasetName/vocabulary.txt", { () => Future(Some(vocabularyCount.getStream)) })
 
-        Logger.debug(s"Before zip enumerator: $username->$datasetName")
+//        Logger.debug(s"Before zip enumerator: $username->$datasetName")
         Ok.chunked(ZipEnumerator(sources))(play.api.http.Writeable.wBytes).withHeaders(
           CONTENT_TYPE -> "application/zip",
           CONTENT_DISPOSITION -> s"attachment; filename=$datasetName.zip"
@@ -843,6 +847,7 @@ class DSManager extends Controller {
     val schemaNameOption = request.getQueryString("schemaName")
 
     val username = request.username.get
+    val userType = request.user.get.userType
     Logger.debug("uploadSample => username: " + username)
     //TODO move create empty directory to utils
     val tempDirPath = DatasetUtils.createEmptyTempDirectory(username, dataSetName)
@@ -868,7 +873,7 @@ class DSManager extends Controller {
       val schemaPathOption = getSchemaPath(tempDirPath, isSchemaUploaded, schemaNameOption)
 
 
-      importDataset(username, dataSetName, schemaPathOption, tempDirPath, files.toSet)
+      importDataset(username, userType, dataSetName, schemaPathOption, tempDirPath, files.toSet)
     }
     catch {
       case e: GMQLNotValidDatasetNameException =>
@@ -916,6 +921,8 @@ class DSManager extends Controller {
       val schemaNameOption = request.getQueryString("schemaName")
 
       val username = request.username.get
+      val userType = request.user.get.userType
+
       val dataFilePaths = (request.body \ "data_files").asOpt[Seq[String]].getOrElse(Seq.empty[String])
       val schemaFileOpt = (request.body \ "schema_file").asOpt[String]
 
@@ -935,16 +942,21 @@ class DSManager extends Controller {
         val schemaPathOption = getSchemaPath(tempDirPath, schemaPath.isDefined, schemaNameOption)
 
 
-        importDataset(username, dataSetName, schemaPathOption, tempDirPath, files.toSet)
+        importDataset(username, userType, dataSetName, schemaPathOption, tempDirPath, files.toSet)
 
-      } catch {
-        case e: FileNotFoundException =>
+      }
+      catch {
+        case e: GMQLNotValidDatasetNameException =>
           Logger.error("error", e)
-          val message = "File not found: " + e.getMessage + ". Please check the URLs and call the service again"
+          val message = " \n" + e.getMessage
           BadRequest(message)
         case e: SAXException =>
           Logger.error("error", e)
           val message = " The dataset schema does not confirm the schema style (XSD) \n" + e.getMessage
+          BadRequest(message)
+        case e: GMQLDSExceedsQuota =>
+          Logger.error("error", e)
+          val message = " User quota exceeded  \n" + e.getMessage
           BadRequest(message)
         case e: Exception =>
           Logger.error("Upload Error", e)
@@ -967,7 +979,7 @@ class DSManager extends Controller {
   }
 
 
-  private def importDataset(username: String, dataSetName: String, schemaPathOption: Option[String], tempDirPath: String, files: Set[String])(implicit request: RequestHeader) = {
+  private def importDataset(username: String, userType: GDMSUserClass, dataSetName: String, schemaPathOption: Option[String], tempDirPath: String, files: Set[String])(implicit request: RequestHeader) = {
     val samplesTuple3 = createEmptyMeta(tempDirPath, files)
     val samplesToImport = samplesTuple3._1 ++ samplesTuple3._2
 
@@ -975,7 +987,7 @@ class DSManager extends Controller {
       case Some(schemaPath) =>
         //      val dataset = IRDataSet(dataSetName, repository.readSchemaFile(schemaPath).fields.map(field => (field.name, field.fieldType)))
         val samples: util.List[GMQLSample] = samplesToImport.toList.map(fileName => GMQLSample(fileName, fileName + ".meta"))
-        repository.importDs(dataSetName, username, samples, schemaPath)
+        repository.importDs(dataSetName, username, userType, samples, schemaPath)
 
         def stringToSample(set: Set[String]) = if (set.isEmpty) None else Some(set.toSeq.map((file: String) => Sample("", file.split("/").last)))
 

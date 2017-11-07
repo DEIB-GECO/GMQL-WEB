@@ -2,7 +2,7 @@ import sbt.ConflictWarning
 
 name := "GMQL-REST"
 
-version := "1.1-dag"
+version := "1.1"
 
 lazy val `GMQL-REST` = (project in file(".")).enablePlugins(PlayScala, SbtWeb)
 //lazy val `gmql_rest2` = (project in file(".")).enablePlugins(PlayScala, PlayEbean, PlayJava)

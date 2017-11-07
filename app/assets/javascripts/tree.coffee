@@ -34,6 +34,7 @@ $ ->
 
 @loadUsage = (formFunction) ->
   memUsage = $('#memory-usage')
+  memUsageTooltip = $('#memory-usage-tooltip')
   usageBar = $('.usage-bar')
   call = jsRoutes.controllers.gmql.DSManager.getMemoryUsage()
   $.ajax
@@ -46,9 +47,17 @@ $ ->
     success: (result, textStatus, jqXHR) ->
       used_percantage = (item.value  for item in result.infoList when item.key == 'used_percentage')[0]
       quotaExceeded = (item.value  for item in result.infoList when item.key == 'quota_exceeded')[0]
+      occupied = (item.value  for item in result.infoList when item.key == 'occupied')[0]/1000
+      total = (item.value  for item in result.infoList when item.key == 'total')[0]/1000
 
 
-      memUsage.width(used_percantage + "%")
+      if used_percantage > 100
+        memUsage.width(100 + "%")
+      else
+        memUsage.width(used_percantage + "%")
+
+      memUsageTooltip.attr("title","#{occupied} MB / #{total} MB").tooltip('fixTitle')
+
       memUsage.text(used_percantage + "%")
 
       memUsage.removeClass("progress-bar-success")

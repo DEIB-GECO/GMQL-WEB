@@ -52,7 +52,7 @@ class VocabularyCount {
         else
           Logger.warn(s"Cannot parse $temp -> $list")
       }
-      Logger.debug(s"Map: $vocabularyMap")
+//      Logger.debug(s"Map: $vocabularyMap")
 //      println("FUTURE2 closed")
     }
     pis

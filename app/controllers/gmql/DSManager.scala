@@ -863,7 +863,7 @@ class DSManager extends Controller {
           val newFile =
             if (file.key == "schema") {
               isSchemaUploaded = true
-              new File(tempDirPath + ".schema")
+              new File(tempDirPath + "test.schema")
             } else {
               files += tempDirPath + File.separator + file.filename
               new File(tempDirPath + File.separator + file.filename)
@@ -871,11 +871,14 @@ class DSManager extends Controller {
           file.ref.moveTo(newFile)
           Logger.info("File: " + file.filename)
       }
-      Logger.info("Schema name: " + schemaNameOption.getOrElse("NO INPUT"))
-      val schemaPathOption = getSchemaPath(tempDirPath, isSchemaUploaded, schemaNameOption)
-
-
-      importDataset(username, userType, dataSetName, schemaPathOption, tempDirPath, files.toSet)
+      if (files.isEmpty)
+        //TODO change notFound code to other code
+        NotFound("There is no file to import")
+      else {
+        Logger.info("Schema name: " + schemaNameOption.getOrElse("NO INPUT"))
+        val schemaPathOption = getSchemaPath(tempDirPath, isSchemaUploaded, schemaNameOption)
+        importDataset(username, userType, dataSetName, schemaPathOption, tempDirPath, files.toSet)
+      }
     }
     catch {
       case e: GMQLNotValidDatasetNameException =>
@@ -1130,7 +1133,7 @@ class DSManager extends Controller {
         val isUserQuotaExceeded = repository.isUserQuotaExceeded(username, userClass)
         val map = mutable.Map.empty[String, AnyVal]
         map.put("occupied", occupied)
-        map.put("available", if(total-occupied > 0) total-occupied else 0 )
+        map.put("available", if (total - occupied > 0) total - occupied else 0)
         map.put("total", total)
         map.put("quota_exceeded", isUserQuotaExceeded)
         map.put("used_percentage", (occupied.toFloat / total * 10000).toInt / 100.0)

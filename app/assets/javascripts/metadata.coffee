@@ -478,7 +478,10 @@ showTable = (result, transposed, datasetName) ->
         data.columns = newColumns
 
 
-    columnDefs: [{"searchable": false, "targets": 0}]
+    columnDefs: [
+      {searchable: false, targets: 0}
+      { className: "first_column", targets: 0 }
+      ]
     dom: '<"datatable-buttons"B><"datatable-lengths"l>ifrtip',
     buttons: [
       'copy'

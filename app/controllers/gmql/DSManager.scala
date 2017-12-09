@@ -863,7 +863,7 @@ class DSManager extends Controller {
           val newFile =
             if (file.key == "schema") {
               isSchemaUploaded = true
-              new File(tempDirPath + "test.schema")
+              new File(tempDirPath + "schema.xml")
             } else {
               files += tempDirPath + File.separator + file.filename
               new File(tempDirPath + File.separator + file.filename)
@@ -939,7 +939,7 @@ class DSManager extends Controller {
             files += downloadFile(tempDirPath, filePath)
         }
         val schemaPath = schemaFileOpt.map(schemaFilePath =>
-          downloadFile(new File(tempDirPath + ".schema"), schemaFilePath)
+          downloadFile(new File(tempDirPath + "schema.xml"), schemaFilePath)
         )
 
         Logger.info("Schema name: " + schemaNameOption.getOrElse("NO INPUT"))
@@ -979,7 +979,7 @@ class DSManager extends Controller {
   private def getSchemaPath(tempDirPath: String, isSchemaUploaded: Boolean, schemaNameOption: Option[String]): Option[String] = {
     schemaNameOption match {
       case Some(schemaName) => Some(s"${ut.GMQL_CONF_DIR}/${schemaName.toUpperCase}.schema")
-      case None => if (isSchemaUploaded) Some(tempDirPath + ".schema") else None
+      case None => if (isSchemaUploaded) Some(tempDirPath + "schema.xml") else None
     }
   }
 

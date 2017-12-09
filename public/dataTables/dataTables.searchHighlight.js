@@ -18,7 +18,7 @@
  * `search()` API method.
  *
  * It depends upon the jQuery Highlight plug-in by Bartek Szopka:
- * 	  http://bartaz.github.io/sandbox.js/jquery.highlight.js
+ *      http://bartaz.github.io/sandbox.js/jquery.highlight.js
  *
  * Search highlighting in DataTables can be enabled by:
  *
@@ -33,58 +33,66 @@
  *     http://datatables.net/blog/2014-10-22
  */
 
-(function(window, document, $){
+(function (window, document, $) {
 
 
-function highlight( body, table )
-{
-	// Removing the old highlighting first
-	body.unhighlight();
+    function highlight(body, table) {
+        // Removing the old highlighting first
+        body.unhighlight();
 
-	// Don't highlight the "not found" row, so we get the rows using the api
-	if ( table.rows( { filter: 'applied' } ).data().length ) {
-		table.columns().every( function () {
-				var column = this;
-				column.nodes().flatten().to$().unhighlight({ className: 'column_highlight' });
-				column.nodes().flatten().to$().highlight( $.trim( column.search() ).split(/\s+/), { className: 'column_highlight' } );
-		} );
-		body.highlight( $.trim( table.search() ).split(/\s+/) );
-	}
-	//Added by Arif Canakoglu in order to highlight correctly the fixed columns
-	if(table && table.fixedColumns)
-		table.fixedColumns().update();
-}
+        // Don't highlight the "not found" row, so we get the rows using the api
+        if (table.rows({filter: 'applied'}).data().length) {
+            table.columns().every(function () {
+                var column = this;
+                column.nodes().flatten().to$().unhighlight({className: 'column_highlight'});
+                column.nodes().flatten().to$().highlight($.trim(column.search()).split(/\s+/), {className: 'column_highlight'});
+            });
+            // body.highlight( $.trim( table.search() ).split(/\s+/) );
+            table.columns().every(function (index) {
+                var column = this;
+                if (this.settings()[0].aoColumns[index].bSearchable) {
+                    column.nodes().flatten().to$().unhighlight();
+                    column.nodes().flatten().to$().highlight($.trim(table.search()).split(/\s+/));
+                }
+            })
+        }
+        //Added by Arif Canakoglu in order to highlight correctly the fixed columns
+        if (table && table.fixedColumns)
+            table.fixedColumns().update();
+
+        // this.settings()[0].aoColumns[0].bSearchable
+    }
 
 
 // Listen for DataTables initialisations
-$(document).on( 'init.dt.dth', function (e, settings, json) {
-	if ( e.namespace !== 'dt' ) {
-		return;
-	}
+    $(document).on('init.dt.dth', function (e, settings, json) {
+        if (e.namespace !== 'dt') {
+            return;
+        }
 
-	var table = new $.fn.dataTable.Api( settings );
-	var body = $( table.table().body() );
+        var table = new $.fn.dataTable.Api(settings);
+        var body = $(table.table().body());
 
-	if (
-		$( table.table().node() ).hasClass( 'searchHighlight' ) || // table has class
-		settings.oInit.searchHighlight                          || // option specified
-		$.fn.dataTable.defaults.searchHighlight                    // default set
-	) {
-		table
-			.on( 'draw.dt.dth column-visibility.dt.dth column-reorder.dt.dth', function () {
-				highlight( body, table );
-			} )
-			.on( 'destroy', function () {
-				// Remove event handler
-				table.off( 'draw.dt.dth column-visibility.dt.dth column-reorder.dt.dth' );
-			} );
+        if (
+            $(table.table().node()).hasClass('searchHighlight') || // table has class
+            settings.oInit.searchHighlight || // option specified
+            $.fn.dataTable.defaults.searchHighlight                    // default set
+        ) {
+            table
+                .on('draw.dt.dth column-visibility.dt.dth column-reorder.dt.dth', function () {
+                    highlight(body, table);
+                })
+                .on('destroy', function () {
+                    // Remove event handler
+                    table.off('draw.dt.dth column-visibility.dt.dth column-reorder.dt.dth');
+                });
 
-		// initial highlight for state saved conditions and initial states
-		if ( table.search() ) {
-			highlight( body, table );
-		}
-	}
-} );
+            // initial highlight for state saved conditions and initial states
+            if (table.search()) {
+                highlight(body, table);
+            }
+        }
+    });
 
 
 })(window, document, jQuery);

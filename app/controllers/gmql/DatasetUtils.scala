@@ -43,7 +43,7 @@ object DatasetUtils {
     regionsDirPath.doCreateParents()
     regionsDirPath.doCreateDirectory()
     //delete schema if exists
-    val schemaFilePath = Path.fromString(tempDirPath + ".schema")
+    val schemaFilePath = Path.fromString(tempDirPath + "schema.xml")
     schemaFilePath.deleteIfExists(force = true)
     tempDirPath
   }

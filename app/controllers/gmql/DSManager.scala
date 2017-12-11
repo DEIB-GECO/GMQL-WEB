@@ -280,11 +280,6 @@ class DSManager extends Controller {
         streamRegion
       }
 
-      object Foo {
-        val MY_STRINGS = Array("chr", "left", "right", "name", "score", "strand")
-      }
-
-
 
       def parseAndCorrect(line: String): String = {
         val gmqlSchema: GMQLSchema = repository.getSchema(dsName, username)
@@ -298,8 +293,14 @@ class DSManager extends Controller {
               val zipped = (gmqlSchema.fields.map(_.name) zip line.split("\t")).toMap
               bed6Headers.map { columnName =>
                 var value = zipped.getOrElse(columnName, ".")
+                //  BED6 definition of strand
+                // : Defines the strand. Either "." (=no strand) or "+" or "-".
                 if (columnName == "strand" && (value == "*"))
                   value = "."
+                //BED6 definition of score:
+                // A score between 0 and 1000....
+                if (columnName == "score" && (value == "."))
+                  value = "1000"
                 value
               }.mkString("\t")
           }
@@ -872,7 +873,7 @@ class DSManager extends Controller {
           Logger.info("File: " + file.filename)
       }
       if (files.isEmpty)
-        //TODO change notFound code to other code
+      //TODO change notFound code to other code
         NotFound("There is no file to import")
       else {
         Logger.info("Schema name: " + schemaNameOption.getOrElse("NO INPUT"))

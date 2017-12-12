@@ -237,6 +237,7 @@ class DSManager extends Controller {
     val topK: Int = request.getQueryString("top").flatMap(s => Try(s.toInt).toOption).getOrElse(Integer.MAX_VALUE)
     val header: Boolean = request.getQueryString("header").flatMap(s => Try(s.toBoolean).toOption).getOrElse(false)
     val bed6: Boolean = request.getQueryString("bed6").flatMap(s => Try(s.toBoolean).toOption).getOrElse(false)
+    val ucsc: Boolean = request.getQueryString("ucsc").flatMap(s => Try(s.toBoolean).toOption).getOrElse(false)
 
     import scala.concurrent.ExecutionContext.Implicits.global
     val transform = Enumeratee.map[String] { line =>
@@ -250,10 +251,14 @@ class DSManager extends Controller {
       dsName = dsName.replace("public.", "")
     }
 
-    val bed6Headers = Array("chr", "left", "right", "name", "score", "strand")
+    val bed6Headers = List("chr", "left", "right", "name", "score", "strand")
+    //    this will be used for gtf2bed conversion
+    val gtfHeaders = List("chr", "source", "feature", "left", "right", "score", "strand", "frame", "attribute")
+
 
     //    else {
     try {
+      val gmqlSchema: GMQLSchema = repository.getSchema(dsName, username)
       //TODO use ARM solution, if it is possible
       val (streamRegion, streamMeta) = repository.sampleStreams(dsName, username, sampleName)
       val headerContent: Enumerator[Array[Byte]] =
@@ -262,10 +267,13 @@ class DSManager extends Controller {
             if (isMeta)
               "Attribute\tValue"
             else {
-              if (bed6)
+              if (bed6 || (ucsc && gmqlSchema.schemaType == GMQLSchemaFormat.TAB))
                 bed6Headers.mkString("\t")
-              else
-                repository.getSchema(dsName, username).fields.map(_.name).mkString("\t")
+              else if (gmqlSchema.schemaType == GMQLSchemaFormat.GTF) {
+                val split = gmqlSchema.fields.map(_.name).splitAt(8)
+                split._1.mkString("\t") + "\tattribute(" + split._2.mkString("; ") + ")"
+              } else
+                gmqlSchema.fields.map(_.name).mkString("\t")
             }
           Enumerator(headerString).through(transform)
         }
@@ -280,29 +288,34 @@ class DSManager extends Controller {
         streamRegion
       }
 
+      def convertToBed6(line: String, schema: List[String]): String = {
+        val zipped = (schema zip line.split("\t")).toMap
+        bed6Headers.map { columnName =>
+          var value = zipped.getOrElse(columnName, ".")
+          //  BED6 definition of strand
+          // : Defines the strand. Either "." (=no strand) or "+" or "-".
+          if (columnName == "strand" && (value == "*"))
+            value = "."
+          //BED6 definition of score:
+          // A score between 0 and 1000....
+          if (columnName == "score" && (value == "."))
+            value = "1000"
+          value
+        }.mkString("\t")
+      }
 
       def parseAndCorrect(line: String): String = {
-        val gmqlSchema: GMQLSchema = repository.getSchema(dsName, username)
-        if (bed6 && line != null && line.nonEmpty)
+        if ((ucsc || bed6) && line != null && line.nonEmpty)
           gmqlSchema.schemaType match {
             case GMQLSchemaFormat.GTF =>
               val splitLine: Array[String] = line.split("\t")
               //0:chr 6:strand
-              line + s""" id=${splitLine(0)}${splitLine(6)}; """
+              if (bed6)
+                convertToBed6(line, gtfHeaders)
+              else
+                line + s""" id=${splitLine(0)}${splitLine(6)}; """
             case GMQLSchemaFormat.TAB =>
-              val zipped = (gmqlSchema.fields.map(_.name) zip line.split("\t")).toMap
-              bed6Headers.map { columnName =>
-                var value = zipped.getOrElse(columnName, ".")
-                //  BED6 definition of strand
-                // : Defines the strand. Either "." (=no strand) or "+" or "-".
-                if (columnName == "strand" && (value == "*"))
-                  value = "."
-                //BED6 definition of score:
-                // A score between 0 and 1000....
-                if (columnName == "score" && (value == "."))
-                  value = "1000"
-                value
-              }.mkString("\t")
+              convertToBed6(line, gmqlSchema.fields.map(_.name))
           }
         else
           line
@@ -623,7 +636,7 @@ class DSManager extends Controller {
         val description = trackName
         buf ++= s"""track name=\"$trackName\" description=\"$description\"  useScore=1 visibility=\"3\" $lineSeparator"""
         //      buf ++= s"""track name=\"$trackName\" $newLine"""
-        buf ++= s"${controllers.gmql.routes.DSManager.getRegionStream(datasetName, sample.name).absoluteURL()}?authToken=$token&bed6=true $lineSeparator"
+        buf ++= s"${controllers.gmql.routes.DSManager.getRegionStream(datasetName, sample.name).absoluteURL()}?authToken=$token&ucsc=true $lineSeparator"
       }
       Ok(buf.toString)
     }

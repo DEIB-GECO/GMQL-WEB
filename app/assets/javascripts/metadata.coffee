@@ -374,10 +374,7 @@ testSelect2 = ->
 showTable = (result, transposed, datasetName) ->
 #  $('#displayTable')?.DataTable()?.destroy(true)
   $('#tableDiv').empty()
-  $('#tableDiv').append '<table id="displayTable" ><thead><tr></tr></thead><tfoot><tr></tr></tfoot></table>'
-
-
-
+  $('#tableDiv').append '<table id="displayTable" ><thead><tr></tr></thead></table>'
 
 
   if transposed
@@ -424,15 +421,17 @@ showTable = (result, transposed, datasetName) ->
     return
 
   checkHiddenColumns = (settings) ->
-    if(settings.aoColumns.map((a) -> a.bVisible).reduce((a, b) -> a && b ))
-      $(".buttons-colvis").css("color","black")
+    if(settings.aoColumns.map((a) -> a.bVisible).reduce((a, b) -> a && b))
+      $(".buttons-colvis").css("color", "black")
     else
-     $(".buttons-colvis").css("color","red")
+      $(".buttons-colvis").css("color", "red")
 
 
   # show the table
   table = $('#displayTable').DataTable
 # begin state related
+    scrollY: '50vh'
+    scrollCollapse: true
     initComplete: (settings, json) ->
       checkHiddenColumns(settings)
     stateSave: true
@@ -480,8 +479,8 @@ showTable = (result, transposed, datasetName) ->
 
     columnDefs: [
       {searchable: false, targets: 0}
-      { className: "first_column", targets: 0 }
-      ]
+      {className: "first_column", targets: 0}
+    ]
     dom: '<"datatable-buttons"B><"datatable-lengths"l>ifrtip',
     buttons: [
       'copy'
@@ -555,17 +554,17 @@ showTable = (result, transposed, datasetName) ->
       aria:
         sortAscending: ': activate to sort column ascending'
         sortDescending: ': activate to sort column descending'
-#              initComplete: ->
-#                @api().columns().every ->
-#                  myCol = this
-#                  if(myCol.index() > 0)
-#                    select = $('<select><option value=""></option></select>').appendTo($(myCol.footer())).on('change', ->
-#                      val = $.fn.dataTable.util.escapeRegex($(this).val())
-#                      temp = if val then '^' + val + '$' else ''
-#                      myCol.search(temp, true, false).draw()
-#                    )
-#                    myCol.data().unique().sort().each (d, j) ->
-#                      select.append '<option value="' + d + '">' + d + '</option>'
+  #              initComplete: ->
+  #                @api().columns().every ->
+  #                  myCol = this
+  #                  if(myCol.index() > 0)
+  #                    select = $('<select><option value=""></option></select>').appendTo($(myCol.footer())).on('change', ->
+  #                      val = $.fn.dataTable.util.escapeRegex($(this).val())
+  #                      temp = if val then '^' + val + '$' else ''
+  #                      myCol.search(temp, true, false).draw()
+  #                    )
+  #                    myCol.data().unique().sort().each (d, j) ->
+  #                      select.append '<option value="' + d + '">' + d + '</option>'
   table.on 'column-visibility.dt', (e, settings, column, state) ->
     checkHiddenColumns(settings)
 

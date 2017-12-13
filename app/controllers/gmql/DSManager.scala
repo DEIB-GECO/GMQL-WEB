@@ -597,7 +597,7 @@ class DSManager extends Controller {
 
   @ApiOperation(value = "getUcscLink", hidden = true)
   @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
-  def getUcscLink(datasetName: String) = AuthenticatedAction { implicit request =>
+  def getUcscLink(datasetName: String, position: String) = AuthenticatedAction { implicit request =>
     val username = request.username.get
     //TODO create temp token
     val token = request.authentication.get.authToken
@@ -605,12 +605,12 @@ class DSManager extends Controller {
     if (datasetName.startsWith("public."))
       BadRequest("Cannot load public datasets")
     else
-      Ok(s"${controllers.gmql.routes.DSManager.getUcscList(datasetName).absoluteURL()}?authToken=$token")
+      Ok(s"${controllers.gmql.routes.DSManager.getUcscList(datasetName, position).absoluteURL()}?authToken=$token")
   }
 
   @ApiOperation(value = "getUcscList", hidden = true)
   @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
-  def getUcscList(datasetName: String) = AuthenticatedAction { implicit request =>
+  def getUcscList(datasetName: String, position: String) = AuthenticatedAction { implicit request =>
     // http://genome.ucsc.edu/cgi-bin/hgTracks?org=human&hgt.customText=http://genomic.elet.polimi.it/gmql-rest/dataSet/heatmap/parse2?auth-token=test-best-token
     // http://genome.ucsc.edu/cgi-bin/hgTracks?org=human&hgt.customText=http://www.bioinformatics.deib.polimi.it/canakoglu/test2.txt
     // val username = request.username.getOrElse("")
@@ -627,7 +627,7 @@ class DSManager extends Controller {
       BadRequest("Cannot load public datasets")
     else {
       val buf = new StringBuilder
-      //    buf ++= "browser position chr1:270-1100"
+      buf ++= s"browser position $position $lineSeparator"
       lazy val sampleList = DatasetUtils.getSamples(username, datasetName)
 
       for (sample <- sampleList) {

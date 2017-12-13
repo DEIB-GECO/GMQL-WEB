@@ -1,5 +1,5 @@
 @gmql = "gmql values"
-ucscBaseLink = "http://genome.ucsc.edu/cgi-bin/hgTracks?org=human&hgt.customText="
+MAX_INT = 2147483647
 $ ->
 #  $(window).resize ->
 #    $("#tree-panel").height $(window).height()
@@ -47,8 +47,8 @@ $ ->
     success: (result, textStatus, jqXHR) ->
       used_percantage = (item.value  for item in result.infoList when item.key == 'used_percentage')[0]
       quotaExceeded = (item.value  for item in result.infoList when item.key == 'quota_exceeded')[0]
-      occupied = (item.value  for item in result.infoList when item.key == 'occupied')[0]/1000
-      total = (item.value  for item in result.infoList when item.key == 'total')[0]/1000
+      occupied = (item.value  for item in result.infoList when item.key == 'occupied')[0] / 1000
+      total = (item.value  for item in result.infoList when item.key == 'total')[0] / 1000
 
 
       if used_percantage > 100
@@ -56,7 +56,7 @@ $ ->
       else
         memUsage.width(used_percantage + "%")
 
-      memUsageTooltip.attr("title","#{occupied} MB / #{total} MB").tooltip('fixTitle')
+      memUsageTooltip.attr("title", "#{occupied} MB / #{total} MB").tooltip('fixTitle')
 
       memUsage.text(used_percantage + "%")
 
@@ -204,7 +204,7 @@ glyph_opts = map:
 
             temp = {
               key: if newType == "data-set" then att.name.replace /^public\./, "" else att.name.split("/").pop()
-              title: if newType == "data-set" then ( att.name.replace /^public\./, "") + result else att.name.split("/").pop()
+              title: if newType == "data-set" then (att.name.replace /^public\./, "") + result else att.name.split("/").pop()
               folder: false
               lazy: lazy
               hideCheckbox: hideCheckBox
@@ -437,7 +437,7 @@ deleteDataset = (node) ->
 downloadDataset = () ->
   console.log(".clicked")
   if window.lastSelectedDataSet.startsWith("public.")
-    BootstrapDialog.alert "Public dataset download is not available from this inferface. For downloading them, please visit the <a href='http://www.bioinformatics.deib.polimi.it/GMQLsystem/datasets/'>link</a>. "
+    BootstrapDialog.alert "Public dataset download is not available from this interface. For downloading them, please visit the <a href='http://www.bioinformatics.deib.polimi.it/GMQLsystem/datasets/'>link</a>. "
   else
 #    dialog = BootstrapDialog.alert "Download file is preparing, please wait"
 #    window.lastDownloadDataSet = window.lastSelectedDataSet
@@ -491,25 +491,115 @@ selectFirstPublic = ->
   firstDS.setActive(true)
 
 loadUcsc = ->
-  newWin = window.open('', '_blank');
-  newWin.blur();
   dataSet = window.lastSelectedDataSet
-  console.log(".clicked")
-  call = jsRoutes.controllers.gmql.DSManager.getUcscLink dataSet
-  $.ajax
-    url: call.url
-    type: call.type
-    method: call.method
-    headers: {'X-AUTH-TOKEN': window.authToken}
-    success: (result, textStatus, jqXHR) ->
-      console.log result
-      #      window.open (ucscBaseLink + result)
-      newWin.location = ucscBaseLink + result
-    error: (jqXHR, textStatus, errorThrown) ->
-      BootstrapDialog.alert
-        message: "Cannot prepare UCSC links for dataset #{dataSet}"
-        type: BootstrapDialog.TYPE_WARNING
-      newWin.close()
+  if dataSet.startsWith("public.")
+    BootstrapDialog.alert "Public dataset UCSC browsing is not available from this interface."
+  else
+    console.log(".clicked")
+
+    # get first sample
+    call = jsRoutes.controllers.gmql.DSManager.getSamples dataSet
+    $.ajax
+      url: call.url
+      type: call.type
+      method: call.method
+      headers: {'X-AUTH-TOKEN': window.authToken}
+      contentType: 'json'
+      dataType: 'json'
+      success: (result, textStatus, jqXHR) ->
+        first_sample_name = result.samples[0].name
+        console.log "first_sample_name: #{first_sample_name}"
+        call = jsRoutes.controllers.gmql.DSManager.getRegionStream(dataSet, first_sample_name)
+        # get first sample first line
+        call.url = call.url + "?top=1&bed6=true"
+        $.ajax
+          url: call.url
+          type: call.type
+          method: call.method
+          headers: {'X-AUTH-TOKEN': window.authToken}
+          contentType: 'text'
+          dataType: 'text'
+          success: (result, textStatus, jqXHR) ->
+            splitted = result.split "\t"
+            chr = splitted[0]
+            start = splitted[1]
+            end = splitted[2]
+            if start > end
+              start = end
+            length = end - start + 1
+            start = start - length
+            if start < 1
+              start = 1
+            end = end + length
+            if end > MAX_INT
+              end = MAX_INT
+
+            showUcscDialog(dataSet, chr, start, end)
+
+          error: (jqXHR, textStatus, errorThrown) ->
+            BootstrapDialog.alert
+              message: "Cannot prepare UCSC links for dataset #{dataSet}"
+              type: BootstrapDialog.TYPE_WARNING
+
+      error: (jqXHR, textStatus, errorThrown) ->
+        BootstrapDialog.alert
+          message: "Cannot prepare UCSC links for dataset #{dataSet}"
+          type: BootstrapDialog.TYPE_WARNING
+
+
+showUcscDialog = (dataSet, chr, start, end)->
+  position = "#{chr}:#{start}-#{end}"
+  buttons = []
+  buttons.push
+    label: 'Open'
+    action: (dialogItself) ->
+      newWin = window.open('', '_blank');
+      newWin.blur();
+      call = jsRoutes.controllers.gmql.DSManager.getUcscLink dataSet, $('#position').val()
+      $.ajax
+        url: call.url
+        type: call.type
+        method: call.method
+        headers: {'X-AUTH-TOKEN': window.authToken}
+        success: (result, textStatus, jqXHR) ->
+          console.log result
+          #      window.open (ucscBaseLink + result)
+          ucscBaseLink = "http://genome.ucsc.edu/cgi-bin/hgTracks?db=#{$('#assembly').val()}&hgt.customText="
+          newWin.location = ucscBaseLink + result
+        error: (jqXHR, textStatus, errorThrown) ->
+          BootstrapDialog.alert
+            message: "Cannot prepare UCSC links for dataset #{dataSet}"
+            type: BootstrapDialog.TYPE_WARNING
+          newWin.close()
+      dialogItself.close()
+  buttons.push
+    label: 'Close'
+    action: (dialogItself) ->
+      dialogItself.close()
+
+  BootstrapDialog.show
+    closeByBackdrop: false
+    closeByKeyboard: true
+    title: "USCS of #{dataSet}"
+#    size: BootstrapDialog.SIZE_WIDE
+    message: '<form>
+                <div class="form-group">
+                  <label for="assembly">Assembly</label>
+                  <select class="form-control" id="assembly">
+                    <option value="hg19">Feb. 2009 GRCh37/hg19</option>
+                    <option value="hg38">Dec. 2013 GRCh38/hg38</option>
+                  </select>
+                  <small id="assemblyHelp" class="form-text text-muted">Help text 1.</small>
+                </div>
+                <div class="form-group">
+                  <label for="position">Browser position</label>
+                  <input type="text" class="form-control" id="position" value="' + position + '">
+                  <small id="positionHelp" class="form-text text-muted">Help text 2.</small>
+                </div>
+              </form>'
+    buttons: buttons
+    onhide: ->
+    onshown: (dialogRef) ->
 
 
 changeFullScreen = ->
@@ -571,7 +661,7 @@ showInfoBootstrapDialog = (title, result) ->
       $('#displayTable').DataTable().destroy(true)
       window.tableResult = null
     onshown: (dialogRef) ->
-    # to define which direction will be the result
+# to define which direction will be the result
       window.tableResult = result
       showInfoTable(result)
 
@@ -586,8 +676,6 @@ showInfoTable = (result) ->
   tfoot.append $("<th>Attribute</th>")
   thead.append $("<th>Value</th>")
   tfoot.append $("<th>Value</th>")
-
-
 
 
   data = result.infoList.map (info) -> [info.key, info.value]

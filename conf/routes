@@ -76,9 +76,9 @@ GET           /datasets/:datasetName/:sampleName/info              controllers.g
 GET           /datasets/:datasetName/zip                           controllers.gmql.DSManager.zip(datasetName:String)
 
 
-GET           /datasets/:datasetName/getUCSCList                   controllers.gmql.DSManager.getUcscList(datasetName:String)
+GET           /datasets/:datasetName/getUCSCList/:position                   controllers.gmql.DSManager.getUcscList(datasetName:String, position: String)
 #GET           /datasets/:datasetName/getSampleFile/:sample        controllers.gmql.DSManager.getRegionStream(datasetName:String, sample:String)
-GET           /datasets/:datasetName/getUCSCLink                   controllers.gmql.DSManager.getUcscLink(datasetName:String)
+GET           /datasets/:datasetName/getUCSCLink/:position                   controllers.gmql.DSManager.getUcscLink(datasetName:String, position: String)
 
 GET           /datasets/:datasetName/schema                        controllers.gmql.DSManager.dataSetSchema(datasetName)
 # get generation query of dataset

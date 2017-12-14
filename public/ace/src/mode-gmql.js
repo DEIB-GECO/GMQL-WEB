@@ -33,7 +33,8 @@ var GmqlHighlightRules = function() {
 			+ "|joinby" //DIFFERENCE
 			+ "|aggregate" //COVER(flat/summit/histogram
 			+ "|output" //JOIN
-			+ "|into" //MATERIALIZE
+            + "|into" //MATERIALIZE
+            + "|countsamp"
     );
 
     var dataTypes = (

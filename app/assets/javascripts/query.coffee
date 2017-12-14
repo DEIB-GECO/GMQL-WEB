@@ -91,6 +91,8 @@ runQuery = (fileKey, type) ->
           console.log("error:" + "runQuery: " + jqXHR + "&" + textStatus + "&" + errorThrown)
           if job?
             status = job.status
+          BootstrapDialog.alert $.parseJSON(jqXHR.responseText).error
+
           $("#query-status").val $.parseJSON(jqXHR.responseText).error
           $("#query-status").show()
 

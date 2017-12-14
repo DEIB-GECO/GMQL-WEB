@@ -6,18 +6,19 @@ import controllers.gmql.ResultUtils.{NA, renderedError}
 import io.swagger.annotations.{ApiImplicitParams, ApiOperation, _}
 import it.polimi.genomics.core.GDMSUserClass.GDMSUserClass
 import it.polimi.genomics.core._
-import it.polimi.genomics.core.exception.{UserExceedsQuota, GMQLDagException}
+import it.polimi.genomics.core.exception.{GMQLDagException, UserExceedsQuota}
 import it.polimi.genomics.core.{BinSize, GMQLSchemaFormat, GMQLScript, ImplementationPlatform}
 import it.polimi.genomics.manager.Exceptions.{InvalidGMQLJobException, NoJobsFoundException}
 import it.polimi.genomics.manager.Status._
 import it.polimi.genomics.manager.{GMQLContext, GMQLExecute, GMQLJob}
 import it.polimi.genomics.manager.Launchers.GMQLSparkLauncher
-import it.polimi.genomics.repository.GMQLExceptions.GMQLDSNotFound
+import it.polimi.genomics.repository.GMQLExceptions.{GMQLDSNotFound, GMQLNotValidDatasetNameException}
 import org.apache.spark.SparkContext
 import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc.Controller
 import wrappers.authanticate.AuthenticatedAction
+
 import scala.collection.JavaConversions._
 
 
@@ -82,6 +83,7 @@ class QueryMan extends Controller {
       }
     } catch {
       case _: UserExceedsQuota => renderedError(BAD_REQUEST, "User quota is exceeded")
+      case e: GMQLNotValidDatasetNameException => renderedError(BAD_REQUEST, e.getMessage)
     }
   }
 

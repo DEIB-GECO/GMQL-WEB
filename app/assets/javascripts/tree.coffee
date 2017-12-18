@@ -437,7 +437,7 @@ deleteDataset = (node) ->
 downloadDataset = () ->
   console.log(".clicked")
   if window.lastSelectedDataSet.startsWith("public.")
-    BootstrapDialog.alert "Public dataset download is not available from this interface. For downloading them, please visit the <a href='http://www.bioinformatics.deib.polimi.it/GMQLsystem/datasets/'>link</a>. "
+    BootstrapDialog.alert "Public dataset download is not available from this interface. For downloading them, please visit the <a href='http://www.bioinformatics.deib.polimi.it/GMQLsystem/datasets/' target='_blank'>link</a>. "
   else
 #    dialog = BootstrapDialog.alert "Download file is preparing, please wait"
 #    window.lastDownloadDataSet = window.lastSelectedDataSet

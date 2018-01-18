@@ -580,7 +580,7 @@ showUcscDialog = (dataSet, chr, start, end)->
   BootstrapDialog.show
     closeByBackdrop: false
     closeByKeyboard: true
-    title: "USCS of #{dataSet}"
+    title: "UCSC of #{dataSet}"
 #    size: BootstrapDialog.SIZE_WIDE
     message: '<form>
                 <div class="form-group">
@@ -589,12 +589,10 @@ showUcscDialog = (dataSet, chr, start, end)->
                     <option value="hg19">Feb. 2009 GRCh37/hg19</option>
                     <option value="hg38">Dec. 2013 GRCh38/hg38</option>
                   </select>
-                  <small id="assemblyHelp" class="form-text text-muted">Help text 1.</small>
                 </div>
                 <div class="form-group">
                   <label for="position">Browser position</label>
                   <input type="text" class="form-control" id="position" value="' + position + '">
-                  <small id="positionHelp" class="form-text text-muted">Help text 2.</small>
                 </div>
               </form>'
     buttons: buttons

@@ -530,9 +530,9 @@ loadUcsc = ->
             start = start - length
             if start < 1
               start = 1
-            end = end + length
-            if end > MAX_INT
-              end = MAX_INT
+            end = start + 3 * length - 1
+            if end > MAX_INT/2
+              end = MAX_INT/2
 
             showUcscDialog(dataSet, chr, start, end)
 

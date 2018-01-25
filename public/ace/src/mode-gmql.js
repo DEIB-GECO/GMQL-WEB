@@ -40,7 +40,7 @@ define("ace/mode/gmql_highlight_rules",["require","exports","module","ace/lib/oo
 
         var dataTypes = (
             "int|numeric|decimal|date|varchar|char|bigint|float|double|bit|binary|text|set|timestamp|" +
-            "money|real|number|integer"
+            "money|real|number|integer|string"
         );
 
         var keywordMapper = this.createKeywordMapper({

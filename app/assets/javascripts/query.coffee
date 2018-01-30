@@ -32,7 +32,7 @@ saveQuery = (type) ->
 
   fileName = $('#file-name').val()
   if(fileName == "")
-    BootstrapDialog.alert "Filename cannot be empty"
+    BootstrapDialog.alert "Query name cannot be empty"
   else
     call = jsRoutes.controllers.gmql.QueryBrowser.saveQuery("#{fileName}")
     $("#result_pane").append "\n" + call.url + "\n"
@@ -63,7 +63,7 @@ runQuery = (fileKey, type) ->
 
   fileName = $('#file-name').val()
   if(fileName == "")
-    BootstrapDialog.alert "Filename cannot be empty"
+    BootstrapDialog.alert "Query name cannot be empty"
   else if type == "execute"
     compiled = compileQuery()
     console.log "compiled: " + compiled

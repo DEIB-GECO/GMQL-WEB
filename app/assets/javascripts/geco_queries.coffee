@@ -1,7 +1,7 @@
-helloWorld = () ->
+fillTable = () ->
   ajaxUrl = jsRoutes.controllers.gmql.GecoQueries.gecoQueriesJson().url
   table = $('#geco_queries_table').DataTable(
-    'crossDomain' : true,
+    'crossDomain': true,
     'ajax': ajaxUrl
     'columns': [
       {'data': 'name'}
@@ -14,6 +14,12 @@ helloWorld = () ->
         'visible': false
       }
       {'data': 'description'}
+      {
+        'className': 'details-control'
+        'orderable': false
+        'data': null
+        'defaultContent': ''
+      }
     ]
     'order': [[2, 'asc']]
     'displayLength': 25
@@ -37,7 +43,8 @@ helloWorld = () ->
       table.order([2, 'asc']).draw()
 
 
-  $('#geco_queries_table').on 'dblclick', 'td', (e) ->
+  #  last column click
+  $('#geco_queries_table').on 'click', 'td.details-control', (e) ->
     name = table.row($(this).parents('tr')).data()['name']
     query = table.row($(this).parents('tr')).data()['query']
     showQueryBootstrapDialog("Example query: #{name}", query)
@@ -48,9 +55,9 @@ showGecoQueriesTable = ->
   BootstrapDialog.show
     title: "Example Queries"
     size: BootstrapDialog.SIZE_WIDE
-    message:       $('<div></div>').load(call.url)
+    message: $('<div></div>').load(call.url)
     onshown: ->
-      helloWorld()
+      fillTable()
 
 
 $ ->

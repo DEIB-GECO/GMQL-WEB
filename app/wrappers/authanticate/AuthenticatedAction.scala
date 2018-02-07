@@ -15,7 +15,7 @@ import play.api.libs.json.Json
 import play.api.mvc.Results.Unauthorized
 import play.api.mvc._
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 

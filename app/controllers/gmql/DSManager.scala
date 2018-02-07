@@ -239,7 +239,7 @@ class DSManager extends Controller {
     val bed6: Boolean = request.getQueryString("bed6").flatMap(s => Try(s.toBoolean).toOption).getOrElse(false)
     val ucsc: Boolean = request.getQueryString("ucsc").flatMap(s => Try(s.toBoolean).toOption).getOrElse(false)
 
-    import scala.concurrent.ExecutionContext.Implicits.global
+    import play.api.libs.concurrent.Execution.Implicits.defaultContext
     val transform = Enumeratee.map[String] { line =>
       val newLine = line + lineSeparator
       newLine.getBytes
@@ -401,7 +401,7 @@ class DSManager extends Controller {
     new ApiResponse(code = 404, message = "Dataset or its sample is not found for the user")))
   def getQueryStream(datasetName: String) = AuthenticatedAction {
     implicit request =>
-      import scala.concurrent.ExecutionContext.Implicits.global
+      import play.api.libs.concurrent.Execution.Implicits.defaultContext
       val username: String = request.username.get
       if (datasetName.startsWith("public."))
         renderedError(FORBIDDEN, "Public dataset cannot be downloaded.")

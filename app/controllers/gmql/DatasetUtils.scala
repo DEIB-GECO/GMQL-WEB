@@ -10,7 +10,7 @@ import play.api.mvc.Results._
 import utils.GmqlGlobal
 
 import scala.collection.JavaConversions._
-import scala.concurrent.ExecutionContext.Implicits.global
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import scala.util.Try
 import scala.xml.Elem
 import scalax.file.Path

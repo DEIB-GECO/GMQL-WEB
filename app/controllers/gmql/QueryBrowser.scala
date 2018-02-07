@@ -8,7 +8,7 @@ import play.api.libs.json.Json
 import play.api.mvc.Controller
 import wrappers.authanticate.AuthenticatedAction
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 

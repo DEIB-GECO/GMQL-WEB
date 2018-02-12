@@ -35,6 +35,7 @@ class DatasetMetadata(username: String, datasetName: String) {
     val temp = samples.map(sample => (sample.name, sample.id))
     val nameToId = temp.toMap
     val idToName = temp.map(t => (t._2, t._1)).toMap
+    Logger.debug(s"(nameToId, idToName) done: $username->$datasetName")
     (nameToId, idToName)
   }
   val ids: Set[String] = idToName.keySet
@@ -53,7 +54,9 @@ class DatasetMetadata(username: String, datasetName: String) {
       case _ => None
     }).toSet
     //if there are duplication
+    Logger.debug(s"pre keyBased: $username->$datasetName")
     val keyBased: Map[String, Map[String, Set[Meta]]] = generateKeyBased(fullFile)
+    Logger.debug(s"between keyBased and idBased: $username->$datasetName")
     val idBased: Map[String, Map[String, Set[Meta]]] = fullFile.groupBy(_.id).map(x => (x._1, x._2.groupBy(_.key) /*.map(x => (x._1, x._2.map(_.id)))*/ ))
     Logger.debug(s"Dataset loaded: $username->$datasetName")
     (keyBased, idBased)
@@ -228,7 +231,7 @@ object DatasetMetadata {
 
   // use for preloading dataset of the user, default is public
   def loadCache(username: String = "public") = {
-    //    import scala.concurrent.ExecutionContext.Implicits.global
+    //    import play.api.libs.concurrent.Execution.Implicits.defaultContext
     //    import scala.concurrent.Future
     for (ds <- utils.GmqlGlobal.repository.listAllDSs(username)) {
       // in order to load all public dataset in pararllel run as a future execution

@@ -111,9 +111,8 @@ class QueryMan extends Controller {
 
         val server = GMQLExecute()
         val script = GMQLScript("", "", serializedDAG)
-        val binsize = BinSize(5000, 1000)
-        val emptyContext: SparkContext = null
-        val gmqlContext = new GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat, binSize = binsize, username = username, sc = emptyContext)
+        val userClass = request.user.get.userType
+        val gmqlContext = GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat, username = username, userClass = userClass, checkQuota = true)
         val job = server.registerDAG(script, gmqlContext)
         server.execute(job)
         val datasets = server.getJobDatasets(job.jobId).map(Dataset(_))
@@ -150,18 +149,14 @@ class QueryMan extends Controller {
 
   private def registerJob(username: String, userClass: GDMSUserClass, query: String, queryName: String, outputFormat: GMQLSchemaFormat.Value) = {
     val server = GMQLExecute()
-    val gmqlScript = new GMQLScript(query, queryName)
-    val binSize = new BinSize(5000, 5000, 1000)
-    val emptyContext: SparkContext = null
-    val gmqlContext = new GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat, binSize = binSize, username = username, sc = emptyContext, userClass = userClass, checkQuota = true)
+    val gmqlScript = GMQLScript(query, queryName)
+    val gmqlContext = GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat, username = username, userClass = userClass, checkQuota = true)
     server.registerJob(gmqlScript, gmqlContext, "")
   }
 
   private def compileJob(username: String, query: String, queryName: String, outputFormat: GMQLSchemaFormat.Value) = {
-    val gmqlScript = new GMQLScript(query, queryName)
-    val binSize = new BinSize(5000, 5000, 1000)
-    val emptyContext: SparkContext = null
-    val gmqlContext = new GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat, binSize = binSize, username = username, sc = emptyContext)
+    val gmqlScript =  GMQLScript(query, queryName)
+    val gmqlContext = GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat,  username = username, checkQuota = false)
     val job: GMQLJob = new GMQLJob(gmqlContext, gmqlScript, gmqlContext.username)
     job.compile()
     job

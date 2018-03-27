@@ -904,11 +904,11 @@ loadContext = -> $('#tree').contextmenu
       cmd: 'showQuery'
       uiIcon: 'ui-icon-note'
     }
-    {
-      title: 'Show vocabulary'
-      cmd: 'showVocabulary'
-      uiIcon: 'ui-icon-note'
-    }
+#    {
+#      title: 'Show vocabulary'
+#      cmd: 'showVocabulary'
+#      uiIcon: 'ui-icon-note'
+#    }
     {
       title: 'Rename'
       cmd: 'renameDataset'

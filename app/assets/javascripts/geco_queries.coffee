@@ -1,6 +1,7 @@
 fillTable = () ->
   ajaxUrl = jsRoutes.controllers.gmql.GecoQueries.gecoQueriesJson().url
   table = $('#geco_queries_table').DataTable(
+    "bSort": false
     'crossDomain': true,
     'ajax': ajaxUrl
     'columns': [

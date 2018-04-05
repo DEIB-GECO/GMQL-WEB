@@ -20,7 +20,7 @@ class GecoQueries @Inject()(ws: WSClient, cached: Cached)(implicit ec: Execution
   }
 
   //TODO add cache here
-  def gecoQueriesJson = //cached.status(_ => "homePage", 200, 3600) { //ten minutes
+  def gecoQueriesJson = cached.status(_ => "homePage", 200, 3600) { //1 hour
     Action.async {
       val request = ws.url("http://www.bioinformatics.deib.polimi.it/geco_queries/geco_queries.json").get
       Logger.debug("got example query")
@@ -29,5 +29,5 @@ class GecoQueries @Inject()(ws: WSClient, cached: Cached)(implicit ec: Execution
         Ok(response.json)
       }
     }
-  //}
+  }
 }

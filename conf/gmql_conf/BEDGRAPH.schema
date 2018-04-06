@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <gmqlSchemaCollection name="HG19_ENCODE_BEDGRAPH" xmlns="http://genomic.elet.polimi.it/entities">
-    <gmqlSchema type="DEL">
-        <field type="STRING">chr</field>
+    <gmqlSchema type="TAB">
+        <field type="STRING">chrom</field>
         <field type="LONG">start</field>
         <field type="LONG">end</field>
-        <field type="DOUBLE">score</field>
+        <field type="INTEGER">score</field>
     </gmqlSchema>
 </gmqlSchemaCollection>

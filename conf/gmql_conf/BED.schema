@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<gmqlSchemaCollection name="HG19_ENCODE_BED" xmlns="http://genomic.elet.polimi.it/entities">
+<gmqlSchemaCollection name="BED6" xmlns="http://genomic.elet.polimi.it/entities">
     <gmqlSchema type="TAB">
         <field type="STRING">chrom</field>
         <field type="LONG">start</field>

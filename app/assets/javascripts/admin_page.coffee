@@ -26,7 +26,7 @@ getActionsHTML = (userTypes, username) ->
 
   button_id = "usertype_btn_" + username
 
-  "<button id='#{button_id}' class='btn btn-primary #{"disabled" if username==window.username}'
+  "<button id='#{button_id}' class='btn btn-primary #{"disabled" if username==window.user.username}'
            data-username='#{username}' type='button'>Update</button>"
 
 getSelectHTML = (userTypes, username, type) ->
@@ -76,7 +76,7 @@ getUsers = (userTypes) ->
 
       # set callback for update buttons
       for selUser in result.users
-        if selUser.username!=window.username
+        if selUser.username!=window.user.username
           $("#usertype_btn_"+selUser.username).click( ()-> updateUserType($(this).attr("data-username")))
 
     error: (jqXHR) ->

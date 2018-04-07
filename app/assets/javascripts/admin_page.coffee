@@ -35,7 +35,7 @@ getSelectHTML = (userTypes, username, type) ->
 
   "<select id='#{select_id}' class='form-control'>" +
     (userTypes.map((userType) ->
-      "<option #{ 'selected' if userType == type }>#{userType}</option>")
+      "<option #{  if userType == type then 'selected' else '' }>#{userType}</option>")
       .reduce (x, y) -> "#{x}\n#{y}") +
   "</select>"
 
@@ -51,33 +51,43 @@ getUsers = (userTypes) ->
     dataType: 'json'
     success: (result, textStatus, jqXHR) ->
 
-      registered_users =  result.users.filter( (user) -> user["userType"]!="GUEST")
-      guest_count = result.users.length - registered_users.length
+      if jqXHR.status == 403 || jqXHR.status == 401
+        window.location = jsRoutes.controllers.Application.gmql().url
+      else
+        registered_users =  result.users.filter( (user) -> user["userType"]!="GUEST")
+        guest_count = result.users.length - registered_users.length
 
-      $("#users_description").html("There are currently <b>#{registered_users.length}</b> registered users and <b>#{guest_count}</b> guest users.")
+        $("#users_description").html("There are currently <b>#{registered_users.length}</b> registered users and <b>#{guest_count}</b> guest users.")
 
-      $('#users_table').DataTable(
-        data: registered_users
-        columns: [
-          {'data': 'username'}
-          {'data': 'firstName'}
-          {'data': 'lastName'}
-          {'data': 'emailAddress'}
-          {
-            'render' :  ( data, type, full ) -> getSelectHTML(userTypes, full.username, full.userType)
-          }
-          {
-            'render' :  ( data, type, full ) -> getActionsHTML(userTypes, full.username)
-          }
-        ]
+        $('#users_table').DataTable(
+          data: registered_users
+          columns: [
+            {'data': 'username'}
+            {'data': 'firstName'}
+            {'data': 'lastName'}
+            {'data': 'emailAddress'}
+            {
+              'render' :  ( data, type, full ) -> getSelectHTML(userTypes, full.username, full.userType)
+            }
+            {
+              'render' :  ( data, type, full ) -> getActionsHTML(userTypes, full.username),
+              'searchable':'false'
+            }
+            {'data':'userType'}
 
-        'displayLength': 25
-      )
+          ]
+          columnDefs: [
+            { targets: [-3], searchable:false},
+            { targets: [-1], visible: false}
+          ]
 
-      # set callback for update buttons
-      for selUser in result.users
-        if selUser.username!=window.user.username
-          $("#usertype_btn_"+selUser.username).click( ()-> updateUserType($(this).attr("data-username")))
+          'displayLength': 25
+        )
+
+        # set callback for update buttons
+        for selUser in result.users
+          if selUser.username!=window.user.username
+            $("#usertype_btn_"+selUser.username).click( ()-> updateUserType($(this).attr("data-username")))
 
     error: (jqXHR) ->
       if jqXHR.status == 403 || jqXHR.status == 401

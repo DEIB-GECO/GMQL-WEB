@@ -45,6 +45,7 @@ object UserDao {
 
   def updateShaPassword(id: Long, shaPassword: Array[Byte]) = dbConfig.db.run(users.filter(_.id === id).map(_.shaPassword).update(shaPassword))
 
+  def updateType(username: String, newType: GDMSUserClass) = dbConfig.db.run( users.filter(_.username === username).map(_.userType).update(newType))
 
 }
 

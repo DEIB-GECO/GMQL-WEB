@@ -22,6 +22,7 @@ class JavascriptRoute extends Controller {
         //
         controllers.routes.javascript.Application.sampleMetadata,
         controllers.routes.javascript.Application.gmql,
+        controllers.routes.javascript.Application.adminPage,
         //
         controllers.gmql.routes.javascript.DSManager.getDatasets,
         controllers.gmql.routes.javascript.DSManager.getSamples,
@@ -81,7 +82,11 @@ class JavascriptRoute extends Controller {
 
         controllers.gmql.routes.javascript.GecoQueries.gecoQueries,
 
-        controllers.gmql.routes.javascript.GecoQueries.gecoQueriesJson
+        controllers.gmql.routes.javascript.GecoQueries.gecoQueriesJson,
+
+        controllers.gmql.routes.javascript.AdminManager.getUsers,
+        controllers.gmql.routes.javascript.AdminManager.getUserTypes,
+        controllers.gmql.routes.javascript.AdminManager.updateType
 
 
 

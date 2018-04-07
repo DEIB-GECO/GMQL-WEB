@@ -13,6 +13,7 @@ init = () ->
       dataType: 'json'
       headers: {"X-AUTH-TOKEN": window.authToken}
       success: (result, textStatus, jqXHR) ->
+        window.user = result
         displayLoggedIn(result.fullName)
 #        $( "input[name='X-AUTH-TOKEN']" ).val(window.authToken)
       error: (jqXHR, textStatus, errorThrown) ->
@@ -52,6 +53,8 @@ displayLoggedIn = (fullName) ->
   $("#login").append $("<span>").text("Hello " + fullName + " ") if fullName?
   $("#login").append $("<button class='btn btn-default navbar-btn'>").text("Logout").click(doLogout)
   $("#signInDropdown").hide()
+  if window.user.userType == "ADMIN"
+    $("#menu-items").append("<li id='admin-page-nav'><a href='#{jsRoutes.controllers.Application.adminPage().url}'>Admin Page</a></li>")
   swaggerUserName? fullName
 
 
@@ -74,6 +77,7 @@ displayLoggedIn = (fullName) ->
 
 doLogin = (data) ->
   token = data.authToken
+  window.user = data
   window.authToken = token # global state holder for the auth token
 #  document.cookie = "auth-token" + "=" + token + "; expires=Tue, 19 Jan 2038 03:14:07 UTC"
 #  $.cookie('authToken', token , { expires: 2147483647 });
@@ -99,6 +103,8 @@ doLogout = (event) ->
       displayError("logout failed:" + jqXHR + "&" + textStatus + "&" + errorThrown)
     displayGuestButton()
     Cookies.remove('authToken')
+    $("#admin-page-nav").remove()
+    dispatchEvent(new Event('logout'))
     window.authToken = undefined
 #    document.cookie = "auth-token" + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT"
     console.log "document.cookie: " + document.cookie
@@ -160,6 +166,7 @@ forgotPassword = () ->
     BootstrapDialog.alert "Please fill the username field in the login form"
   else
     call = jsRoutes.controllers.SecurityController.passwordRecoveryEmail(username)
+
     $.ajax
       url: call.url
       type: call.type

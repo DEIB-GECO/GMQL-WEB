@@ -50,6 +50,10 @@ class Application @Inject()(ws: WSClient) extends Controller {
     //    (new DSManager).dataSetAll.apply(request)
   }
 
+  def adminPage = Action { implicit request =>
+    Ok(views.html.admin_main())
+  }
+
   @ApiModelProperty(hidden = true)
   def swagger = Action {
     request =>

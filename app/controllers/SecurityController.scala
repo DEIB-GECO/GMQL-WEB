@@ -186,10 +186,14 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
       user match {
         case Some(u) => Some(u.fullName)
         case _ => None
+      },
+      user match {
+        case Some(u) => Some(u.userType.toString)
+        case _ => None
       })
   }
 
-  def loginResult(authToken: Option[String], username: Option[String], fullName: Option[String])(implicit request: RequestHeader): Result = {
+  def loginResult(authToken: Option[String], username: Option[String], fullName: Option[String], userType: Option[String])(implicit request: RequestHeader): Result = {
     render {
       // @formatter:off
       case Accepts.Xml() =>
@@ -204,6 +208,9 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
             {if (fullName.isDefined)
             <fullName>{fullName.get}</fullName>
             }
+            {if (userType.isDefined)
+            <userType>{userType.get}</userType>
+            }
           </user>
         Ok(xmlResult)
       // @formatter:on
@@ -215,6 +222,10 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
           }) ++ (
           fullName match {
             case Some(u) => Json.obj("fullName" -> u)
+            case _ => Json.obj()
+          }) ++ (
+          userType match {
+            case Some(u) => Json.obj("userType" -> u)
             case _ => Json.obj()
           })
         Ok(result)

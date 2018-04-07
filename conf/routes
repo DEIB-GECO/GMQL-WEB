@@ -19,6 +19,8 @@ GET           /                                                    controllers.A
 GET           /help                                                controllers.Application.gmqlRestHelp
 ## GMQL help/documantation page
 GET           /gmqlHelp                                            controllers.Application.gmqlHelp
+## Admin Page
+GET           /admin                                               controllers.Application.adminPage
 #
 #
 ## java script reverse router, all the javascript ajax call url load from the file below
@@ -210,3 +212,9 @@ GET           /metadata/:totalCount/:list                          controllers.A
 
 
 #GET           /test                                              controllers.Application.test
+
+# ADMIN
+# returns the list of users with their information
+GET         /users                                                  controllers.gmql.AdminManager.getUsers
+GET         /users/types                                            controllers.gmql.AdminManager.getUserTypes
+PUT         /users/:username/type                                   controllers.gmql.AdminManager.updateType(username)

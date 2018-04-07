@@ -326,6 +326,7 @@ object SwaggerUtils {
   final val swaggerQueryBrowser = "Query Browser"
   final val swaggerQueryManager = "Query Execution"
   final val swaggerSecurityController = "Security controller"
+  final val swaggerSystemAdmin ="System administration"
 }
 
 case class MatrixResult(samples: Seq[Sample],

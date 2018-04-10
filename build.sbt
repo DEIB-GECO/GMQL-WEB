@@ -95,7 +95,7 @@ libraryDependencies += "org.eclipse.persistence" % "eclipselink" % "2.6.3"
 
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
-val gmql_version = "1.0-logging-SNAPSHOT"
+val gmql_version = "1.0-SNAPSHOT"
 
 libraryDependencies += "it.polimi.genomics" % "Compiler" % gmql_version
 libraryDependencies += "it.polimi.genomics" % "GMQL-Core" % gmql_version

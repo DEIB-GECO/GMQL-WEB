@@ -11,11 +11,12 @@ lazy val `GMQL-REST` = (project in file(".")).enablePlugins(PlayScala, SbtWeb)
 //lazy val `gmql_rest2` = (project in file(".")).enablePlugins(PlayScala, PlayEbean, PlayJava)
 
 scalaVersion := "2.11.8"
-//scalacOptions += "-feature"
+
+logLevel := Level.Info
+
 
 //updated to last version of h2
 libraryDependencies += "com.h2database" % "h2" % "1.4.192"
-
 
 libraryDependencies ++= Seq(
   cache,

@@ -3,7 +3,7 @@ import sbt.ConflictWarning
 import scala.xml.transform.{RewriteRule, RuleTransformer}
 import scala.xml.{Elem, Node, Text, XML}
 
-name := "GMQL-REST"
+name := "gmql-web"
 
 version := "1.0-SNAPSHOT"
 

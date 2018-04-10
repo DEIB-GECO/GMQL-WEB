@@ -1,5 +1,25 @@
 language: scala
 jdk:
-    - oraclejdk8
+  - oraclejdk8
 scala:
-   - 2.11.8
+  - 2.11.8
+
+before_deploy:
+-  PROJECT_NAME=`grep ^name build.sbt  | sed s"/name.*:=.*\"\(.*\)\"/\1/"`
+-  VERSION=`grep ^version build.sbt  | sed s"/version.*:=.*\"\(.*\)\"/\1/"`
+-  FILE=target/universal/$PROJECT_NAME-$VERSION.zip
+-  echo "VARAIBLES:"
+-  echo $PROJECT_NAME
+-  echo $VERSION
+-  echo $FILE
+-  echo $TRAVIS_TAG
+deploy:
+  provider: releases
+  api_key:
+    secure: jKKiHcqPW+8Ejvyl6wnRP0AOJ/JOAoBpliHpsGCriTrXlWciROt5MDjDj7aWxymEh58hDwCJiFmnKTIz5A2Pxy2vPkIcXE+hr1iQ/DvZgSPKC5K7VHPyUwkU3tTIVrxJUqIx27uRNUo7C7xSpcUEdTueNpSvm1yXwcro3bUYECdkTOsOLpxzM+s9xKEujK2JpVcGkudG0E3lJzuuMJVVNE59q+ofTNnBH6XhpzpeC0zkQhas2R/Ku4WccJ3aAPC8Y22nUsUcnOv7GSdsncDZU9wp4ESjTi1QB7EvsF5LuaYXuGo1oTR7n9AeKq06h//bCSTsYKa5/AodmMzCRwNGk6+JjfOIq5SYaoSZXiBQt9fcFFM36DSgnR/c1JHMhnCYIioGiEMeNNhbllMvTFkTA2PR5Pw6+qdqDL6QtmJ8IGEyyzIrUbOZZrrkm1sqvcqTeDZnBuJuj2ayT2U+o0ttb5Eb/gYFLbWiPomd2k7NSVhSdcG1HJNYzgI2T1xkiFgky0Rk/p36uwnmxiUIM8j4GyIcd90ISeWb9BwQQMD7IaGLnfk8P6A7DAS/Kj3644Z2dV7RBpC0AjLTXBho44Kzzj5Mml1MTaTrxsZ9B1PTIebRONJTHyR949lv5RzQ4Ih/F8Och8IomfT0CA95vXx55tY42evrqzeDhPIZ2IoMqE4=
+  file: $FILE
+  on:
+    repo: DEIB-GECO/GMQL-WEB
+  skip_cleanup: true
+  overwrite: true
+

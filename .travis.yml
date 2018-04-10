@@ -18,6 +18,7 @@ before_deploy:
 -  echo $TRAVIS_TAG
 -  if [ -z "$TRAVIS_TAG" ]; then TRAVIS_TAG=$VERSION; fi
 -  echo $TRAVIS_TAG
+-  ls target/universal/
 deploy:
   provider: releases
   api_key:

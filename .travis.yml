@@ -4,6 +4,9 @@ jdk:
 scala:
   - 2.11.8
 
+script:
+   - sbt ++$TRAVIS_SCALA_VERSION test dist
+
 before_deploy:
 -  PROJECT_NAME=`grep ^name build.sbt  | sed s"/name.*:=.*\"\(.*\)\"/\1/"`
 -  VERSION=`grep ^version build.sbt  | sed s"/version.*:=.*\"\(.*\)\"/\1/"`

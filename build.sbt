@@ -1,8 +1,11 @@
 import sbt.ConflictWarning
 
+import scala.xml.transform.{RewriteRule, RuleTransformer}
+import scala.xml.{Elem, Node, Text, XML}
+
 name := "GMQL-REST"
 
-version := "1.1"
+version := "1.0"
 
 lazy val `GMQL-REST` = (project in file(".")).enablePlugins(PlayScala, SbtWeb)
 //lazy val `gmql_rest2` = (project in file(".")).enablePlugins(PlayScala, PlayEbean, PlayJava)
@@ -15,8 +18,8 @@ libraryDependencies += "com.h2database" % "h2" % "1.4.192"
 
 
 libraryDependencies ++= Seq(
-//  evolutions,
-//  jdbc,
+  //  evolutions,
+  //  jdbc,
   cache,
   ws,
   //  "org.webjars" % "jquery" % "2.2.1",
@@ -90,25 +93,17 @@ libraryDependencies += "org.eclipse.persistence" % "eclipselink" % "2.6.3"
 //libraryDependencies += "io.spray" % "spray-json_2.10" % "1.3.2"
 
 
-//libraryDependencies += "orchestrator.genomics" % "orchestrator" % "7.1"
-//libraryDependencies += "it.polimi.genomics" % "GMQL-Cli" % "2.0"
-//libraryDependencies += "it.polimi.genomics" % "GMQL-Spark" % "3.0"
-//libraryDependencies += "it.polimi.genomics" % "GMQL-Server" % "2.0"
-//libraryDependencies += "it.polimi.genomics" % "GMQL-Core" % "2.0"
-//libraryDependencies += "it.polimi.genomics" % "Compiler" % "2.0"
-//libraryDependencies += "it.polimi.genomics" % "GMQL-R" % "3.0"
-//libraryDependencies += "it.polimi.genomics" % "GMQL-Repository" % "1.0"
-//libraryDependencies += "it.polimi.genomics" % "GMQL-Flink" % "2.0"
-//libraryDependencies += "it.polimi.genomics" % "GMQL-SManager" % "2.0"
+resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
-//libraryDependencies += "orchestrator.genomics" % "orchestrator" % "7.1"
-libraryDependencies += "it.polimi.genomics" % "Compiler" % "1.0-SNAPSHOT"
-libraryDependencies += "it.polimi.genomics" % "GMQL-Core" % "1.0-SNAPSHOT"
-//libraryDependencies += "it.polimi.genomics" % "GMQL-Flink" % "3.0"
-libraryDependencies += "it.polimi.genomics" % "GMQL-Repository" % "1.0-SNAPSHOT"
-libraryDependencies += "it.polimi.genomics" % "GMQL-Server" % "1.0-SNAPSHOT"
-libraryDependencies += "it.polimi.genomics" % "GMQL-SManager" % "1.0-SNAPSHOT"
-libraryDependencies += "it.polimi.genomics" % "GMQL-Spark" % "1.0-SNAPSHOT"
+val gmql_version = "1.0-logging-SNAPSHOT"
+
+libraryDependencies += "it.polimi.genomics" % "Compiler" % gmql_version
+libraryDependencies += "it.polimi.genomics" % "GMQL-Core" % gmql_version
+libraryDependencies += "it.polimi.genomics" % "GMQL-Repository" % gmql_version
+libraryDependencies += "it.polimi.genomics" % "GMQL-Server" % gmql_version
+libraryDependencies += "it.polimi.genomics" % "GMQL-SManager" % gmql_version
+libraryDependencies += "it.polimi.genomics" % "GMQL-Spark" % gmql_version
+libraryDependencies += "it.polimi.genomics" % "GMQL-Cli" % gmql_version classifier "jar-with-dependencies"
 
 
 //  [error]    com.typesafe.play:play-ws _2.11, _2.10
@@ -137,3 +132,41 @@ libraryDependencies += "io.swagger" % "swagger-core" % "1.5.10"
 
 //libraryDependencies ~= { _.map(_.exclude("org.slf4j", "slf4j-log4j12")) }
 //libraryDependencies ~= { _.map(_.exclude("com.fasterxml.jackson.module", "jackson-module-scala_2.10")) }
+
+
+val copyJarsTask = taskKey[Unit]("Copies the required jars to the lib folder")
+
+copyJarsTask := {
+  val jar_name = "GMQL-Cli-"+ gmql_version +"-jar-with-dependencies.jar"
+  val gmql_lib_path = "gmql_lib"
+  println("Copying " + jar_name + " to " + gmql_lib_path)
+
+  val folder = new File(gmql_lib_path)
+  (managedClasspath in Compile).value.files.foreach(f => {
+    if(f.getName == jar_name)
+      IO.copyFile(f, folder / f.getName)
+  })
+
+  // mofify the executor.xml to match the downloaded CLI jar
+
+  val modifyCLIJarRule = new RewriteRule {
+    override def transform(n: Node): Seq[Node] = n match {
+      case elem: Elem if elem.label == "property" && elem.attribute("name").get.head.text == "CLI_JAR_NAME" =>
+        elem.copy(child = Text(jar_name))
+      case n => n
+    }
+  }
+
+  val executor_xml_path = "./conf/gmql_conf/executor.xml"
+  println("Changing the executor.xml at " + executor_xml_path)
+  val transformer = new RuleTransformer(modifyCLIJarRule)
+  val executor_xml = XML.loadFile(executor_xml_path)
+  val new_executor_xml = transformer(executor_xml)
+  XML.save(executor_xml_path, new_executor_xml)
+}
+
+compile in Compile := {
+  val x = (compile in Compile).value
+  copyJarsTask.value
+  x
+}

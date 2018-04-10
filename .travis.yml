@@ -20,6 +20,8 @@ deploy:
   file: $FILE
   on:
     repo: DEIB-GECO/GMQL-WEB
+    all_branches: true
+    condition: $TRAVIS_BRANCH == "master"
   skip_cleanup: true
   overwrite: true
 

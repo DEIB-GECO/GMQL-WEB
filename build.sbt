@@ -12,6 +12,7 @@ lazy val `GMQL-REST` = (project in file(".")).enablePlugins(PlayScala, SbtWeb)
 
 scalaVersion := "2.11.8"
 
+logLevel := Level.Warn
 
 
 //updated to last version of h2

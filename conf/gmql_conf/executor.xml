@@ -1,16 +1,15 @@
-<?xml version = "1.0" encoding="UTF-8" standalone="yes"?>
-<gmqlProperties xmlns = "http://genomic.elet.polimi.it/impl">
-  <property name = "SPARK_HOME">/usr/local/spark/</property>
-  <property name = "CLI_JAR_NAME">GMQL-Cli-1.0-SNAPSHOT-jar-with-dependencies.jar</property>
-  <property name = "CLI_CLASS">it.polimi.genomics.cli.GMQLExecuteCommand</property>
-  <property name = "LAUNCHER_MODE">CLUSTER</property>
-  <property name = "LIB_DIR_LOCAL">/Users/canakoglu/.m2/repository/it/polimi/genomics/GMQL-Cli/1.0-SNAPSHOT/</property>
-  <property name = "LIB_DIR_HDFS">/user/repository/lib/</property>
+<gmqlProperties xmlns="http://genomic.elet.polimi.it/impl">
+  <property name="SPARK_HOME">/usr/local/spark/</property>
+  <property name="CLI_JAR_NAME">GMQL-Cli-1.0-SNAPSHOT-jar-with-dependencies.jar</property>
+  <property name="CLI_CLASS">it.polimi.genomics.cli.GMQLExecuteCommand</property>
+  <property name="LAUNCHER_MODE">CLUSTER</property>
+  <property name="LIB_DIR_LOCAL">conf/gmql_lib/</property>
+  <property name="LIB_DIR_HDFS">/user/repository/lib/</property>
 
-  <property name="SPARK_CUSTOM" user-category="GUEST"  spark-property="spark.cores.max">6</property>
-  <property name="SPARK_CUSTOM" user-category="BASIC"  spark-property="spark.cores.max">12</property>
-  <property name="SPARK_CUSTOM" user-category="PRO"    spark-property="spark.cores.max">15</property>
-  <property name="SPARK_CUSTOM" user-category="ADMIN"  spark-property="spark.cores.max">18</property>
+  <property name="SPARK_CUSTOM" user-category="GUEST" spark-property="spark.cores.max">6</property>
+  <property name="SPARK_CUSTOM" user-category="BASIC" spark-property="spark.cores.max">12</property>
+  <property name="SPARK_CUSTOM" user-category="PRO" spark-property="spark.cores.max">15</property>
+  <property name="SPARK_CUSTOM" user-category="ADMIN" spark-property="spark.cores.max">18</property>
   <property name="SPARK_CUSTOM" user-category="PUBLIC" spark-property="spark.cores.max">18</property>
 
 </gmqlProperties>

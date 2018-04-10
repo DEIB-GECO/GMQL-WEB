@@ -258,7 +258,15 @@ class DSManager extends Controller {
 
     //    else {
     try {
-      val gmqlSchema: GMQLSchema = repository.getSchema(dsName, username)
+      lazy val gmqlSchema: GMQLSchema = repository.getSchema(dsName, username)
+      lazy val outputName =
+        repository
+          .listDSSamples(dsName, username)
+          .find(_.name.split("\\.").head.endsWith(sampleName))
+          .map(s => if (isMeta) s.meta else s.name)
+          .map(_.split("/").last)
+          .get
+
       //TODO use ARM solution, if it is possible
       val (streamRegion, streamMeta) = repository.sampleStreams(dsName, username, sampleName)
       val headerContent: Enumerator[Array[Byte]] =
@@ -344,9 +352,18 @@ class DSManager extends Controller {
         }
         fileStream.through(transform)
       }
+
+
+      println
+      println
+      println
+      println(outputName)
+      println
+      println
+      println
       Ok.chunked(headerContent >>> fileContent).withHeaders(
         "Content-Type" -> "text/plain",
-        "Content-Disposition" -> s"attachment; filename=$dsName-$sampleName${if (isMeta) ".meta" else ""}"
+        "Content-Disposition" -> s"attachment; filename=$outputName"
       )
     } catch {
       case _: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found: $dsName")

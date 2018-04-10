@@ -13,6 +13,8 @@ before_deploy:
 -  echo $VERSION
 -  echo $FILE
 -  echo $TRAVIS_TAG
+-  if [ -z "$TRAVIS_TAG" ]; then TRAVIS_TAG=$VERSION; fi
+-  echo $TRAVIS_TAG
 deploy:
   provider: releases
   api_key:

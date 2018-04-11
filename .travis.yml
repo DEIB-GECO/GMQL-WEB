@@ -12,6 +12,8 @@ before_deploy:
 -  echo $PROJECT_NAME
 -  echo $VERSION
 -  echo $FILE
+-  git config user.name "Travis CI"
+-  git config user.email "$COMMIT_AUTHOR_EMAIL"
 -  git push --delete origin $VERSION || true
 -  echo $TRAVIS_TAG
 -  if [ -z "$TRAVIS_TAG" ]; then TRAVIS_TAG=$VERSION; fi

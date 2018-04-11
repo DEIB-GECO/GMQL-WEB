@@ -6,10 +6,10 @@
   <property name="LIB_DIR_LOCAL">conf/gmql_lib/</property>
   <property name="LIB_DIR_HDFS">/user/repository/lib/</property>
 
-  <property name="SPARK_CUSTOM" user-category="GUEST" spark-property="spark.cores.max">6</property>
-  <property name="SPARK_CUSTOM" user-category="BASIC" spark-property="spark.cores.max">12</property>
-  <property name="SPARK_CUSTOM" user-category="PRO" spark-property="spark.cores.max">15</property>
-  <property name="SPARK_CUSTOM" user-category="ADMIN" spark-property="spark.cores.max">18</property>
-  <property name="SPARK_CUSTOM" user-category="PUBLIC" spark-property="spark.cores.max">18</property>
+  <property spark-property="spark.cores.max" user-category="GUEST" name="SPARK_CUSTOM">6</property>
+  <property spark-property="spark.cores.max" user-category="BASIC" name="SPARK_CUSTOM">12</property>
+  <property spark-property="spark.cores.max" user-category="PRO" name="SPARK_CUSTOM">15</property>
+  <property spark-property="spark.cores.max" user-category="ADMIN" name="SPARK_CUSTOM">18</property>
+  <property spark-property="spark.cores.max" user-category="PUBLIC" name="SPARK_CUSTOM">18</property>
 
 </gmqlProperties>

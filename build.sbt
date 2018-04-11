@@ -1,4 +1,6 @@
+import org.apache.commons.io.FileUtils
 import sbt.ConflictWarning
+import sbt.Keys.libraryDependencies
 
 import scala.xml.transform.{RewriteRule, RuleTransformer}
 import scala.xml.{Elem, Node, Text, XML}
@@ -7,8 +9,7 @@ name := "gmql-web"
 
 version := "1.0-SNAPSHOT"
 
-lazy val `GMQL-REST` = (project in file(".")).enablePlugins(PlayScala, SbtWeb)
-//lazy val `gmql_rest2` = (project in file(".")).enablePlugins(PlayScala, PlayEbean, PlayJava)
+lazy val `gmql-web` = (project in file(".")).enablePlugins(PlayScala, SbtWeb)
 
 scalaVersion := "2.11.8"
 
@@ -33,7 +34,7 @@ libraryDependencies += "com.github.tototoshi" %% "slick-joda-mapper" % "2.0.0"
 
 unmanagedResourceDirectories in Test <+= baseDirectory(_ / "target/web/public/test")
 
-resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases"
+//resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases"
 
 libraryDependencies += "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.3"
 
@@ -73,13 +74,19 @@ resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repos
 
 val gmql_version = "1.0-SNAPSHOT"
 
-libraryDependencies += "it.polimi.genomics" % "Compiler" % gmql_version
-libraryDependencies += "it.polimi.genomics" % "GMQL-Core" % gmql_version
-libraryDependencies += "it.polimi.genomics" % "GMQL-Repository" % gmql_version
-libraryDependencies += "it.polimi.genomics" % "GMQL-Server" % gmql_version
-libraryDependencies += "it.polimi.genomics" % "GMQL-SManager" % gmql_version
-libraryDependencies += "it.polimi.genomics" % "GMQL-Spark" % gmql_version
-libraryDependencies += "it.polimi.genomics" % "GMQL-Cli" % gmql_version classifier "jar-with-dependencies"
+
+libraryDependencies ++= Seq(
+  "it.polimi.genomics" % "Compiler",
+  "it.polimi.genomics" % "GMQL-Core",
+  "it.polimi.genomics" % "GMQL-Repository",
+  "it.polimi.genomics" % "GMQL-Server",
+  "it.polimi.genomics" % "GMQL-SManager",
+  "it.polimi.genomics" % "GMQL-Spark"
+).map(_ % gmql_version)
+
+
+
+libraryDependencies += "it.polimi.genomics" % "GMQL-Cli" % gmql_version % "provided" classifier "jar-with-dependencies"
 
 
 routesGenerator := InjectedRoutesGenerator
@@ -95,6 +102,7 @@ val copyJarsTask = taskKey[Unit]("Copies the required jars to the lib folder")
 
 val gmql_lib_path = "conf/gmql_lib/"
 
+
 copyJarsTask := {
   val jar_name = "GMQL-Cli-" + gmql_version + "-jar-with-dependencies.jar"
   println("Copying " + jar_name + " to " + gmql_lib_path)
@@ -102,16 +110,22 @@ copyJarsTask := {
   val folder = new File(gmql_lib_path)
   (managedClasspath in Compile).value.files.foreach(f => {
     if (f.getName == jar_name)
-      IO.copyFile(f, folder / f.getName)
+      if(!FileUtils.contentEquals(f, folder / f.getName))
+        IO.copyFile(f, folder / f.getName)
   })
+
+
 
   // modify the executor.xml to match the downloaded CLI jar
 
   val modifyCLIJarRule = new RewriteRule {
+    var changed = false
     override def transform(n: Node): Seq[Node] = n match {
-      case elem: Elem if elem.label == "property" && elem.attribute("name").get.head.text == "CLI_JAR_NAME" =>
+      case elem: Elem if elem.label == "property" && elem.attribute("name").get.head.text == "CLI_JAR_NAME" && elem.text != jar_name =>
+        changed = true
         elem.copy(child = Text(jar_name))
-      case elem: Elem if elem.label == "property" && elem.attribute("name").get.head.text == "LIB_DIR_LOCAL" =>
+      case elem: Elem if elem.label == "property" && elem.attribute("name").get.head.text == "LIB_DIR_LOCAL" && elem.text != gmql_lib_path =>
+        changed = true
         elem.copy(child = Text(gmql_lib_path))
       case n => n
     }
@@ -122,13 +136,11 @@ copyJarsTask := {
   val transformer = new RuleTransformer(modifyCLIJarRule)
   val executor_xml = XML.loadFile(executor_xml_path)
   val new_executor_xml = transformer(executor_xml)
-  XML.save(executor_xml_path, new_executor_xml)
+  if (modifyCLIJarRule.changed) {
+    XML.save(executor_xml_path, new_executor_xml)
+  }
 }
 
-compile in Compile := {
-  val x = (compile in Compile).value
-  copyJarsTask.value
-  x
-}
+compile in Compile <<= (compile in Compile).dependsOn(copyJarsTask)
 
 cleanFiles <+= baseDirectory { base => base / gmql_lib_path }

@@ -11,15 +11,18 @@
     </div>
     <div class="form-group">
         <label for="file-upload-type">File type:</label>
+        <span>
+            <a target="_blank" href="https://github.com/DEIB-GECO/GMQL-WEB/wiki/file_formats" data-toggle="tooltip" data-placement="right" title="Information about file types"><span class="glyphicon glyphicon-info-sign"></span></a>
+        </span>
         <select class="form-control selectpicker" id="file-upload-type" title= "Choose file type">
-            <option value="bed">BED</option>
+            <option value="bed">BED6</option>
             <option value="bedGraph">BedGraph</option>
             @*<option value="gtf">gtf</option>*@
             @*<option value="tab">tab</option>*@
             <option value="NarrowPeak">NarrowPeak</option>
             <option value="BroadPeak">BroadPeak</option>
             <option value="vcf">VCF</option>
-            <option value="UPLOAD">Custom</option>
+            <option value="UPLOAD">Custom (GTF or tab-delimited)</option>
         </select>
     </div>
     <div id="file-upload-schema-div" class="form-group">

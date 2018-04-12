@@ -69,7 +69,7 @@ libraryDependencies += "org.eclipse.persistence" % "eclipselink" % "2.6.3"
 
 
 
-resolvers += Resolver.mavenLocal
+//resolvers += Resolver.mavenLocal
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
 val gmql_version = "1.0-SNAPSHOT"
@@ -105,40 +105,46 @@ val gmql_lib_path = "conf/gmql_lib/"
 
 copyJarsTask := {
   val jar_name = "GMQL-Cli-" + gmql_version + "-jar-with-dependencies.jar"
-  println("Copying " + jar_name + " to " + gmql_lib_path)
+
+  //  TODO change file check with the file attributes
+  //  Files.readAttributes(Paths.get(pathStr), classOf[BasicFileAttributes]).creationTime
+  //  Files.getFileAttributeView(Paths.get(pathStr), classOf[BasicFileAttributeView]).readAttributes.lastModifiedTime
+  //  and size
 
   val folder = new File(gmql_lib_path)
   (managedClasspath in Compile).value.files.foreach(f => {
     if (f.getName == jar_name)
-      if(!FileUtils.contentEquals(f, folder / f.getName))
-        IO.copyFile(f, folder / f.getName)
+      if (!FileUtils.contentEquals(f, folder / "GMQL-Cli.jar")) {
+        println("Copying " + jar_name + " to " + gmql_lib_path)
+        IO.copyFile(f, folder / "GMQL-Cli.jar")
+      }
   })
 
 
 
-  // modify the executor.xml to match the downloaded CLI jar
-
-  val modifyCLIJarRule = new RewriteRule {
-    var changed = false
-    override def transform(n: Node): Seq[Node] = n match {
-      case elem: Elem if elem.label == "property" && elem.attribute("name").get.head.text == "CLI_JAR_NAME" && elem.text != jar_name =>
-        changed = true
-        elem.copy(child = Text(jar_name))
-      case elem: Elem if elem.label == "property" && elem.attribute("name").get.head.text == "LIB_DIR_LOCAL" && elem.text != gmql_lib_path =>
-        changed = true
-        elem.copy(child = Text(gmql_lib_path))
-      case n => n
-    }
-  }
-
-  val executor_xml_path = "./conf/gmql_conf/executor.xml"
-  println("Changing the executor.xml at " + executor_xml_path)
-  val transformer = new RuleTransformer(modifyCLIJarRule)
-  val executor_xml = XML.loadFile(executor_xml_path)
-  val new_executor_xml = transformer(executor_xml)
-  if (modifyCLIJarRule.changed) {
-    XML.save(executor_xml_path, new_executor_xml)
-  }
+  //  // modify the executor.xml to match the downloaded CLI jar
+  //
+  //  val modifyCLIJarRule = new RewriteRule {
+  //    var changed = false
+  //    override def transform(n: Node): Seq[Node] = n match {
+  //      case elem: Elem if elem.label == "property" && elem.attribute("name").get.head.text == "CLI_JAR_NAME" && elem.text != jar_name =>
+  //        changed = true
+  //        elem.copy(child = Text(jar_name))
+  //      case elem: Elem if elem.label == "property" && elem.attribute("name").get.head.text == "LIB_DIR_LOCAL" && elem.text != gmql_lib_path =>
+  //        changed = true
+  //        elem.copy(child = Text(gmql_lib_path))
+  //      case n => n
+  //    }
+  //  }
+  //
+  //  val executor_xml_path = "./conf/gmql_conf/executor.xml"
+  //  println("Changing the executor.xml at " + executor_xml_path)
+  //  val transformer = new RuleTransformer(modifyCLIJarRule)
+  //  val executor_xml = XML.loadFile(executor_xml_path)
+  //  val new_executor_xml = transformer(executor_xml)
+  //  if (modifyCLIJarRule.changed) {
+  //    XML.save(executor_xml_path, new_executor_xml)
+  //  }
 }
 
 compile in Compile <<= (compile in Compile).dependsOn(copyJarsTask)

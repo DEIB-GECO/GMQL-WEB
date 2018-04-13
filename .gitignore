@@ -83,3 +83,5 @@ gen### Example user template template
 out
 gen
 conf/gmql_lib
+*.cache
+*.class

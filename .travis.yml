@@ -3,7 +3,7 @@ jdk: oraclejdk8
 scala: 2.11.8
 script: sbt ++$TRAVIS_SCALA_VERSION --warn test dist
 
-before_deploy: travis_before_deploy.sh
+before_deploy: sh ./travis_before_deploy.sh
 
 deploy:
   provider: releases

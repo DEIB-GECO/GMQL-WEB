@@ -1,3 +1,5 @@
+import java.io.PrintWriter
+
 import org.apache.commons.io.FileUtils
 import sbt.ConflictWarning
 import sbt.Keys.libraryDependencies
@@ -120,7 +122,12 @@ copyJarsTask := {
       }
   })
 
-
+  val pwMain = new PrintWriter(new File("public/GMQL-version.txt"))
+  pwMain.print(gmql_version)
+  pwMain.close()
+  val pwWeb =new PrintWriter(new File("public/GMQL-WEB-version.txt"))
+  pwWeb.print(version.value)
+  pwWeb.close()
 
   //  // modify the executor.xml to match the downloaded CLI jar
   //

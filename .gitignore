@@ -85,3 +85,5 @@ gen
 conf/gmql_lib
 *.cache
 *.class
+public/GMQL-WEB-version.txt
+public/GMQL-version.txt

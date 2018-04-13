@@ -11,9 +11,11 @@ before_deploy:
 - echo $PROJECT_NAME
 - echo $VERSION
 - echo $FILE
+- git branch -a
 - git config --global user.email "travis@travis-ci.org"
 - git config --global user.name "Travis CI"
 - git remote add origin-test https://${GITHUB_TOKEN}@github.com/DEIB-GECO/GMQL-WEB.git
+- git branch -a
 - git push --delete origin-test $VERSION || true
 - echo $TRAVIS_TAG
 - if [ -z "$TRAVIS_TAG" ]; then TRAVIS_TAG=$VERSION; fi

@@ -1,4 +1,4 @@
-updateUserType = (selUsername) ->
+window.updateUserType = (selUsername) ->
   call =  jsRoutes.controllers.gmql.AdminManager.updateType(selUsername)
 
   newType = $("#usertype_sel_"+selUsername).val()
@@ -27,7 +27,9 @@ getActionsHTML = (userTypes, username) ->
   button_id = "usertype_btn_" + username
 
   "<button id='#{button_id}' class='btn btn-primary #{"disabled" if username==window.user.username}'
-           data-username='#{username}' type='button'>Update</button>"
+           data-username='#{username}'
+           onclick='updateUserType(\"#{username}\")'
+           type='button'>Update</button>"
 
 getSelectHTML = (userTypes, username, type) ->
 
@@ -84,10 +86,6 @@ getUsers = (userTypes) ->
           'displayLength': 25
         )
 
-        # set callback for update buttons
-        for selUser in result.users
-          if selUser.username!=window.user.username
-            $("#usertype_btn_"+selUser.username).click( ()-> updateUserType($(this).attr("data-username")))
 
     error: (jqXHR) ->
       if jqXHR.status == 403 || jqXHR.status == 401

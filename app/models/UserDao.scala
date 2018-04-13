@@ -38,6 +38,8 @@ object UserDao {
 
   def listAll: Future[Seq[UserModel]] = dbConfig.db.run(users.result)
 
+  def listActive:  Future[Seq[UserModel]] = dbConfig.db.run(users.filter(!_.deleted).result)
+
   def count: Future[Int] = dbConfig.db.run(users.filter(_.userType === GDMSUserClass.ADMIN).length.result)
 
 

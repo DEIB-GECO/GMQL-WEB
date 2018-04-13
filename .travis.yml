@@ -16,7 +16,7 @@ before_deploy:
 - git config --global user.name "Travis CI"
 - git remote add origin-test https://${GITHUB_TOKEN}@github.com/DEIB-GECO/GMQL-WEB.git
 - git branch -a
-- git push --delete origin-test $VERSION || true
+- git push --delete --set-upstream origin-test $VERSION || true
 - echo $TRAVIS_TAG
 - if [ -z "$TRAVIS_TAG" ]; then TRAVIS_TAG=$VERSION; fi
 - echo $TRAVIS_TAG

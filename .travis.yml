@@ -2,21 +2,9 @@ language: scala
 jdk: oraclejdk8
 scala: 2.11.8
 script: sbt ++$TRAVIS_SCALA_VERSION --warn test dist
-before_deploy:
-- PROJECT_NAME=`grep ^name build.sbt  | sed s"/name.*:=.*\"\(.*\)\"/\1/"`
-- VERSION=`grep ^version build.sbt  | sed s"/version.*:=.*\"\(.*\)\"/\1/"`
-- FILE=target/universal/$PROJECT_NAME-$VERSION.zip
-- echo "VARAIBLES:"
-- echo $PROJECT_NAME
-- echo $VERSION
-- echo $FILE
-- git config --global user.email $GITHUB_EMAIL
-- git config --global user.name $GITHUB_USERNAME
-- git push --delete origin $VERSION || true
-- echo $TRAVIS_TAG
-- if [ -z "$TRAVIS_TAG" ]; then TRAVIS_TAG=$VERSION; fi
-- echo $TRAVIS_TAG
-- ls target/universal/
+
+before_deploy: travis_before_deploy.sh
+
 deploy:
   provider: releases
   api_key:

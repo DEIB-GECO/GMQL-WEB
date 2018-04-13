@@ -58,7 +58,7 @@ class AdminManager extends Controller {
     } else {
 
       lazy val users: Users = {
-        val dbusers = Await.result(UserDao.listAll, Duration.Inf)
+        val dbusers = Await.result(UserDao.listActive, Duration.Inf)
         val userlist = for (user <- dbusers) yield User(user.username, user.firstName, user.lastName, user.emailAddress, user.userType.toString)
         Users(userlist)
       }

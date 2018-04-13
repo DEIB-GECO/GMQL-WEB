@@ -13,8 +13,8 @@ before_deploy:
 - echo $FILE
 - git config --global user.email "travis@travis-ci.org"
 - git config --global user.name "Travis CI"
-- git remote add origin https://${GITHUB_TOKEN}@github.com/DEIB-GECO/GMQL-WEB.git
-- git push --delete origin $VERSION || true
+- git remote add origin-test https://${GITHUB_TOKEN}@github.com/DEIB-GECO/GMQL-WEB.git
+- git push --delete origin-test $VERSION || true
 - echo $TRAVIS_TAG
 - if [ -z "$TRAVIS_TAG" ]; then TRAVIS_TAG=$VERSION; fi
 - echo $TRAVIS_TAG

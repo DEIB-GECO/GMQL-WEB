@@ -9,13 +9,14 @@ import controllers.gmql.ResultUtils._
 import io.swagger.annotations.{ApiImplicitParams, _}
 import it.polimi.genomics.core.DataStructures.IRDataSet
 import it.polimi.genomics.core.GDMSUserClass.GDMSUserClass
-import it.polimi.genomics.core.exception.UserExceedsQuota
+import it.polimi.genomics.core.exception.{ParsingException, UserExceedsQuota}
 import it.polimi.genomics.core.{GNull, _}
 import it.polimi.genomics.manager.ProfilerLauncher
 import it.polimi.genomics.repository.FSRepository.FS_Utilities
 import it.polimi.genomics.repository.GMQLExceptions.{GMQLDSNotFound, GMQLNotValidDatasetNameException, GMQLSampleNotFound}
 import it.polimi.genomics.repository._
 import it.polimi.genomics.spark.implementation.loaders.CustomParser
+import org.apache.spark.SparkException
 import org.xml.sax.SAXException
 import play.api.Play.current
 import play.api.libs.functional.syntax._
@@ -920,6 +921,11 @@ class DSManager extends Controller {
         Logger.error("error", e)
         val message = " The dataset schema does not confirm the schema style (XSD) \n" + e.getMessage
         BadRequest(message)
+      case e: SparkException if Some(e.getCause).getOrElse(new Exception).isInstanceOf[ParsingException] =>
+        Logger.error("Parsing Error", e)
+        val message = "Parsing error. \n" + e.getCause.getMessage.replace("[","<code>").replace("]","</code>")
+        repository.deleteDS(dataSetName, username)
+        BadRequest(message)
       case e: UserExceedsQuota =>
         Logger.error("error", e)
         val message = " User quota exceeded  \n" + e.getMessage
@@ -989,6 +995,11 @@ class DSManager extends Controller {
         case e: SAXException =>
           Logger.error("error", e)
           val message = " The dataset schema does not confirm the schema style (XSD) \n" + e.getMessage
+          BadRequest(message)
+        case e: SparkException if Some(e.getCause).getOrElse(new Exception).isInstanceOf[ParsingException] =>
+          Logger.error("Parsing Error", e)
+          val message = "Parsing error. \n" + e.getCause.getMessage
+          repository.deleteDS(dataSetName, username)
           BadRequest(message)
         case e: UserExceedsQuota =>
           Logger.error("error", e)

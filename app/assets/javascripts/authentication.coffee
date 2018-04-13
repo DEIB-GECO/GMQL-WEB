@@ -41,8 +41,18 @@ displayGuestButton = () ->
         <h4>Please login before use the GMQL.</h4>
         <p>This system is under active development, please forgive us for possible errors and send us your comments, criticisms and congratulations, if any.</p>
         <div id="visit_count"></div>
+        <div>GMQL core version: <span id="GMQL-version"></span></div>
+        <div>GMQL WEB version: <span id="GMQL-WEB-version"></span></div>
       </div>
   ')
+  $.ajax
+    url: "assets/GMQL-version.txt"
+    success: (result, textStatus, jqXHR) ->
+      $("#GMQL-version").append(result)
+  $.ajax
+    url: "assets/GMQL-WEB-version.txt"
+    success: (result, textStatus, jqXHR) ->
+      $("#GMQL-WEB-version").append(result)
   makeRequest('/AnalyticsQueryWrapper/AnalyticsServlet')
 
 

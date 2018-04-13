@@ -1,29 +1,27 @@
 language: scala
 jdk: oraclejdk8
 scala: 2.11.8
-
 script: sbt ++$TRAVIS_SCALA_VERSION --warn test dist
-
 before_deploy:
--  PROJECT_NAME=`grep ^name build.sbt  | sed s"/name.*:=.*\"\(.*\)\"/\1/"`
--  VERSION=`grep ^version build.sbt  | sed s"/version.*:=.*\"\(.*\)\"/\1/"`
--  FILE=target/universal/$PROJECT_NAME-$VERSION.zip
--  echo "VARAIBLES:"
--  echo $PROJECT_NAME
--  echo $VERSION
--  echo $FILE
--  git config --global user.email "builds@travis-ci.com"
--  git config --global user.name "Travis CI"
--  git push --delete origin $VERSION || true
--  echo $TRAVIS_TAG
--  if [ -z "$TRAVIS_TAG" ]; then TRAVIS_TAG=$VERSION; fi
--  echo $TRAVIS_TAG
--  ls target/universal/
+- PROJECT_NAME=`grep ^name build.sbt  | sed s"/name.*:=.*\"\(.*\)\"/\1/"`
+- VERSION=`grep ^version build.sbt  | sed s"/version.*:=.*\"\(.*\)\"/\1/"`
+- FILE=target/universal/$PROJECT_NAME-$VERSION.zip
+- echo "VARAIBLES:"
+- echo $PROJECT_NAME
+- echo $VERSION
+- echo $FILE
+- git config --global user.email "builds@travis-ci.com"
+- git config --global user.name "Travis CI"
+- git push --delete origin $VERSION || true
+- echo $TRAVIS_TAG
+- if [ -z "$TRAVIS_TAG" ]; then TRAVIS_TAG=$VERSION; fi
+- echo $TRAVIS_TAG
+- ls target/universal/
 deploy:
   provider: releases
   api_key:
     secure: jKKiHcqPW+8Ejvyl6wnRP0AOJ/JOAoBpliHpsGCriTrXlWciROt5MDjDj7aWxymEh58hDwCJiFmnKTIz5A2Pxy2vPkIcXE+hr1iQ/DvZgSPKC5K7VHPyUwkU3tTIVrxJUqIx27uRNUo7C7xSpcUEdTueNpSvm1yXwcro3bUYECdkTOsOLpxzM+s9xKEujK2JpVcGkudG0E3lJzuuMJVVNE59q+ofTNnBH6XhpzpeC0zkQhas2R/Ku4WccJ3aAPC8Y22nUsUcnOv7GSdsncDZU9wp4ESjTi1QB7EvsF5LuaYXuGo1oTR7n9AeKq06h//bCSTsYKa5/AodmMzCRwNGk6+JjfOIq5SYaoSZXiBQt9fcFFM36DSgnR/c1JHMhnCYIioGiEMeNNhbllMvTFkTA2PR5Pw6+qdqDL6QtmJ8IGEyyzIrUbOZZrrkm1sqvcqTeDZnBuJuj2ayT2U+o0ttb5Eb/gYFLbWiPomd2k7NSVhSdcG1HJNYzgI2T1xkiFgky0Rk/p36uwnmxiUIM8j4GyIcd90ISeWb9BwQQMD7IaGLnfk8P6A7DAS/Kj3644Z2dV7RBpC0AjLTXBho44Kzzj5Mml1MTaTrxsZ9B1PTIebRONJTHyR949lv5RzQ4Ih/F8Och8IomfT0CA95vXx55tY42evrqzeDhPIZ2IoMqE4=
-  file: $FILE
+  file: "$FILE"
   on:
     repo: DEIB-GECO/GMQL-WEB
     all_branches: true
@@ -32,4 +30,6 @@ deploy:
   overwrite: true
 env:
   global:
-    secure: jKKiHcqPW+8Ejvyl6wnRP0AOJ/JOAoBpliHpsGCriTrXlWciROt5MDjDj7aWxymEh58hDwCJiFmnKTIz5A2Pxy2vPkIcXE+hr1iQ/DvZgSPKC5K7VHPyUwkU3tTIVrxJUqIx27uRNUo7C7xSpcUEdTueNpSvm1yXwcro3bUYECdkTOsOLpxzM+s9xKEujK2JpVcGkudG0E3lJzuuMJVVNE59q+ofTNnBH6XhpzpeC0zkQhas2R/Ku4WccJ3aAPC8Y22nUsUcnOv7GSdsncDZU9wp4ESjTi1QB7EvsF5LuaYXuGo1oTR7n9AeKq06h//bCSTsYKa5/AodmMzCRwNGk6+JjfOIq5SYaoSZXiBQt9fcFFM36DSgnR/c1JHMhnCYIioGiEMeNNhbllMvTFkTA2PR5Pw6+qdqDL6QtmJ8IGEyyzIrUbOZZrrkm1sqvcqTeDZnBuJuj2ayT2U+o0ttb5Eb/gYFLbWiPomd2k7NSVhSdcG1HJNYzgI2T1xkiFgky0Rk/p36uwnmxiUIM8j4GyIcd90ISeWb9BwQQMD7IaGLnfk8P6A7DAS/Kj3644Z2dV7RBpC0AjLTXBho44Kzzj5Mml1MTaTrxsZ9B1PTIebRONJTHyR949lv5RzQ4Ih/F8Och8IomfT0CA95vXx55tY42evrqzeDhPIZ2IoMqE4=
+  - secure: jKKiHcqPW+8Ejvyl6wnRP0AOJ/JOAoBpliHpsGCriTrXlWciROt5MDjDj7aWxymEh58hDwCJiFmnKTIz5A2Pxy2vPkIcXE+hr1iQ/DvZgSPKC5K7VHPyUwkU3tTIVrxJUqIx27uRNUo7C7xSpcUEdTueNpSvm1yXwcro3bUYECdkTOsOLpxzM+s9xKEujK2JpVcGkudG0E3lJzuuMJVVNE59q+ofTNnBH6XhpzpeC0zkQhas2R/Ku4WccJ3aAPC8Y22nUsUcnOv7GSdsncDZU9wp4ESjTi1QB7EvsF5LuaYXuGo1oTR7n9AeKq06h//bCSTsYKa5/AodmMzCRwNGk6+JjfOIq5SYaoSZXiBQt9fcFFM36DSgnR/c1JHMhnCYIioGiEMeNNhbllMvTFkTA2PR5Pw6+qdqDL6QtmJ8IGEyyzIrUbOZZrrkm1sqvcqTeDZnBuJuj2ayT2U+o0ttb5Eb/gYFLbWiPomd2k7NSVhSdcG1HJNYzgI2T1xkiFgky0Rk/p36uwnmxiUIM8j4GyIcd90ISeWb9BwQQMD7IaGLnfk8P6A7DAS/Kj3644Z2dV7RBpC0AjLTXBho44Kzzj5Mml1MTaTrxsZ9B1PTIebRONJTHyR949lv5RzQ4Ih/F8Och8IomfT0CA95vXx55tY42evrqzeDhPIZ2IoMqE4=
+  - secure: e3mp4C4/Hl3TWY/WqNrqgBs9RaFUckmkzTT4NRpZEncwzrcDfCj6pTUDQ37Sbrw/Fnue+gc8BVE30SLxlQhzkQDTy6xm74BXUUH2arp57BfTycPnfjw85h3+eFlv6+Q0NfxB0vcn4YIdgrJ20h5zksl00Te7yeS5nGQBU6/kttjXMZWvELJAi8oXgxMNXxvFrxaBErePeoNVP5dpGPZxgVxWUQMPRD3gYnWX0Rvf5gcwlRgM73ugELrefKGag8//WEMAWhLcpYT2tjy6poKvQ5OaqdOUrtJzBjyrsWR5VU//KG5FsVRq4TdzT4Nkv/3yvxHLSm2Qfd2Oh8BrmBei3juP/CAtkA6+cUaI3SBejjizKv2Swi2rrEpIILRgBg0JDIZSbCyG6fO0HcnwXImCk3h1J7h/M4IKwhDHd0eJ8lM9hNxo0vL5+3Z4WU1jHbzwgkH7rP1hDSTGfqPCB1hKIRaFG8U1rmAfLVzLAWr0CvrlQODp/EOz7CibXyTuWR5eYQORCqDl4g09YYnA1Js19Y0H7zyeA/TXkxUVsChqDjQz/VW53+PiYFAm6gkKR8xOxh7+y29xh4o0ab4YboHIadC9RcDwYkMzsXp2x3CEsOqB8Z/utPYI8JiT/tRsG3F76IYHsDrrMGimiiEqcM3U4fxaI3y3Hgj8YbFNNireNus=
+  - secure: h8DoCQCbBuRr8DplDbxCUte49OzAvDSVexgviUen1vv0w7mbtgDu0WYp6LtUaZAlwLbrd1zYnlkf4Vb8MjkF9vyvkqEOeW5fn08n6CALYN+7aIn5bpZEsmn+tyjlEZGxWCubqb/9QWA9KTsI4QW+Yu1Az8/0oxzn3FQgc8lOwoeJtA72ztKCeo5rbBSDjMEgL9zeAWQTgSlsCclCEnAkiwUnvTuoqM5wsnyLXA3uUhvmIqY8/ICgjRDsyj7iILWcsmowxrkLehdAoMwvBkLsSsEkzpT02xkZqnseVAENpzQPxeR/QUZRjMrGaHZbA4agpncq5YxXC2jgwrICkAsdzrNP8vfrKAhyPDycb9PAs2zopdS4O7KPu9Og/qxVkx3rdmt2sLb03NgT3UmT2y+3vqFfvjrTLaTZSeCM1W3XVgGFCHk1STiU2hHtEINAzcJKSbiSERR3p4c5jTIlOJC71X3jfrhxQhfUU2qMvNCt4p3LPxbVbZazsQ1IxolCOPFMrfmLrhK2hTe1r35QbwIGIdUHaglFf53pTGGjOp1bEJTMynWeg/wx5Z6Yl3Yia8cN+qI3wXhPOSX5ONfKVV4TBK1ktlNhAEBuanmrtLvgla8eQ8D5dYAjMcr8+/5k3LdcVK+tUACXBqHZXo5hvlQFLFYZUhYuyGC7q9VaWct7R3w=

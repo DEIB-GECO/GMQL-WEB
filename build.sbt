@@ -119,13 +119,13 @@ copyJarsTask := {
       //check if the file size and modified dates are same
       if (inFileAtt.map(_.lastModifiedTime) != outFileAtt.map(_.lastModifiedTime)
         || inFileAtt.map(_.size) != outFileAtt.map(_.size)) {
-        println("Copying " + jarName + " to " + gmqlLibPath)
+        streams.value.log.info("Copying " + jarName + " to " + gmqlLibPath)
         IO.copyFile(f, folder / "GMQL-Cli.jar", true)
       }
     }
   })
 
-  def getContent(filePath: String) =
+  def getContent(filePath: String): String =
     Try {
       val bufferedSource = Source.fromFile(filePath)
       val contents = bufferedSource.mkString
@@ -133,21 +133,21 @@ copyJarsTask := {
       contents
     }.getOrElse("")
 
-  def printVersion(filePath: String, version: String) = {
+  def saveVersion(filePath: String, version: String): Unit = {
     val pwMain = new PrintWriter(new File(filePath))
     pwMain.print(version)
     pwMain.close()
   }
 
   if (getContent(gmqlVersionPath) != gmqlVersion) {
-    println("Saving gmql version(" + gmqlVersion + ") to " + gmqlVersionPath)
-    printVersion(gmqlVersionPath, gmqlVersion)
+    streams.value.log.info("Saving gmql version(" + gmqlVersion + ") to " + gmqlVersionPath)
+    saveVersion(gmqlVersionPath, gmqlVersion)
 
   }
 
   if (getContent(gmqlWebVersionPath) != version.value) {
-    println("Saving gmql-web version(" + version.value + ") to " + gmqlWebVersionPath)
-    printVersion(gmqlWebVersionPath, version.value)
+    streams.value.log.info("Saving gmql-web version(" + version.value + ") to " + gmqlWebVersionPath)
+    saveVersion(gmqlWebVersionPath, version.value)
   }
 }
 

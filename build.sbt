@@ -1,11 +1,12 @@
 import java.io.PrintWriter
+import java.nio.file.Files
+import java.nio.file.attribute.BasicFileAttributes
 
-import org.apache.commons.io.FileUtils
 import sbt.ConflictWarning
 import sbt.Keys.libraryDependencies
 
-import scala.xml.transform.{RewriteRule, RuleTransformer}
-import scala.xml.{Elem, Node, Text, XML}
+import scala.io.Source
+import scala.util.Try
 
 name := "gmql-web"
 
@@ -16,7 +17,6 @@ lazy val `gmql-web` = (project in file(".")).enablePlugins(PlayScala, SbtWeb)
 scalaVersion := "2.11.8"
 
 
-//updated to last version of h2
 libraryDependencies += "com.h2database" % "h2" % "1.4.192"
 
 libraryDependencies ++= Seq(
@@ -35,8 +35,6 @@ libraryDependencies += "com.github.tototoshi" %% "slick-joda-mapper" % "2.0.0"
 
 
 unmanagedResourceDirectories in Test <+= baseDirectory(_ / "target/web/public/test")
-
-//resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases"
 
 libraryDependencies += "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.3"
 
@@ -74,7 +72,7 @@ libraryDependencies += "org.eclipse.persistence" % "eclipselink" % "2.6.3"
 //resolvers += Resolver.mavenLocal
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
-val gmql_version = "1.0-SNAPSHOT"
+val gmqlVersion = "1.0-SNAPSHOT"
 
 
 libraryDependencies ++= Seq(
@@ -84,11 +82,11 @@ libraryDependencies ++= Seq(
   "it.polimi.genomics" % "GMQL-Server",
   "it.polimi.genomics" % "GMQL-SManager",
   "it.polimi.genomics" % "GMQL-Spark"
-).map(_ % gmql_version)
+).map(_ % gmqlVersion)
 
 
 
-libraryDependencies += "it.polimi.genomics" % "GMQL-Cli" % gmql_version % "provided" classifier "jar-with-dependencies"
+libraryDependencies += "it.polimi.genomics" % "GMQL-Cli" % gmqlVersion % "provided" classifier "jar-with-dependencies"
 
 
 routesGenerator := InjectedRoutesGenerator
@@ -102,58 +100,60 @@ libraryDependencies += "io.swagger" % "swagger-core" % "1.5.10"
 
 val copyJarsTask = taskKey[Unit]("Copies the required jars to the lib folder")
 
-val gmql_lib_path = "conf/gmql_lib/"
+val gmqlLibPath = "conf/gmql_lib/"
+
+val gmqlVersionPath = "public/GMQL-version.txt"
+val gmqlWebVersionPath = "public/GMQL-WEB-version.txt"
+
 
 
 copyJarsTask := {
-  val jar_name = "GMQL-Cli-" + gmql_version + "-jar-with-dependencies.jar"
+  val jarName = "GMQL-Cli-" + gmqlVersion + "-jar-with-dependencies.jar"
 
-  //  TODO change file check with the file attributes
-  //  Files.readAttributes(Paths.get(pathStr), classOf[BasicFileAttributes]).creationTime
-  //  Files.getFileAttributeView(Paths.get(pathStr), classOf[BasicFileAttributeView]).readAttributes.lastModifiedTime
-  //  and size
-
-  val folder = new File(gmql_lib_path)
+  val folder = new File(gmqlLibPath)
   (managedClasspath in Compile).value.files.foreach(f => {
-    if (f.getName == jar_name)
-      if (!FileUtils.contentEquals(f, folder / "GMQL-Cli.jar")) {
-        println("Copying " + jar_name + " to " + gmql_lib_path)
-        IO.copyFile(f, folder / "GMQL-Cli.jar")
+    if (f.getName == jarName) {
+      val inFileAtt = Try(Files.readAttributes(f.toPath, classOf[BasicFileAttributes]))
+      val outFileAtt = Try(Files.readAttributes((folder / "GMQL-Cli.jar").toPath, classOf[BasicFileAttributes]))
+
+      //check if the file size and modified dates are same
+      if (inFileAtt.map(_.lastModifiedTime) != outFileAtt.map(_.lastModifiedTime)
+        || inFileAtt.map(_.size) != outFileAtt.map(_.size)) {
+        println("Copying " + jarName + " to " + gmqlLibPath)
+        IO.copyFile(f, folder / "GMQL-Cli.jar", true)
       }
+    }
   })
 
-  val pwMain = new PrintWriter(new File("public/GMQL-version.txt"))
-  pwMain.print(gmql_version)
-  pwMain.close()
-  val pwWeb =new PrintWriter(new File("public/GMQL-WEB-version.txt"))
-  pwWeb.print(version.value)
-  pwWeb.close()
+  def getContent(filePath: String) =
+    Try {
+      val bufferedSource = Source.fromFile(filePath)
+      val contents = bufferedSource.mkString
+      bufferedSource.close
+      contents
+    }.getOrElse("")
 
-  //  // modify the executor.xml to match the downloaded CLI jar
-  //
-  //  val modifyCLIJarRule = new RewriteRule {
-  //    var changed = false
-  //    override def transform(n: Node): Seq[Node] = n match {
-  //      case elem: Elem if elem.label == "property" && elem.attribute("name").get.head.text == "CLI_JAR_NAME" && elem.text != jar_name =>
-  //        changed = true
-  //        elem.copy(child = Text(jar_name))
-  //      case elem: Elem if elem.label == "property" && elem.attribute("name").get.head.text == "LIB_DIR_LOCAL" && elem.text != gmql_lib_path =>
-  //        changed = true
-  //        elem.copy(child = Text(gmql_lib_path))
-  //      case n => n
-  //    }
-  //  }
-  //
-  //  val executor_xml_path = "./conf/gmql_conf/executor.xml"
-  //  println("Changing the executor.xml at " + executor_xml_path)
-  //  val transformer = new RuleTransformer(modifyCLIJarRule)
-  //  val executor_xml = XML.loadFile(executor_xml_path)
-  //  val new_executor_xml = transformer(executor_xml)
-  //  if (modifyCLIJarRule.changed) {
-  //    XML.save(executor_xml_path, new_executor_xml)
-  //  }
+  def printVersion(filePath: String, version: String) = {
+    val pwMain = new PrintWriter(new File(filePath))
+    pwMain.print(version)
+    pwMain.close()
+  }
+
+  if (getContent(gmqlVersionPath) != gmqlVersion) {
+    println("Saving gmql version(" + gmqlVersion + ") to " + gmqlVersionPath)
+    printVersion(gmqlVersionPath, gmqlVersion)
+
+  }
+
+  if (getContent(gmqlWebVersionPath) != version.value) {
+    println("Saving gmql-web version(" + version.value + ") to " + gmqlWebVersionPath)
+    printVersion(gmqlWebVersionPath, version.value)
+  }
 }
 
 compile in Compile <<= (compile in Compile).dependsOn(copyJarsTask)
 
-cleanFiles <+= baseDirectory { base => base / gmql_lib_path }
+cleanFiles <+= baseDirectory(_ / gmqlLibPath)
+
+cleanFiles <+= baseDirectory(_ / gmqlVersionPath)
+cleanFiles <+= baseDirectory(_ / gmqlWebVersionPath)

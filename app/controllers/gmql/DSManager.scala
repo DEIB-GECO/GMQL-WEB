@@ -954,7 +954,7 @@ class DSManager extends Controller {
     new ApiResponse(code = 404, message = "Dataset is not found for the user")
   ))
   @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "schemaName", paramType = "query", dataType = "string", allowableValues = "[bed, bedGraph, NarrowPeak, BroadPeak, vcf]"),
+    new ApiImplicitParam(name = "schemaName", paramType = "query", dataType = "string", allowableValues = "bed, bedGraph, NarrowPeak, BroadPeak, vcf"),
     new ApiImplicitParam(name = "body", dataType = "string", paramType = "body",
       examples = new Example(Array(new ExampleProperty(value = "{\n\t\"schema_file\": \"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/HG19_ANN.schema\",\n\t\"data_files\": [\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/RefSeqGenesExons_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/RefSeqGenesExons_hg19.bed.meta\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/TSS_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/TSS_hg19.bed.meta\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/VistaEnhancers_hg19.bed\",\n\t\t\"http://www.bioinformatics.deib.polimi.it/canakoglu/guest_data/VistaEnhancers_hg19.bed.meta\"\n\t]\n}")))
     ), new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))

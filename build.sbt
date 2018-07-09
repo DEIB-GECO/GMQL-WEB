@@ -10,7 +10,7 @@ import scala.util.Try
 
 name := "gmql-web"
 
-version := "2.1"
+version := "2.2-SNAPSHOT"
 
 lazy val `gmql-web` = (project in file(".")).enablePlugins(PlayScala, SbtWeb)
 

@@ -72,7 +72,7 @@ libraryDependencies += "org.eclipse.persistence" % "eclipselink" % "2.6.3"
 //resolvers += Resolver.mavenLocal
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
-val gmqlVersion = "1.0-SNAPSHOT"
+val gmqlVersion = "5.0"
 
 
 libraryDependencies ++= Seq(

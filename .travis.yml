@@ -1,7 +1,7 @@
 language: scala
 jdk: oraclejdk8
 scala: 2.11.8
-script: sbt --warn test dist
+script: sbt ++$TRAVIS_SCALA_VERSION --warn test dist
 
 before_deploy:
 - PROJECT_NAME=`grep ^name build.sbt  | sed s"/name.*:=.*\"\(.*\)\"/\1/"`

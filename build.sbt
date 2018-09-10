@@ -69,8 +69,8 @@ libraryDependencies += "org.eclipse.persistence" % "eclipselink" % "2.6.3"
 
 
 
-//resolvers += Resolver.mavenLocal
-resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+resolvers += Resolver.mavenLocal
+//resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
 val gmqlVersion = "1.0-SNAPSHOT"
 
@@ -96,6 +96,8 @@ conflictWarning := ConflictWarning.disable
 
 libraryDependencies += "io.swagger" %% "swagger-play2" % "1.5.1"
 libraryDependencies += "io.swagger" % "swagger-core" % "1.5.10"
+
+libraryDependencies += "com.softwaremill.sttp" %% "core" % "1.3.1"
 
 
 val copyJarsTask = taskKey[Unit]("Copies the required jars to the lib folder")

@@ -30,10 +30,13 @@ class MetadataBrowser extends Controller {
   def getSampleMetadata(datasetName: String, sampleName: String) = AuthenticatedAction { implicit request =>
     var username: String = request.username.get
     var dsName = datasetName
-    // if public then user name is public and get the correct dataset name
+    // if public[federated] then user name is public[federated] and get the correct dataset name
     if (datasetName.startsWith("public.")) {
       username = "public"
       dsName = dsName.substring("public.".length)
+    } else if(datasetName.startsWith("federated.")) {
+      username = "federated"
+      dsName = dsName.substring("federated.".length)
     }
     try {
       lazy val result = DatasetMetadata(username, dsName).getSampleMetadata(sampleName: String)
@@ -64,6 +67,9 @@ class MetadataBrowser extends Controller {
     if (datasetName.startsWith("public.")) {
       username = "public"
       dsName = dsName.substring("public.".length)
+    } else if (datasetName.startsWith("federated.")){
+      username = "federated"
+      dsName = dsName.substring("federated.".length)
     }
     try {
       lazy val result = DatasetMetadata(username, dsName).getAllKeys

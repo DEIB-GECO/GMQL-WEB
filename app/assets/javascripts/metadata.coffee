@@ -161,7 +161,7 @@ getQuery = ->
   console.log "last reduced.length: " + reduced.length
   reduced = (reduced if reduced.length) or ""
   if window.lastSelectedDataSet?
-    "DATA_SET_VAR = SELECT(#{reduced}) #{window.lastSelectedDataSet.replace /^public\./, ""};"
+    "DATA_SET_VAR = SELECT(#{reduced}) #{window.lastSelectedDataSet.replace /^(public|federated)\./, ""};"
   else
     "Please choose dataset for data selection"
 

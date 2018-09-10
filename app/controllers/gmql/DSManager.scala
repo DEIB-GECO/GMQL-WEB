@@ -62,8 +62,10 @@ class DSManager extends Controller {
 
     lazy val datasets: Datasets = {
       val datasetList = (for (ds: IRDataSet <- repository.listAllDSs(username)) yield Dataset(ds.position, Some(username), info = Some(DatasetUtils.getInfo(username, ds.position)))) ++
-        // public dataset
-        (for (ds: IRDataSet <- repository.listAllDSs("public")) yield Dataset(ds.position, Some("public"), info = Some(DatasetUtils.getInfo("public", ds.position))))
+        // public datasets
+        (for (ds: IRDataSet <- repository.listAllDSs("public")) yield Dataset(ds.position, Some("public"), info = Some(DatasetUtils.getInfo("public", ds.position)))) ++
+        // federated datasets
+        (for (ds: IRDataSet <- repository.listAllDSs("federated")) yield Dataset(ds.position, Some("federated"), info = Some(DatasetUtils.getInfo("public", ds.position))))
       Datasets(datasetList.sorted)
     }
 
@@ -73,7 +75,6 @@ class DSManager extends Controller {
       case _ => NA
     }
   }
-
 
   /**
     * Return the samples list of the dataset.
@@ -96,6 +97,9 @@ class DSManager extends Controller {
     if (datasetName.startsWith("public.")) {
       username = "public"
       dsName = dsName.substring("public.".length)
+    } else if (datasetName.startsWith("federated.")) {
+      username = "federated"
+      dsName = dsName.substring("federated.".length)
     }
     try {
       lazy val sampleList = DatasetUtils.getSamples(username, dsName)
@@ -127,7 +131,7 @@ class DSManager extends Controller {
     new ApiResponse(code = 404, message = "Dataset is not found for the user")))
   def deleteDataset(datasetName: String) = AuthenticatedAction { implicit request =>
     val username: String = request.username.get
-    if (datasetName.startsWith("public."))
+    if (datasetName.startsWith("public.") || datasetName.startsWith("federated."))
       renderedError(FORBIDDEN, "Public dataset cannot be deleted.")
     else {
       //TODO add also DSExists after its implementation
@@ -194,7 +198,7 @@ class DSManager extends Controller {
 
   def modifyCommon[A](implicit request: AuthenticatedRequest[A], datasetName: String, newDatasetNameOption: Option[String]) = {
     val username: String = request.username.get
-    if (datasetName.startsWith("public."))
+    if (datasetName.startsWith("public.") || datasetName.startsWith("federated."))
       renderedError(FORBIDDEN, "Public dataset cannot be modified.")
     else if (newDatasetNameOption.isEmpty)
       renderedError(UNPROCESSABLE_ENTITY, "New name is missing")
@@ -571,6 +575,9 @@ class DSManager extends Controller {
     if (datasetName.startsWith("public.")) {
       username = "public"
       dsName = dsName.substring("public.".length)
+    } else if (datasetName.startsWith("federated.")) {
+      username = "federated"
+      dsName = dsName.substring("federated.".length)
     }
 
     def getXmlGmqlSchema(gmqlSchema: GMQLSchema): Elem =
@@ -1106,10 +1113,13 @@ class DSManager extends Controller {
   def getDatasetInfo(datasetName: String) = AuthenticatedAction { implicit request =>
     var username: String = request.username.get
     var dsName = datasetName
-    // if public then user name is public and get the correct dataset name
+    // if public[federated] then user name is public[federated] and get the correct dataset name
     if (datasetName.startsWith("public.")) {
       username = "public"
       dsName = dsName.substring("public.".length)
+    } else if (datasetName.startsWith("federated.")) {
+      username = "federated"
+      dsName = dsName.substring("federated.".length)
     }
 
 
@@ -1140,6 +1150,9 @@ class DSManager extends Controller {
     if (dsName.startsWith("public.")) {
       username = "public"
       dsName = dsName.replace("public.", "")
+    } else if (dsName.startsWith("federated.")) {
+      username = "federated"
+      dsName = dsName.replace("federated.", "")
     }
 
     try {

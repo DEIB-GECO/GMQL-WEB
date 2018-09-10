@@ -30,6 +30,9 @@ class DatasetMetadata(username: String, datasetName: String) {
     if (datasetName.startsWith("public.")) {
       user = "public"
       dsName = dsName.substring("public.".length)
+    } else if (datasetName.startsWith("federated.")) {
+      user = "federated"
+      dsName = dsName.substring("federated.".length)
     }
     val samples = DatasetUtils.getSamples(user, dsName)
     val temp = samples.map(sample => (sample.name, sample.id))

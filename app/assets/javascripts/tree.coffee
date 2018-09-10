@@ -142,6 +142,15 @@ glyph_opts = map:
         type: "main"
         value: "public-data-set"
       }
+      {
+        title: "Federated"
+        "folder": true
+        "lazy": true
+        hideCheckbox: true
+        unselectable: true
+        type: "main"
+        value: "federated-data-set"
+      }
     ]
 
     toggleEffect:
@@ -158,7 +167,7 @@ glyph_opts = map:
 #      console.log("ASD")
 #      'glyphicon glyphicon-book'
 
-
+    # Triggered when a node with 'lazy' attribute is expanded for the first time
     lazyLoad: (event, data) ->
       window.lastNode = data.node
       console.log(data)
@@ -185,9 +194,12 @@ glyph_opts = map:
             if "public-data-set" == data.node.data.value
               console.log "public"
               list = datasets.filter (x) -> x.owner == "public"
+            else if "federated-data-set" == data.node.data.value
+              console.log "federated"
+              list = datasets.filter (x) -> x.owner == "federated"
             else
-              console.log "private"
-              list = datasets.filter (x) -> x.owner != "public"
+              console.log "public"
+              list = datasets.filter (x) -> x.owner != "public" && x.owner != "federated"
           else
             newType = "sample"
             lazy = false
@@ -196,7 +208,8 @@ glyph_opts = map:
             list = result.samples
 
           res = for att in list
-            hideCheckBox = ("public-data-set" == data.node.data.value) || ("public-data-set" == data.node.parent?.data.value)
+            hideCheckBox = ("public-data-set" == data.node.data.value) || ("public-data-set" == data.node.parent?.data.value) ||
+                         ("federated-data-set" == data.node.data.value)  || ("federated-data-set" == data.node.parent?.data.value)
             result = (item.value  for item in att?.info?.infoList when item.key == 'Number of samples')
             result = if(result?.length) then result = " (#{result})" else ""
             #TODO title should not be used anymore from the other functions, only key should be used
@@ -210,7 +223,7 @@ glyph_opts = map:
               hideCheckbox: hideCheckBox
               unselectable: hideCheckBox
               type: newType
-              value: (if newType == "data-set" && att.owner == "public" then att.owner + "." else "") + att.name
+              value: (if newType == "data-set" && (att.owner == "public" || att.owner == "federated" ) then att.owner + "." else "") + att.name
               selected: data.node.selected
             }
             temp.icon = icon if icon

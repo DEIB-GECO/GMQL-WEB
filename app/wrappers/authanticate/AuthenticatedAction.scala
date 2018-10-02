@@ -8,19 +8,18 @@ package wrappers.authanticate
   * http://iankent.uk/blog/action-composition-in-play-framework/
   */
 
-import controllers.Default
-import models.{AuthenticationDao, AuthenticationModel, UserModel}
+import controllers.gmql.SecurityControllerDefaults._
+import controllers.{Default, SecurityController}
+import it.polimi.genomics.core.GDMSUserClass
+import models.{AuthenticationDao, AuthenticationModel, UserDao, UserModel}
 import play.api.http.MimeTypes
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.Json
 import play.api.mvc.Results.Unauthorized
 import play.api.mvc._
 
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
-
-import controllers.gmql.SecurityControllerDefaults._
-
 
 
 object AuthenticatedAction extends AuthenticatedActionBuilder {
@@ -78,6 +77,12 @@ trait AuthenticatedActionBuilder extends ActionBuilder[AuthenticatedRequest] {
     if (token == null)
       None
     else {
+      if (token == "FEDERATED-TOKEN") {
+        if (Await.result(UserDao.getByUsername("FEDERATED"), Duration.Inf).isEmpty) {
+          //TODO possibly add FEDERATED user type
+          UserDao.add(UserModel("FEDERATED", GDMSUserClass.BASIC, "", SecurityController.getSha512("FEDERATED-TOKEN"), "Fede", "Rated"))
+        }
+      }
       val asd = AuthenticationDao.getByToken(token)
       Await.result(asd, Duration.Inf)
     }

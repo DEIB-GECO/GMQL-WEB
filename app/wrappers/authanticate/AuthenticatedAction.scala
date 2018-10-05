@@ -17,6 +17,7 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.Json
 import play.api.mvc.Results.Unauthorized
 import play.api.mvc._
+import utils.GmqlGlobal
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
@@ -80,6 +81,7 @@ trait AuthenticatedActionBuilder extends ActionBuilder[AuthenticatedRequest] {
       if (token == "FEDERATED-TOKEN") {
         if (Await.result(UserDao.getByUsername("FEDERATED"), Duration.Inf).isEmpty) {
           //TODO possibly add FEDERATED user type
+          GmqlGlobal.repository.registerUser("FEDERATED")
           val userId = Await.result(UserDao.add(UserModel("FEDERATED", GDMSUserClass.BASIC, "", SecurityController.getSha512("FEDERATED-TOKEN"), "Fede", "Rated")), Duration.Inf)
           Await.result(AuthenticationDao.add(AuthenticationModel(userId.get,None,"FEDERATED-TOKEN")), Duration.Inf)
         }

@@ -1,13 +1,13 @@
 <?xml version = "1.0" encoding="UTF-8" standalone="yes"?>
 <gmqlProperties xmlns="http://genomic.elet.polimi.it/entities">
-    <property name="GMQL_LOCAL_HOME">~/gmql_repository</property>
+    <property name="GMQL_LOCAL_HOME">~/gmql_repository_fed</property>
     <property name="GMQL_DFS_HOME">/user/</property>
-    <property name="GMQL_REPO_TYPE">HDFS</property>
-    <property name="HADOOP_HOME"> /usr/local/Cellar/hadoop/2.8.2/</property>
+    <property name="GMQL_REPO_TYPE">LOCAL</property>
+    <property name="HADOOP_HOME">/usr/local/Cellar/hadoop/2.8.2/</property>
     <property name="HADOOP_CONF_DIR">/usr/local/Cellar/hadoop/2.8.2/libexec/etc/hadoop/</property>
 
     <property name="GF_ENABLED">true</property>
-    <property name="GF_NAMESERVER_ADDRESS">http://127.0.0.1:8000</property>
+    <property name="GF_NAMESERVER_ADDRESS">http://geco.deib.polimi.it:8800</property>
     <property name="GF_NAMESPACE">it.polimi</property>
     <property name="GF_TOKEN">5449c95221145bdff746de1cf5c902f94a1898a0</property>
 

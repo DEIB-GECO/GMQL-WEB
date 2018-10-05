@@ -96,7 +96,8 @@ class QueryMan extends Controller {
     dataType = "string", paramType = "body"
   ), new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
   def runDag(//queryName: String,
-             @ApiParam(allowableValues = "tab, gtf") outputType: String) = AuthenticatedAction { implicit request =>
+             @ApiParam(allowableValues = "tab, gtf") outputType: String,
+             jobId: String = "") = AuthenticatedAction { implicit request =>
     val username = request.username.getOrElse("")
     val outputFormat = GMQLSchemaFormat.getType(outputType)
 
@@ -155,8 +156,8 @@ class QueryMan extends Controller {
   }
 
   private def compileJob(username: String, query: String, queryName: String, outputFormat: GMQLSchemaFormat.Value) = {
-    val gmqlScript =  GMQLScript(query, queryName)
-    val gmqlContext = GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat,  username = username, checkQuota = false)
+    val gmqlScript = GMQLScript(query, queryName)
+    val gmqlContext = GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat, username = username, checkQuota = false)
     val job: GMQLJob = new GMQLJob(gmqlContext, gmqlScript, gmqlContext.username)
     job.compile()
     job

@@ -114,7 +114,7 @@ class QueryMan extends Controller {
         val script = GMQLScript("", "", serializedDAG)
         val userClass = request.user.get.userType
         val gmqlContext = GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat, username = username, userClass = userClass, checkQuota = true)
-        val job = server.registerDAG(script, gmqlContext)
+        val job = server.registerDAG(script, gmqlContext, federated = jobId.nonEmpty)
         server.execute(job)
         val datasets = server.getJobDatasets(job.jobId).map(Dataset(_))
         Some(Job(job.jobId, Some(job.status.toString), Some(job.getMessage()), Some(datasets), {

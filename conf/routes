@@ -135,7 +135,7 @@ POST          /metadata/:datasetName/dataset/matrix                controllers.g
 POST          /queries/run/:fileName/:gtfOutput                    controllers.gmql.QueryMan.runQuery(fileName: String, gtfOutput: String)
 POST          /queries/compile                                     controllers.gmql.QueryMan.compileQuery
 
-POST           /queries/dag/:gtfOutput                  controllers.gmql.QueryMan.runDag(gtfOutput: String, jobId: String ?= "")
+POST           /queries/dag/:gtfOutput                  controllers.gmql.QueryMan.runDag(gtfOutput: String, federatedJobId: String ?= "")
 #POST           /queries/dag/:gtfOutput/:jobId                  controllers.gmql.QueryMan.runDag(gtfOutput: String, jobId:Option[String])
 
 

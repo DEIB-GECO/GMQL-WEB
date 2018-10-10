@@ -79,10 +79,10 @@ trait AuthenticatedActionBuilder extends ActionBuilder[AuthenticatedRequest] {
       None
     else {
       if (token == "FEDERATED-TOKEN") {
-        if (Await.result(UserDao.getByUsername("FEDERATED"), Duration.Inf).isEmpty) {
+        if (Await.result(UserDao.getByUsername("federated"), Duration.Inf).isEmpty) {
           //TODO possibly add FEDERATED user type
-          GmqlGlobal.repository.registerUser("FEDERATED")
-          val userId = Await.result(UserDao.add(UserModel("FEDERATED", GDMSUserClass.BASIC, "", SecurityController.getSha512("FEDERATED-TOKEN"), "Fede", "Rated")), Duration.Inf)
+          GmqlGlobal.repository.registerUser("federated")
+          val userId = Await.result(UserDao.add(UserModel("federated", GDMSUserClass.BASIC, "", SecurityController.getSha512("FEDERATED-TOKEN"), "Fede", "Rated")), Duration.Inf)
           Await.result(AuthenticationDao.add(AuthenticationModel(userId.get,None,"FEDERATED-TOKEN")), Duration.Inf)
         }
       }

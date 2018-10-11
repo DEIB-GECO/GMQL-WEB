@@ -87,3 +87,4 @@ conf/gmql_lib
 *.class
 public/GMQL-WEB-version.txt
 public/GMQL-version.txt
+.DS_Store

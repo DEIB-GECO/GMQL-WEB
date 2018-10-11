@@ -509,15 +509,25 @@ class DSManager extends Controller {
     new ApiResponse(code = 401, message = "User is not authenticated"),
     new ApiResponse(code = 403, message = "Public datasets cannot be downloaded by user"),
     new ApiResponse(code = 404, message = "Dataset is not found for the user")))
-  def zip(datasetName: String) = AuthenticatedAction { implicit request =>
+  def zip(dsName: String) = AuthenticatedAction { implicit request =>
 
     import play.api.libs.concurrent.Execution.Implicits.defaultContext
-    val username: String = request.username.get
+    var username: String = request.username.get
+
+    var datasetName: String = dsName
+
+    Logger.info(request.username.get)
+    Logger.info(dsName)
+
 
     try {
-      if (datasetName.startsWith("public."))
-        renderedError(FORBIDDEN, "Public dataset cannot be downloaded.")
-      else {
+
+
+        if(datasetName.startsWith("public.")) {
+          username = "public"
+          datasetName = datasetName.replace("public.", "")
+        }
+
         val sampleNames = repository.listDSSamples(datasetName, username).map(temp => (temp.name.split("/").last.split("\\.").head, temp.name.split("/").last))
         Logger.debug("sampleNames" + sampleNames)
 
@@ -556,7 +566,7 @@ class DSManager extends Controller {
           CONTENT_TYPE -> "application/zip",
           CONTENT_DISPOSITION -> s"attachment; filename=$datasetName.zip"
         )
-      }
+
     } catch {
       case _: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found: $datasetName")
     }

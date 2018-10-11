@@ -103,6 +103,8 @@ GET           /datasets/:datasetName/:columnName/parse             controllers.g
 
 GET           /metadata/:datasetName/sample/:sampleName            controllers.gmql.MetadataBrowser.getSampleMetadata(datasetName, sampleName)
 
+#GET           /metadata/:datasetName/wholeSample            controllers.gmql.MetadataBrowser.getSampleMetadata(datasetName, datasetName)
+
 
 GET           /metadata/:datasetName/all                           controllers.gmql.MetadataBrowser.getKeys(datasetName)
 POST          /metadata/:datasetName/filter                        controllers.gmql.MetadataBrowser.getFilteredKeys(datasetName)
@@ -218,3 +220,9 @@ GET           /metadata/:totalCount/:list                          controllers.A
 GET         /users                                                  controllers.gmql.AdminManager.getUsers
 GET         /users/types                                            controllers.gmql.AdminManager.getUserTypes
 PUT         /users/:username/type                                   controllers.gmql.AdminManager.updateType(username)
+
+# FEDERATED
+GET         /federated/download/:fedJobId/:dsName                   controllers.gmql.GFManager.zip(fedJobId, dsName)
+GET         /federated/import/:fedJobId/:dsName/:locationId         controllers.gmql.GFManager.importResult(fedJobId, dsName, locationId)
+GET         /federated/checkimport/:fedJobId/:dsName                controllers.gmql.GFManager.checkImportStatus(fedJobId, dsName)
+GET         /federated/delete/:fedJobId/:dsName                     controllers.gmql.GFManager.delete(fedJobId, dsName)

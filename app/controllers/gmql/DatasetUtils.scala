@@ -327,6 +327,7 @@ object SwaggerUtils {
   final val swaggerQueryManager = "Query Execution"
   final val swaggerSecurityController = "Security controller"
   final val swaggerSystemAdmin ="System administration"
+  final val swaggerFederated ="GMQL Federated"
 }
 
 case class MatrixResult(samples: Seq[Sample],

@@ -3,7 +3,7 @@ package controllers.gmql
 import controllers.gmql.ResultUtils._
 import io.swagger.annotations.{ApiImplicitParams, _}
 import it.polimi.genomics.repository.GMQLExceptions.GMQLDSNotFound
-import it.polimi.genomics.repository.federated.communication.{Downloading, Failed, Pending, NotFound => NotFoundStatus, Success => SuccessStatus}
+import it.polimi.genomics.repository.federated.communication.{Downloading, Failed, NotFoundException, Pending, NotFound => NotFoundStatus, Success => SuccessStatus}
 import javax.inject.Singleton
 import play.api.libs.json._
 import play.api.mvc._
@@ -89,8 +89,7 @@ class GFManager extends Controller {
   @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
   @ApiResponses(value = Array(
     new ApiResponse(code = 401, message = "User is not authenticated"),
-    new ApiResponse(code = 403, message = "Public datasets cannot be downloaded by user"),
-    new ApiResponse(code = 404, message = "Paertial result not found")))
+    new ApiResponse(code = 404, message = "Partial result not found")))
   def zip(jobId: String, dsName: String) = AuthenticatedAction { implicit request =>
 
     if (GmqlGlobal.federated_interface.isEmpty) {
@@ -110,6 +109,7 @@ class GFManager extends Controller {
       val filesList: List[String] = GmqlGlobal.federated_interface.get.listPartialResultFiles(jobId, dsName)
       Logger.debug("partialFiles" + filesList)
 
+
       val sources = filesList.flatMap { fileName =>
         lazy val stream = GmqlGlobal.federated_interface.get.fileStream(jobId, dsName, fileName)
         List(ZipEnumerator.Source(s"$resourceId/${fileName}", { () => Future(Some(stream)) })
@@ -121,8 +121,10 @@ class GFManager extends Controller {
         CONTENT_DISPOSITION -> s"attachment; filename=$resourceId.zip"
       )
 
+
+
     } catch {
-      case _: GMQLDSNotFound => renderedError(NOT_FOUND, s"Resource not found: $resourceId")
+      case e : NotFoundException => renderedError(404, "Resource not found.")
     }
   }
 

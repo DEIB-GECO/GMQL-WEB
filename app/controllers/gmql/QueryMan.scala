@@ -9,7 +9,7 @@ import it.polimi.genomics.manager.Exceptions.{InvalidGMQLJobException, NoJobsFou
 import it.polimi.genomics.manager.Status._
 import it.polimi.genomics.manager.{GMQLContext, GMQLExecute, GMQLJob}
 import it.polimi.genomics.repository.GMQLExceptions.{GMQLDSNotFound, GMQLNotValidDatasetNameException}
-import it.polimi.genomics.repository.federated.GF_Decorator
+import it.polimi.genomics.repository.Utilities
 import javax.inject.Singleton
 import play.api.Logger
 import play.api.libs.json.Json
@@ -29,7 +29,7 @@ class QueryMan extends Controller {
   import utils.GmqlGlobal._
 
   def implementationPlatform =
-    if (repository.isInstanceOf[GF_Decorator])
+    if (Utilities().GF_ENABLED)
       ImplementationPlatform.FEDERATED
     else
       ImplementationPlatform.SPARK

@@ -1,19 +1,16 @@
 package controllers.gmql
 
-import javax.inject.Singleton
-
 import controllers.gmql.ResultUtils.{NA, renderedError}
 import io.swagger.annotations.{ApiImplicitParams, ApiOperation, _}
 import it.polimi.genomics.core.GDMSUserClass.GDMSUserClass
-import it.polimi.genomics.core._
 import it.polimi.genomics.core.exception.{GMQLDagException, UserExceedsQuota}
-import it.polimi.genomics.core.{BinSize, GMQLSchemaFormat, GMQLScript, ImplementationPlatform}
+import it.polimi.genomics.core.{GMQLSchemaFormat, GMQLScript, ImplementationPlatform}
 import it.polimi.genomics.manager.Exceptions.{InvalidGMQLJobException, NoJobsFoundException}
 import it.polimi.genomics.manager.Status._
 import it.polimi.genomics.manager.{GMQLContext, GMQLExecute, GMQLJob}
-import it.polimi.genomics.manager.Launchers.GMQLSparkLauncher
 import it.polimi.genomics.repository.GMQLExceptions.{GMQLDSNotFound, GMQLNotValidDatasetNameException}
-import org.apache.spark.SparkContext
+import it.polimi.genomics.repository.federated.GF_Decorator
+import javax.inject.Singleton
 import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc.Controller
@@ -30,6 +27,12 @@ import scala.collection.JavaConversions._
 class QueryMan extends Controller {
 
   import utils.GmqlGlobal._
+
+  def implementationPlatform =
+    if (repository.isInstanceOf[GF_Decorator])
+      ImplementationPlatform.FEDERATED
+    else
+      ImplementationPlatform.SPARK
 
   @ApiOperation(value = "Execute the query",
     notes = "Execute query and for the result user needs to check trace the job.",
@@ -113,8 +116,10 @@ class QueryMan extends Controller {
         val server = GMQLExecute()
         val script = GMQLScript("", "", serializedDAG)
         val userClass = request.user.get.userType
-        val gmqlContext = GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat, username = username, userClass = userClass, checkQuota = true)
-        val federatedJobIdOpt = if(federatedJobId.isEmpty) None else Some(federatedJobId)
+
+
+        val gmqlContext = GMQLContext(implementationPlatform, repository, outputFormat, username = username, userClass = userClass, checkQuota = true)
+        val federatedJobIdOpt = if (federatedJobId.isEmpty) None else Some(federatedJobId)
         val job = server.registerDAG(script, gmqlContext, federated = federatedJobId.nonEmpty, federatedJobId = federatedJobIdOpt)
         server.execute(job)
         val datasets = server.getJobDatasets(job.jobId).map(Dataset(_))
@@ -152,13 +157,13 @@ class QueryMan extends Controller {
   private def registerJob(username: String, userClass: GDMSUserClass, query: String, queryName: String, outputFormat: GMQLSchemaFormat.Value) = {
     val server = GMQLExecute()
     val gmqlScript = GMQLScript(query, queryName)
-    val gmqlContext = GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat, username = username, userClass = userClass, checkQuota = true)
+    val gmqlContext = GMQLContext(implementationPlatform, repository, outputFormat, username = username, userClass = userClass, checkQuota = true)
     server.registerJob(gmqlScript, gmqlContext, "")
   }
 
   private def compileJob(username: String, query: String, queryName: String, outputFormat: GMQLSchemaFormat.Value) = {
     val gmqlScript = GMQLScript(query, queryName)
-    val gmqlContext = GMQLContext(ImplementationPlatform.SPARK, repository, outputFormat, username = username, checkQuota = false)
+    val gmqlContext = GMQLContext(implementationPlatform, repository, outputFormat, username = username, checkQuota = false)
     val job: GMQLJob = new GMQLJob(gmqlContext, gmqlScript, gmqlContext.username)
     job.compile()
     job

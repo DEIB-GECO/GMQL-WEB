@@ -2,14 +2,13 @@ package controllers.gmql
 
 import controllers.gmql.ResultUtils._
 import io.swagger.annotations.{ApiImplicitParams, _}
-import it.polimi.genomics.repository.GMQLExceptions.GMQLDSNotFound
 import it.polimi.genomics.repository.federated.communication.{Downloading, Failed, NotFoundException, Pending, NotFound => NotFoundStatus, Success => SuccessStatus}
 import javax.inject.Singleton
+import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc._
-import play.api.{Logger, Play}
 import utils.{GmqlGlobal, ZipEnumerator}
-import wrappers.authanticate.{AuthenticatedAction, AuthenticatedRequest}
+import wrappers.authanticate.AuthenticatedAction
 
 import scala.concurrent.Future
 
@@ -61,10 +60,9 @@ class GFManager extends Controller {
 
       def renderStatus(status: String, message: String = "") = render {
         case Accepts.Xml() => Ok(<result>
-          {status}
-        </result> <message>
-          {message}
-        </message>)
+          <status>{status}</status>
+          <message>{message}</message>
+        </result>)
         case Accepts.Json() => Ok(JsObject(Seq("result" -> JsString(status), "message" -> JsString(message))))
         case _ => NA
       }

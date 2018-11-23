@@ -30,6 +30,22 @@ ADD ./docker_conf/executor.xml /app/${GMQL_WEB_NAME}/conf/gmql_conf/
 RUN rm ./${GMQL_WEB_NAME}/conf/application.conf
 ADD ./docker_conf/application.conf /app/${GMQL_WEB_NAME}/conf/
 
+# importing example datasets using repository
+ADD ./example_datasets/ /app/example_datasets/
+# registering public user
+RUN java -jar ./${GMQL_WEB_NAME}/conf/gmql_lib/GMQL-Repository.jar registeruser public
+# adding datasets
+RUN java -jar ./${GMQL_WEB_NAME}/conf/gmql_lib/GMQL-Repository.jar createds \
+                           Example_Dataset_1 \
+                           /app/example_datasets/Example_Dataset_1/files/schema.xml \
+                           /app/example_datasets/Example_Dataset_1/files/ \
+                           public
+RUN java -jar ./${GMQL_WEB_NAME}/conf/gmql_lib/GMQL-Repository.jar createds \
+                           Example_Dataset_2 \
+                           /app/example_datasets/Example_Dataset_2/files/schema.xml \
+                           /app/example_datasets/Example_Dataset_2/files/ \
+                           public
+
 
 
 CMD ["sh", "-c", "./${GMQL_WEB_NAME}/bin/gmql-web"]

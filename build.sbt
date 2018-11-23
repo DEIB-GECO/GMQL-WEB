@@ -87,6 +87,7 @@ libraryDependencies ++= Seq(
 
 
 libraryDependencies += "it.polimi.genomics" % "GMQL-Cli" % gmqlVersion % "provided" classifier "jar-with-dependencies"
+libraryDependencies += "it.polimi.genomics" % "GMQL-Repository" % gmqlVersion % "provided" classifier "jar-with-dependencies"
 
 
 routesGenerator := InjectedRoutesGenerator
@@ -108,22 +109,33 @@ val gmqlWebVersionPath = "public/GMQL-WEB-version.txt"
 
 
 copyJarsTask := {
-  val jarName = "GMQL-Cli-" + gmqlVersion + "-jar-with-dependencies.jar"
 
-  val folder = new File(gmqlLibPath)
-  (managedClasspath in Compile).value.files.foreach(f => {
-    if (f.getName == jarName) {
-      val inFileAtt = Try(Files.readAttributes(f.toPath, classOf[BasicFileAttributes]))
-      val outFileAtt = Try(Files.readAttributes((folder / "GMQL-Cli.jar").toPath, classOf[BasicFileAttributes]))
+  val jarsToCopy = Map(
+    "GMQL-Cli-" + gmqlVersion + "-jar-with-dependencies.jar" -> "GMQL-Cli.jar",
+    "GMQL-Repository-" + gmqlVersion + "-jar-with-dependencies.jar" -> "GMQL-Repository.jar"
+  )
 
-      //check if the file size and modified dates are same
-      if (inFileAtt.map(_.lastModifiedTime) != outFileAtt.map(_.lastModifiedTime)
-        || inFileAtt.map(_.size) != outFileAtt.map(_.size)) {
-        streams.value.log.info("Copying " + jarName + " to " + gmqlLibPath)
-        IO.copyFile(f, folder / "GMQL-Cli.jar", true)
+//  val jarName = "GMQL-Cli-" + gmqlVersion + "-jar-with-dependencies.jar"
+//  val outputName = "GMQL-Cli.jar"
+
+  def copyJarToLibPath(jarName: String, outputName: String): Unit = {
+    val folder = new File(gmqlLibPath)
+    (managedClasspath in Compile).value.files.foreach(f => {
+      if (f.getName == jarName) {
+        val inFileAtt = Try(Files.readAttributes(f.toPath, classOf[BasicFileAttributes]))
+        val outFileAtt = Try(Files.readAttributes((folder / outputName).toPath, classOf[BasicFileAttributes]))
+
+        //check if the file size and modified dates are same
+        if (inFileAtt.map(_.lastModifiedTime) != outFileAtt.map(_.lastModifiedTime)
+          || inFileAtt.map(_.size) != outFileAtt.map(_.size)) {
+          streams.value.log.info("Copying " + jarName + " to " + gmqlLibPath)
+          IO.copyFile(f, folder / outputName, true)
+        }
       }
-    }
-  })
+    })
+  }
+
+  jarsToCopy.foreach{ case (jarName, outputName) => copyJarToLibPath(jarName, outputName) }
 
   def getContent(filePath: String): String =
     Try {

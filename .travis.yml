@@ -1,7 +1,22 @@
 language: scala
+sudo: required
+
 jdk: oraclejdk8
 scala: 2.11.8
-script: sbt ++$TRAVIS_SCALA_VERSION --warn test dist
+
+before_script:
+  - chmod +x ./docker_conf/before_docker_build.sh
+  - chmod +x ./docker_conf/build_docker.sh
+
+script:
+  - sbt ++$TRAVIS_SCALA_VERSION --warn test dist
+  - echo "PRE-BUILD OF THE DOCKER IMAGE"
+  - ./docker_conf/before_docker_build.sh
+  - echo "BUILD OF THE $DOCKER_IMAGE_NAME DOCKER IMAGE"
+  - ./docker_conf/build_docker.sh $DOCKER_IMAGE_NAME
+
+services:
+  - docker
 
 before_deploy:
 - PROJECT_NAME=`grep ^name build.sbt  | sed s"/name.*:=.*\"\(.*\)\"/\1/"`
@@ -34,5 +49,6 @@ deploy:
   overwrite: true
 env:
   global:
+  - DOCKER_IMAGE_NAME=gmql-web
   - secure: e3mp4C4/Hl3TWY/WqNrqgBs9RaFUckmkzTT4NRpZEncwzrcDfCj6pTUDQ37Sbrw/Fnue+gc8BVE30SLxlQhzkQDTy6xm74BXUUH2arp57BfTycPnfjw85h3+eFlv6+Q0NfxB0vcn4YIdgrJ20h5zksl00Te7yeS5nGQBU6/kttjXMZWvELJAi8oXgxMNXxvFrxaBErePeoNVP5dpGPZxgVxWUQMPRD3gYnWX0Rvf5gcwlRgM73ugELrefKGag8//WEMAWhLcpYT2tjy6poKvQ5OaqdOUrtJzBjyrsWR5VU//KG5FsVRq4TdzT4Nkv/3yvxHLSm2Qfd2Oh8BrmBei3juP/CAtkA6+cUaI3SBejjizKv2Swi2rrEpIILRgBg0JDIZSbCyG6fO0HcnwXImCk3h1J7h/M4IKwhDHd0eJ8lM9hNxo0vL5+3Z4WU1jHbzwgkH7rP1hDSTGfqPCB1hKIRaFG8U1rmAfLVzLAWr0CvrlQODp/EOz7CibXyTuWR5eYQORCqDl4g09YYnA1Js19Y0H7zyeA/TXkxUVsChqDjQz/VW53+PiYFAm6gkKR8xOxh7+y29xh4o0ab4YboHIadC9RcDwYkMzsXp2x3CEsOqB8Z/utPYI8JiT/tRsG3F76IYHsDrrMGimiiEqcM3U4fxaI3y3Hgj8YbFNNireNus=
   - secure: h8DoCQCbBuRr8DplDbxCUte49OzAvDSVexgviUen1vv0w7mbtgDu0WYp6LtUaZAlwLbrd1zYnlkf4Vb8MjkF9vyvkqEOeW5fn08n6CALYN+7aIn5bpZEsmn+tyjlEZGxWCubqb/9QWA9KTsI4QW+Yu1Az8/0oxzn3FQgc8lOwoeJtA72ztKCeo5rbBSDjMEgL9zeAWQTgSlsCclCEnAkiwUnvTuoqM5wsnyLXA3uUhvmIqY8/ICgjRDsyj7iILWcsmowxrkLehdAoMwvBkLsSsEkzpT02xkZqnseVAENpzQPxeR/QUZRjMrGaHZbA4agpncq5YxXC2jgwrICkAsdzrNP8vfrKAhyPDycb9PAs2zopdS4O7KPu9Og/qxVkx3rdmt2sLb03NgT3UmT2y+3vqFfvjrTLaTZSeCM1W3XVgGFCHk1STiU2hHtEINAzcJKSbiSERR3p4c5jTIlOJC71X3jfrhxQhfUU2qMvNCt4p3LPxbVbZazsQ1IxolCOPFMrfmLrhK2hTe1r35QbwIGIdUHaglFf53pTGGjOp1bEJTMynWeg/wx5Z6Yl3Yia8cN+qI3wXhPOSX5ONfKVV4TBK1ktlNhAEBuanmrtLvgla8eQ8D5dYAjMcr8+/5k3LdcVK+tUACXBqHZXo5hvlQFLFYZUhYuyGC7q9VaWct7R3w=

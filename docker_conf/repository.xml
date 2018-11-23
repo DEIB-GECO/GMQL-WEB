@@ -1,0 +1,14 @@
+<?xml version = "1.0" encoding="UTF-8" standalone="yes"?>
+<gmqlProperties xmlns="http://genomic.elet.polimi.it/entities">
+    <property name="GMQL_LOCAL_HOME">/app/volume/gmql_repository</property>
+    <property name="GMQL_DFS_HOME">/user/</property>
+    <property name="GMQL_REPO_TYPE">LOCAL</property>
+    <property name="HADOOP_HOME">/usr/local/Cellar/hadoop/2.7.3/</property>
+    <property name="HADOOP_CONF_DIR">/usr/local/Cellar/hadoop/2.7.3/libexec/etc/hadoop/</property>
+
+    <!--property name="DISK_QUOTA" user-category="GUEST">500000</property-->
+    <!--property name="DISK_QUOTA" user-category="BASIC">5000000</property-->
+    <!--property name="DISK_QUOTA" user-category="PRO">20000000</property-->
+    <!--property name="DISK_QUOTA" user-category="ADMIN">50000000</property-->
+
+</gmqlProperties>

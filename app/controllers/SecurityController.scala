@@ -3,12 +3,13 @@ package controllers
 import java.security.MessageDigest
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
-import javax.inject.{Inject, Singleton}
 
+import controllers.SecurityController.getSha512
 import controllers.gmql.SecurityControllerDefaults._
 import controllers.gmql.SwaggerUtils
 import io.swagger.annotations.{ApiImplicitParams, _}
 import it.polimi.genomics.core.GDMSUserClass
+import javax.inject.{Inject, Singleton}
 import models.{AuthenticationDao, AuthenticationModel, UserDao, UserModel}
 import play.api.Play.current
 import play.api.libs.json._
@@ -28,6 +29,7 @@ import scala.concurrent.duration.Duration
 @Singleton
 @Api(value = SwaggerUtils.swaggerSecurityController, produces = "application/json, application/xml")
 class SecurityController @Inject()(mailerClient: MailerClient) extends Controller {
+
 
   def hasAdmin = {
     //    object admin{
@@ -339,8 +341,6 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
   }
 
 
-  def getSha512(value: String): Array[Byte] = MessageDigest.getInstance("SHA-512").digest(value.getBytes("UTF-8"))
-
   def createToken(id: Option[Long] = None): Some[String] = {
     val authToken = UUID.randomUUID().toString
     if (id.nonEmpty) {
@@ -358,4 +358,8 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
     }
   }
 
+}
+
+object SecurityController {
+  def getSha512(value: String): Array[Byte] = MessageDigest.getInstance("SHA-512").digest(value.getBytes("UTF-8"))
 }

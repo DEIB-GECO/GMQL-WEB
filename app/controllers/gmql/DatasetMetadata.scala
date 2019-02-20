@@ -229,6 +229,8 @@ object DatasetMetadata {
 
   import play.api.Play.current
 
+  val synchronizedLoadingSet = new java.util.concurrent.ConcurrentHashMap[String, Unit]()
+
   // use for preloading dataset of the user, default is public
   def loadCache(username: String = "public") = {
     //    import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -249,10 +251,27 @@ object DatasetMetadata {
   }
 
 
-  def apply(username: String, datasetName: String): DatasetMetadata =
-    if (username == "public")
-      Cache.getOrElse(s"$username->$datasetName")(new DatasetMetadata(username: String, datasetName: String))
-    else
-      Cache.getOrElse(s"$username->$datasetName", 10.minutes)(new DatasetMetadata(username: String, datasetName: String))
+  def apply(username: String, datasetName: String): DatasetMetadata = {
+    val dsKey = s"$username->$datasetName"
+    val resultOption = Cache.get(dsKey)
+    if (resultOption.nonEmpty)
+      resultOption.get.asInstanceOf[DatasetMetadata]
+    else {
+      println(synchronizedLoadingSet)
+      println(synchronizedLoadingSet.containsKey(dsKey))
+      if (synchronizedLoadingSet.containsKey(dsKey))
+        throw new Exception("Loading")
+      else {
+        synchronizedLoadingSet.put(dsKey, Unit)
+        val result =
+          if (username == "public")
+            Cache.getOrElse(s"$username->$datasetName")(new DatasetMetadata(username: String, datasetName: String))
+          else
+            Cache.getOrElse(s"$username->$datasetName", 10.minutes)(new DatasetMetadata(username: String, datasetName: String))
+        synchronizedLoadingSet.remove(dsKey)
+        result
+      }
+    }
+  }
 }
 

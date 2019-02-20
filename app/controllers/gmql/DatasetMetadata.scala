@@ -257,8 +257,6 @@ object DatasetMetadata {
     if (resultOption.nonEmpty)
       resultOption.get.asInstanceOf[DatasetMetadata]
     else {
-      println(synchronizedLoadingSet)
-      println(synchronizedLoadingSet.containsKey(dsKey))
       if (synchronizedLoadingSet.containsKey(dsKey))
         throw new Exception("Loading")
       else {

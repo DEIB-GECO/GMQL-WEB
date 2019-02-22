@@ -235,6 +235,20 @@ object DatasetMetadata {
 
   val synchronizedLoadingSet = new java.util.concurrent.ConcurrentHashMap[String, Unit]()
 
+  //TODO remove
+  def showMemory(text: String) = {
+    val r: Runtime = Runtime.getRuntime
+
+    // to test memory usage
+    r.gc
+    System.gc()
+    System.runFinalization()
+    r.gc
+    System.gc()
+    System.runFinalization()
+    Logger.debug(s"Memory usage - $text: " + (r.totalMemory - r.freeMemory) / 1024.0 / 1024.0)
+  }
+
 
   // use for preloading dataset of the user, default is public
   def loadCache(username: String = "public") = {
@@ -244,8 +258,21 @@ object DatasetMetadata {
       // in order to load all public dataset in pararllel run as a future execution
       //Future {
 
+      showMemory(s"before DatasetMetadata call $username->${ds.position}")
+      //TODO remove
+      val startTime = System.nanoTime
 
       DatasetMetadata(username, ds.position)
+
+
+      //TODO remove
+      val endTime = System.nanoTime
+      val timeElapsed = (endTime - startTime) / 1000000000.0
+      Logger.debug(s"Loading time $username->${ds.position}: $timeElapsed")
+
+
+      showMemory(s"after DatasetMetadata call $username->${ds.position}")
+
 
       //}
     }

@@ -29,6 +29,8 @@ object Global extends GlobalSettings {
         Thread.sleep(30000)
         Logger.info("Loading datasets ")
         DatasetMetadata.loadCache()
+        Logger.info("Datasets loaded  ")
+
       }
     }
   }

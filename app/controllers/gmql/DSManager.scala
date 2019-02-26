@@ -3,9 +3,10 @@ package controllers.gmql
 import java.io._
 import java.net.URL
 import java.util
-import javax.inject.Singleton
 
+import javax.inject.Singleton
 import controllers.gmql.ResultUtils._
+import controllers.gmql.SecurityControllerDefaults.PUBLIC_USER
 import io.swagger.annotations.{ApiImplicitParams, _}
 import it.polimi.genomics.core.DataStructures.IRDataSet
 import it.polimi.genomics.core.GDMSUserClass.GDMSUserClass
@@ -508,49 +509,54 @@ class DSManager extends Controller {
   def zip(datasetName: String) = AuthenticatedAction { implicit request =>
 
     import play.api.libs.concurrent.Execution.Implicits.defaultContext
-    val username: String = request.username.get
+    var username: String = request.username.get
 
     try {
-      if (datasetName.startsWith("public."))
+      if (datasetName.startsWith("public.") && !username.equals(PUBLIC_USER + "_download"))
         renderedError(FORBIDDEN, "Public dataset cannot be downloaded.")
       else {
-        val sampleNames = repository.listDSSamples(datasetName, username).map(temp => (temp.name.split("/").last.split("\\.").head, temp.name.split("/").last))
+
+        var dsName = if (datasetName.startsWith("public.")) datasetName.replace("public.", "") else datasetName
+
+        username = if (datasetName.startsWith("public.")) PUBLIC_USER else username
+
+        val sampleNames = repository.listDSSamples(dsName, username).map(temp => (temp.name.split("/").last.split("\\.").head, temp.name.split("/").last))
         Logger.debug("sampleNames" + sampleNames)
 
         val vocabularyCount = new VocabularyCount
         //TODO add schema
 
         val sources = sampleNames.flatMap { sampleName =>
-          lazy val streams = repository.sampleStreams(datasetName, username, sampleName._1)
+          lazy val streams = repository.sampleStreams(dsName, username, sampleName._1)
           List(
-            ZipEnumerator.Source(s"$datasetName/files/${sampleName._2}", { () => Future(Some(streams._1)) }),
-            ZipEnumerator.Source(s"$datasetName/files/${sampleName._2}.meta", { () => Future(Some(vocabularyCount.addVocabulary(streams._2))) })
+            ZipEnumerator.Source(s"$dsName/files/${sampleName._2}", { () => Future(Some(streams._1)) }),
+            ZipEnumerator.Source(s"$dsName/files/${sampleName._2}.meta", { () => Future(Some(vocabularyCount.addVocabulary(streams._2))) })
           )
         }
-        lazy val schemaStream = repository.getSchemaStream(datasetName, username)
-        sources += ZipEnumerator.Source(s"$datasetName/files/schema.xml", { () => Future(Some(schemaStream)) })
+        lazy val schemaStream = repository.getSchemaStream(dsName, username)
+        sources += ZipEnumerator.Source(s"$dsName/files/schema.xml", { () => Future(Some(schemaStream)) })
 
-        lazy val infoStream = repository.getInfoStream(datasetName, username)
-        sources += ZipEnumerator.Source(s"$datasetName/info.txt", { () => Future(Some(infoStream)) })
+        lazy val infoStream = repository.getInfoStream(dsName, username)
+        sources += ZipEnumerator.Source(s"$dsName/info.txt", { () => Future(Some(infoStream)) })
 
 
         val scriptStreamTest = try {
-          Some(repository.getScriptStream(datasetName, username).close())
+          Some(repository.getScriptStream(dsName, username).close())
         } catch {
           case _: Throwable => None
         }
 
         if (scriptStreamTest.isDefined) {
-          lazy val scriptStream = repository.getScriptStream(datasetName, username)
-          sources += ZipEnumerator.Source(s"$datasetName/query.txt", { () => Future(Some(scriptStream)) })
+          lazy val scriptStream = repository.getScriptStream(dsName, username)
+          sources += ZipEnumerator.Source(s"$dsName/query.txt", { () => Future(Some(scriptStream)) })
         }
 
-        sources += ZipEnumerator.Source(s"$datasetName/vocabulary.txt", { () => Future(Some(vocabularyCount.getStream)) })
+        sources += ZipEnumerator.Source(s"$dsName/vocabulary.txt", { () => Future(Some(vocabularyCount.getStream)) })
 
         //        Logger.debug(s"Before zip enumerator: $username->$datasetName")
         Ok.chunked(ZipEnumerator(sources))(play.api.http.Writeable.wBytes).withHeaders(
           CONTENT_TYPE -> "application/zip",
-          CONTENT_DISPOSITION -> s"attachment; filename=$datasetName.zip"
+          CONTENT_DISPOSITION -> s"attachment; filename=$dsName.zip"
         )
       }
     } catch {

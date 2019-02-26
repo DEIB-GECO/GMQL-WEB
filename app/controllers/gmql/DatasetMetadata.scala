@@ -38,7 +38,7 @@ class DatasetMetadata(username: String, datasetName: String, fullMap: mutable.Ma
     }
     val samples = DatasetUtils.getSamples(user, dsName)
     val temp = samples.map(sample => (sample.name, sample.id.toInt))
-    val n = temp.map(_._2).max + 1
+    val n = if(temp.isEmpty)  0 else temp.map(_._2).max + 1
     val nameToId = temp.toMap
     val idToName = Array.ofDim[String](n)
     temp.foreach(t => idToName(t._2) = t._1)

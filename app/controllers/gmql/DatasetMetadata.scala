@@ -38,7 +38,7 @@ class DatasetMetadata(username: String, datasetName: String, fullMap: mutable.Ma
     }
     val samples = DatasetUtils.getSamples(user, dsName)
     val temp = samples.map(sample => (sample.name, sample.id.toInt))
-    val n = if(temp.isEmpty)  0 else temp.map(_._2).max + 1
+    val n = if (temp.isEmpty) 0 else temp.map(_._2).max + 1
     val nameToId = temp.toMap
     val idToName = Array.ofDim[String](n)
     temp.foreach(t => idToName(t._2) = t._1)
@@ -61,14 +61,14 @@ class DatasetMetadata(username: String, datasetName: String, fullMap: mutable.Ma
 
   val (keyBased, idBased) = {
     //
-    val fullFile ={
+    val fullFile = {
       //to remove replicates if exists
       val seen = mutable.HashSet[Meta]()
-       repository.getMetaIterator(datasetName, username).map(_.split("\t")).flatMap({
+      repository.getMetaIterator(datasetName, username).map(_.split("\t")).flatMap({
         case Array(id: String, key: String, value: String) => Some(Meta(id.toInt, fullMap.getOrElseUpdate(key, key), fullMap.getOrElseUpdate(value, value)))
         case _ => None
-      }).filter{x=>
-        if(seen(x))
+      }).filter { x =>
+        if (seen(x))
           false
         else {
           seen += x
@@ -258,7 +258,7 @@ object DatasetMetadata {
 
   val synchronizedLoadingSet: concurrent.Map[String, Unit] = new ConcurrentHashMap[String, Unit]().asScala
 
-  val fullMapPublic: concurrent.Map[String, String] = new java.util.concurrent.ConcurrentHashMap[String, String]().asScala
+  var fullMapPublic: concurrent.Map[String, String] = new java.util.concurrent.ConcurrentHashMap[String, String]().asScala
   //  val fullMapPublic: mutable.Map[String, String] = mutable.Map.empty[String, String]
 
 
@@ -303,7 +303,7 @@ object DatasetMetadata {
 
       //}
     }
-    fullMapPublic.clear()
+    fullMapPublic = new java.util.concurrent.ConcurrentHashMap[String, String]().asScala
     showMemory(s"after fullMapPublic.clear()")
     showMemory(s"after fullMapPublic.clear()")
   }

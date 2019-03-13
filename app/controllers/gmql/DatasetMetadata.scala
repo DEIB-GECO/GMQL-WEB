@@ -258,7 +258,7 @@ object DatasetMetadata {
 
   val synchronizedLoadingSet: concurrent.Map[String, Unit] = new ConcurrentHashMap[String, Unit]().asScala
 
-  var fullMapPublic: concurrent.Map[String, String] = new java.util.concurrent.ConcurrentHashMap[String, String]().asScala
+  var fullMapPublic = new ConcurrentHashMap[String, String]()
   //  val fullMapPublic: mutable.Map[String, String] = mutable.Map.empty[String, String]
 
 
@@ -281,31 +281,50 @@ object DatasetMetadata {
   def loadCache(username: String = "public") = {
     //    import play.api.libs.concurrent.Execution.Implicits.defaultContext
     //    import scala.concurrent.Future
-    for (ds <- utils.GmqlGlobal.repository.listAllDSs(username)) {
+    for (datasetName <- utils.GmqlGlobal.repository.listAllDSs(username).map(_.position).sorted) {
       // in order to load all public dataset in pararllel run as a future execution
       //Future {
 
-      showMemory(s"before DatasetMetadata call $username->${ds.position}")
+//      showMemory(s"before DatasetMetadata call $username->${datasetName}")
       //TODO remove
       val startTime = System.nanoTime
 
-      DatasetMetadata(username, ds.position)
+      DatasetMetadata(username, datasetName)
 
 
       //TODO remove
       val endTime = System.nanoTime
       val timeElapsed = (endTime - startTime) / 1000000000.0
-      Logger.debug(s"Loading time $username->${ds.position}: $timeElapsed")
+      Logger.debug(s"Loading time $username->${datasetName}: $timeElapsed")
 
 
-      showMemory(s"after DatasetMetadata call $username->${ds.position}")
+//      showMemory(s"after DatasetMetadata call $username->${datasetName}")
 
 
       //}
     }
-    fullMapPublic = new java.util.concurrent.ConcurrentHashMap[String, String]().asScala
-    showMemory(s"after fullMapPublic.clear()")
-    showMemory(s"after fullMapPublic.clear()")
+    Logger.debug("fullMapPublic size:" + fullMapPublic.size)
+    Logger.debug("fullMapPublic size:" + fullMapPublic.keys.size)
+    showMemory(s"after fullMapPublic.clear()0")
+    showMemory(s"after fullMapPublic.clear()0")
+
+    try{
+      Logger.debug(""+ fullMapPublic.getClass.getDeclaredFields().toList.map(_.getName))
+      val tableField = fullMapPublic.getClass.getDeclaredField("table")
+      tableField.setAccessible(true)
+      val table = tableField.get(fullMapPublic).asInstanceOf[Array[AnyRef]]
+      Logger.debug("fullMapPublic real table size:" + (if (table == null) 0 else table.length))
+    } catch {
+      case e:Exception => Logger.debug("",e)
+    }
+
+
+    fullMapPublic.clear()
+    showMemory(s"after fullMapPublic.clear()1")
+    showMemory(s"after fullMapPublic.clear()1")
+    fullMapPublic = new java.util.concurrent.ConcurrentHashMap[String, String]()
+    showMemory(s"after fullMapPublic.clear()2")
+    showMemory(s"after fullMapPublic.clear()2")
   }
 
   def clearCache() = {

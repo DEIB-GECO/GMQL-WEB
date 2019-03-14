@@ -8,8 +8,8 @@
 
     <property name="GF_ENABLED">true</property>
     <property name="GF_NAMESERVER_ADDRESS">http://geco.deib.polimi.it:8800</property>
-    <property name="GF_NAMESPACE">it.polimi</property>
-    <property name="GF_TOKEN">5449c95221145bdff746de1cf5c902f94a1898a0</property>
+    <property name="GF_INSTANCENAME">arif_1</property>
+    <property name="GF_TOKEN">1bb334022e691d23b226603fcb6e186609489821</property>
 
     <!--property name="DISK_QUOTA" user-category="GUEST">500000</property-->
     <!--property name="DISK_QUOTA" user-category="BASIC">5000000</property-->

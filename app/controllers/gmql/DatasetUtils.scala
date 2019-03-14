@@ -316,6 +316,8 @@ object SecurityControllerDefaults {
   final val AUTH_TOKEN_COOKIE: String = "authToken"
   final val AUTH_TOKEN_JSON: String = "authToken"
   final val QUERY_AUTH_TOKEN: String = "authToken"
+  final val AUTH_HEADER_NAME_FN = "X-AUTH-FED-INSTANCE"
+  final val AUTH_HEADER_NAME_FT = "X-AUTH-FED-TOKEN"
 
   final val GUEST_USER: String = "guest_new"
   final val PUBLIC_USER: String = "public"

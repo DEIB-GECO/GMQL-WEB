@@ -11,6 +11,7 @@ package wrappers.authanticate
 import controllers.gmql.SecurityControllerDefaults._
 import controllers.{Default, SecurityController}
 import it.polimi.genomics.core.GDMSUserClass
+import it.polimi.genomics.repository.federated.communication.NameServer
 import models.{AuthenticationDao, AuthenticationModel, UserDao, UserModel}
 import play.api.http.MimeTypes
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -79,15 +80,45 @@ trait AuthenticatedActionBuilder extends ActionBuilder[AuthenticatedRequest] {
       None
     else {
       if (token == "FEDERATED-TOKEN") {
-        if (Await.result(UserDao.getByUsername("federated"), Duration.Inf).isEmpty) {
-          //TODO possibly add FEDERATED user type
-          GmqlGlobal.repository.registerUser("federated")
-          val userId = Await.result(UserDao.add(UserModel("federated", GDMSUserClass.BASIC, "", SecurityController.getSha512("FEDERATED-TOKEN"), "Fede", "Rated")), Duration.Inf)
-          Await.result(AuthenticationDao.add(AuthenticationModel(userId.get,None,"FEDERATED-TOKEN")), Duration.Inf)
+        val instanceName = request.headers.get(AUTH_HEADER_NAME_FN) match {
+          case Some(token) => token
+          case None =>
+            request.queryString.get(AUTH_HEADER_NAME_FN) match {
+              case Some(token) => Some(token(0)).getOrElse(request.cookies.get(AUTH_HEADER_NAME_FN).getOrElse(Cookie(name = AUTH_HEADER_NAME_FN, value = null)).value)
+              case None => fromCookie
+            }
         }
+        println("instanceName: '" + instanceName + "'")
+        val instanceToken = request.headers.get(AUTH_HEADER_NAME_FT) match {
+          case Some(token) => token
+          case None =>
+            request.queryString.get(AUTH_HEADER_NAME_FT) match {
+              case Some(token) => Some(token(0)).getOrElse(request.cookies.get(AUTH_HEADER_NAME_FT).getOrElse(Cookie(name = AUTH_HEADER_NAME_FT, value = null)).value)
+              case None => fromCookie
+            }
+        }
+        println("instanceToken: '" + instanceToken + "'")
+
+        val isValid = new NameServer().validateToken(instanceName, instanceToken)
+        println("isValid: " + isValid)
+
+        if(isValid) {
+          if (Await.result(UserDao.getByUsername("federated"), Duration.Inf).isEmpty) {
+            //TODO possibly add FEDERATED user type
+            GmqlGlobal.repository.registerUser("federated")
+            val userId = Await.result(UserDao.add(UserModel("federated", GDMSUserClass.BASIC, "", SecurityController.getSha512("FEDERATED-TOKEN"), "Fede", "Rated")), Duration.Inf)
+            Await.result(AuthenticationDao.add(AuthenticationModel(userId.get, None, "FEDERATED-TOKEN")), Duration.Inf)
+          }
+          val asd = AuthenticationDao.getByToken(token)
+          Await.result(asd, Duration.Inf)
+        }
+        else
+          None
       }
-      val asd = AuthenticationDao.getByToken(token)
-      Await.result(asd, Duration.Inf)
+      else {
+        val asd = AuthenticationDao.getByToken(token)
+        Await.result(asd, Duration.Inf)
+      }
     }
     //    Some(User2(1,"","canakoglu","",null,"","",null,null,false))
     //    val test = asd.value

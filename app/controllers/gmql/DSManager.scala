@@ -944,7 +944,8 @@ class DSManager extends Controller {
           }
         BadRequest(message)
     } finally {
-      DatasetUtils.deleteTemp(tempDirPath)
+      if(ut.MODE != ut.LOCAL)
+        DatasetUtils.deleteTemp(tempDirPath)
     }
   }
 

@@ -1042,7 +1042,7 @@ class DSManager extends Controller {
         //      val dataset = IRDataSet(dataSetName, repository.readSchemaFile(schemaPath).fields.map(field => (field.name, field.fieldType)))
         val samples: util.List[GMQLSample] = samplesToImport.toList.map(fileName => GMQLSample(fileName, fileName + ".meta"))
         repository.importDs(dataSetName, username, userType, samples, schemaPath)
-//        ProfilerLauncher.profileDS(username, dataSetName)
+        ProfilerLauncher.profileDS(username, dataSetName)
 
         def stringToSample(set: Set[String]) = if (set.isEmpty) None else Some(set.toSeq.map((file: String) => Sample("", file.split("/").last)))
 

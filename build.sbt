@@ -10,7 +10,7 @@ import scala.util.Try
 
 name := "gmql-web"
 
-version := "2.2-SNAPSHOT"
+version := "2.2-gmql_federated-SNAPSHOT"
 
 lazy val `gmql-web` = (project in file(".")).enablePlugins(PlayScala, SbtWeb)
 
@@ -69,10 +69,10 @@ libraryDependencies += "org.eclipse.persistence" % "eclipselink" % "2.6.3"
 
 
 
-resolvers += Resolver.mavenLocal
-//resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+//resolvers += Resolver.mavenLocal
+resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
-val gmqlVersion = "1.0-SNAPSHOT"
+val gmqlVersion = "1.0-gmql_federated-SNAPSHOT"
 
 
 libraryDependencies ++= Seq(

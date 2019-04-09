@@ -63,8 +63,10 @@ object DatasetUtils {
       Sample(temp.ID,
         //TODO check the correctness
         temp.name.split("/").last.split("\\.").head, /*name is the last part of the file*/
-        Some(temp.name),
-        info = Some(getInfo(username, datasetName, temp.name.split("/").last.split("\\.").head)))
+        Some(temp.name)
+//        ,
+//        info = Some(getInfo(username, datasetName, temp.name.split("/").last.split("\\.").head))
+      )
     ).sorted
   }
 

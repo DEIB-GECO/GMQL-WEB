@@ -523,49 +523,49 @@ class DSManager extends Controller {
     try {
 
 
-        if(datasetName.startsWith("public.")) {
-          username = "public"
-          datasetName = datasetName.replace("public.", "")
-        }
+      if(datasetName.startsWith("public.")) {
+        username = "public"
+        datasetName = datasetName.replace("public.", "")
+      }
 
-        val sampleNames = repository.listDSSamples(datasetName, username).map(temp => (temp.name.split("/").last.split("\\.").head, temp.name.split("/").last))
-        Logger.debug("sampleNames" + sampleNames)
+      val sampleNames = repository.listDSSamples(datasetName, username).map(temp => (temp.name.split("/").last.split("\\.").head, temp.name.split("/").last))
+      Logger.debug("sampleNames" + sampleNames)
 
-        val vocabularyCount = new VocabularyCount
-        //TODO add schema
+      val vocabularyCount = new VocabularyCount
+      //TODO add schema
 
-        val sources = sampleNames.flatMap { sampleName =>
-          lazy val streams = repository.sampleStreams(datasetName, username, sampleName._1)
-          List(
-            ZipEnumerator.Source(s"$datasetName/files/${sampleName._2}", { () => Future(Some(streams._1)) }),
-            ZipEnumerator.Source(s"$datasetName/files/${sampleName._2}.meta", { () => Future(Some(vocabularyCount.addVocabulary(streams._2))) })
-          )
-        }
-        lazy val schemaStream = repository.getSchemaStream(datasetName, username)
-        sources += ZipEnumerator.Source(s"$datasetName/files/schema.xml", { () => Future(Some(schemaStream)) })
-
-        lazy val infoStream = repository.getInfoStream(datasetName, username)
-        sources += ZipEnumerator.Source(s"$datasetName/info.txt", { () => Future(Some(infoStream)) })
-
-
-        val scriptStreamTest = try {
-          Some(repository.getScriptStream(datasetName, username).close())
-        } catch {
-          case _: Throwable => None
-        }
-
-        if (scriptStreamTest.isDefined) {
-          lazy val scriptStream = repository.getScriptStream(datasetName, username)
-          sources += ZipEnumerator.Source(s"$datasetName/query.txt", { () => Future(Some(scriptStream)) })
-        }
-
-        sources += ZipEnumerator.Source(s"$datasetName/vocabulary.txt", { () => Future(Some(vocabularyCount.getStream)) })
-
-        //        Logger.debug(s"Before zip enumerator: $username->$datasetName")
-        Ok.chunked(ZipEnumerator(sources))(play.api.http.Writeable.wBytes).withHeaders(
-          CONTENT_TYPE -> "application/zip",
-          CONTENT_DISPOSITION -> s"attachment; filename=$datasetName.zip"
+      val sources = sampleNames.flatMap { sampleName =>
+        lazy val streams = repository.sampleStreams(datasetName, username, sampleName._1)
+        List(
+          ZipEnumerator.Source(s"$datasetName/files/${sampleName._2}", { () => Future(Some(streams._1)) }),
+          ZipEnumerator.Source(s"$datasetName/files/${sampleName._2}.meta", { () => Future(Some(vocabularyCount.addVocabulary(streams._2))) })
         )
+      }
+      lazy val schemaStream = repository.getSchemaStream(datasetName, username)
+      sources += ZipEnumerator.Source(s"$datasetName/files/schema.xml", { () => Future(Some(schemaStream)) })
+
+      lazy val infoStream = repository.getInfoStream(datasetName, username)
+      sources += ZipEnumerator.Source(s"$datasetName/info.txt", { () => Future(Some(infoStream)) })
+
+
+      val scriptStreamTest = try {
+        Some(repository.getScriptStream(datasetName, username).close())
+      } catch {
+        case _: Throwable => None
+      }
+
+      if (scriptStreamTest.isDefined) {
+        lazy val scriptStream = repository.getScriptStream(datasetName, username)
+        sources += ZipEnumerator.Source(s"$datasetName/query.txt", { () => Future(Some(scriptStream)) })
+      }
+
+      sources += ZipEnumerator.Source(s"$datasetName/vocabulary.txt", { () => Future(Some(vocabularyCount.getStream)) })
+
+      //        Logger.debug(s"Before zip enumerator: $username->$datasetName")
+      Ok.chunked(ZipEnumerator(sources))(play.api.http.Writeable.wBytes).withHeaders(
+        CONTENT_TYPE -> "application/zip",
+        CONTENT_DISPOSITION -> s"attachment; filename=$datasetName.zip"
+      )
 
     } catch {
       case _: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found: $datasetName")

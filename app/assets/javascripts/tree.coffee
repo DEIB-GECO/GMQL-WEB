@@ -210,8 +210,8 @@ glyph_opts = map:
           res = for att in list
             hideCheckBox = ("public-data-set" == data.node.data.value) || ("public-data-set" == data.node.parent?.data.value) ||
                          ("federated-data-set" == data.node.data.value)  || ("federated-data-set" == data.node.parent?.data.value)
-            result = (item.value  for item in att?.info?.infoList when item.key == 'Number of samples')
-            result = if(result?.length) then result = " (#{result})" else ""
+#            result = (item.value  for item in att?.info?.infoList when item.key == 'Number of samples')
+#            result = if(result?.length) then result = " (#{result})" else ""
             #TODO title should not be used anymore from the other functions, only key should be used
             result = ""
 

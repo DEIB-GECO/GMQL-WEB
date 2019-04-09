@@ -8,10 +8,10 @@ package wrappers.authanticate
   * http://iankent.uk/blog/action-composition-in-play-framework/
   */
 
+import it.polimi.genomics.repository.federated.communication.NameServer
 import controllers.gmql.SecurityControllerDefaults._
 import controllers.{Default, SecurityController}
 import it.polimi.genomics.core.GDMSUserClass
-import it.polimi.genomics.repository.federated.communication.NameServer
 import models.{AuthenticationDao, AuthenticationModel, UserDao, UserModel}
 import play.api.http.MimeTypes
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -116,6 +116,15 @@ trait AuthenticatedActionBuilder extends ActionBuilder[AuthenticatedRequest] {
           None
       }
       else {
+        if (token == "DOWNLOAD-TOKEN") {
+          val userName = PUBLIC_USER + "_download"
+          if (Await.result(UserDao.getByUsername(userName), Duration.Inf).isEmpty) {
+            //TODO possibly add special user type
+            GmqlGlobal.repository.registerUser(userName)
+            val userId = Await.result(UserDao.add(UserModel(userName, GDMSUserClass.BASIC, "DOWNLOAD-TOKEN", Array.emptyByteArray, "public", "download")), Duration.Inf)
+            Await.result(AuthenticationDao.add(AuthenticationModel(userId.get,None,"DOWNLOAD-TOKEN")), Duration.Inf)
+          }
+        }
         val asd = AuthenticationDao.getByToken(token)
         Await.result(asd, Duration.Inf)
       }

@@ -2,14 +2,14 @@
 <gmqlProperties xmlns="http://genomic.elet.polimi.it/entities">
     <property name="GMQL_LOCAL_HOME">~/gmql_repository</property>
     <property name="GMQL_DFS_HOME">/user/</property>
-    <property name="GMQL_REPO_TYPE">HDFS</property>
+    <property name="GMQL_REPO_TYPE">LOCAL</property>
     <property name="HADOOP_HOME">/usr/local/Cellar/hadoop/2.7.3/</property>
     <property name="HADOOP_CONF_DIR">/usr/local/Cellar/hadoop/2.7.3/libexec/etc/hadoop/</property>
 
     <property name="GF_ENABLED">true</property>
-    <property name="GF_NAMESERVER_ADDRESS">http://geco.deib.polimi.it:8800</property>
-    <property name="GF_INSTANCENAME">arif_1</property>
-    <property name="GF_TOKEN">b2c55204fa86861566c53af1c4f71ec0b1ded73b</property>
+    <property name="GF_NAMESERVER_ADDRESS">http://genomic.deib.polimi.it/nameserver</property>
+    <property name="GF_INSTANCENAME">USER_NAME</property>
+    <property name="GF_TOKEN">USER_TOKEN</property>
 
     <!--property name="DISK_QUOTA" user-category="GUEST">500000</property-->
     <!--property name="DISK_QUOTA" user-category="BASIC">5000000</property-->

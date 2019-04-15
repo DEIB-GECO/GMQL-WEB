@@ -160,8 +160,21 @@ getQuery = ->
   console.log "last reduced: '" + reduced + "'"
   console.log "last reduced.length: " + reduced.length
   reduced = (reduced if reduced.length) or ""
+  fed_server = window.lastSelectedDataSet
+  if fed_server?.startsWith("federated")
+    fed_server =  fed_server.replace /^(federated)\./, ""
+    fed_server =  fed_server.replace /\..*$/, ""
+    fed_server =  "at:" + fed_server
+    if reduced
+      fed_server =  ";" +  fed_server
+  else
+    fed_server = ""
+
+
+
+
   if window.lastSelectedDataSet?
-    "DATA_SET_VAR = SELECT(#{reduced}) #{window.lastSelectedDataSet.replace /^(public|federated)\./, ""};"
+    "DATA_SET_VAR = SELECT(#{reduced}#{fed_server}) #{window.lastSelectedDataSet.replace /^(public|federated)\./, ""};"
   else
     "Please choose dataset for data selection"
 

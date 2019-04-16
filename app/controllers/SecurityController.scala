@@ -9,6 +9,7 @@ import controllers.gmql.SecurityControllerDefaults._
 import controllers.gmql.SwaggerUtils
 import io.swagger.annotations.{ApiImplicitParams, _}
 import it.polimi.genomics.core.GDMSUserClass
+import it.polimi.genomics.repository.Utilities
 import javax.inject.{Inject, Singleton}
 import models.{AuthenticationDao, AuthenticationModel, UserDao, UserModel}
 import play.api.Play.current
@@ -87,9 +88,12 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
     else {
       try {
         val userType =
-          if (hasAdmin)
-            GDMSUserClass.BASIC
-          else
+          if (hasAdmin) {
+            if (!Utilities().GUEST_ENABLED)
+              GDMSUserClass.DISABLED
+            else
+              GDMSUserClass.BASIC
+          } else
             GDMSUserClass.ADMIN
 
 
@@ -137,28 +141,38 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
       val userOption = Await.result(userFuture, Duration.Inf).filter(_.shaPassword.deep == getSha512(password).deep)
 
       userOption match {
-        case Some(user) =>
-          loginResult(createToken(user.id), userOption)
+        case Some(user) => {
+          if(user.userType != GDMSUserClass.DISABLED)
+            loginResult(createToken(user.id), userOption)
+          else {
+            val result = "Your registration request needs approval from the administrator."
+            errorResult(result, Some(UNAUTHORIZED))
+          }
+        }
         case None =>
-          val result = "The username or password you entered don't match." + (if (Play.isDev) username + "-" + password else "")
+          val result = "You have entered an invalid username or password." //+ (if (Play.isDev) username + "-" + password else "")
           errorResult(result, Some(UNAUTHORIZED))
       }
     }
   }
 
   def loginGuest = Action { implicit request =>
-    var username = GUEST_USER + guestCounter.incrementAndGet
-    while (Await.result(UserDao.getByUsername(username), Duration.Inf).nonEmpty) {
-      username = GUEST_USER + guestCounter.incrementAndGet
+    if(!Utilities().GUEST_ENABLED)
+       new Results.Status(403)
+    else {
+      var username = GUEST_USER + guestCounter.incrementAndGet
+      while (Await.result(UserDao.getByUsername(username), Duration.Inf).nonEmpty) {
+        username = GUEST_USER + guestCounter.incrementAndGet
+      }
+      val user: UserModel = UserModel(username, GDMSUserClass.GUEST, username + "@demo.com", getSha512("password"), "Guest", "")
+      val userId = Await.result(UserDao.add(user), Duration.Inf)
+      repository.registerUser(username)
+      val token = createToken(userId)
+      if (Play.isDev)
+        loginResult(token, Some(user))
+      else
+        loginResult(token, user = None)
     }
-    val user: UserModel = UserModel(username, GDMSUserClass.GUEST, username + "@demo.com", getSha512("password"), "Guest", "")
-    val userId = Await.result(UserDao.add(user), Duration.Inf)
-    repository.registerUser(username)
-    val token = createToken(userId)
-    if (Play.isDev)
-      loginResult(token, Some(user))
-    else
-      loginResult(token, user = None)
   }
 
   @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))

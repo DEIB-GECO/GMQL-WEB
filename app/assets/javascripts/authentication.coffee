@@ -80,6 +80,8 @@ displayLoggedIn = (fullName) ->
     dataType: 'json'
     success: (result, textStatus, jqXHR) ->
       doLogin(result)
+    error: ->
+      BootstrapDialog.alert "Guest users cannot be created on this instance."
 
 
 
@@ -138,8 +140,8 @@ loginButtonClick = () ->
     contentType: 'application/json'
     success: (result, textStatus, jqXHR) ->
       doLogin(result)
-    error: ->
-      BootstrapDialog.alert "Password or username is wrong, please check it."
+    error: (jqXHR, textStatus, errorThrown) ->
+      BootstrapDialog.alert JSON.parse(jqXHR.responseText).errorString
 
 registerButtonClick = () ->
   console.log("loginButton.click")

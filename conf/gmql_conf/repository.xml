@@ -11,6 +11,8 @@
     <property name="GF_INSTANCENAME">USER_NAME</property>
     <property name="GF_TOKEN">USER_TOKEN</property>
 
+    <property name="GUEST_ENABLED">true</property>
+
     <!--property name="DISK_QUOTA" user-category="GUEST">500000</property-->
     <!--property name="DISK_QUOTA" user-category="BASIC">5000000</property-->
     <!--property name="DISK_QUOTA" user-category="PRO">20000000</property-->

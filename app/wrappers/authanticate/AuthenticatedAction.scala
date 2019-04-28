@@ -125,8 +125,16 @@ trait AuthenticatedActionBuilder extends ActionBuilder[AuthenticatedRequest] {
             Await.result(AuthenticationDao.add(AuthenticationModel(userId.get,None,"DOWNLOAD-TOKEN")), Duration.Inf)
           }
         }
+
         val asd = AuthenticationDao.getByToken(token)
-        Await.result(asd, Duration.Inf)
+
+
+        val user: Option[(UserModel, AuthenticationModel)] = Await.result(asd, Duration.Inf)
+
+        if(user.isDefined && user.get._1.userType == GDMSUserClass.DISABLED)
+          None
+        else
+          Await.result(asd, Duration.Inf)
       }
     }
     //    Some(User2(1,"","canakoglu","",null,"","",null,null,false))

@@ -32,6 +32,18 @@ $ ->
   loadContext()
   loadUsage()
 
+
+@updateUploadView = () ->
+  if window.user.userType == "ADMIN" && $("#file-user-name").length == 0
+    $("#file-upload-form").prepend('<div class="form-group">
+          <label for="file-user-name">User name:</label>
+          <input
+            class="form-control"
+            name="file-user-name"
+            id="file-user-name"
+            placeholder="Enter user name, leave empty if you want to load your own private space">
+        </div>')
+
 @loadUsage = (formFunction) ->
   memUsage = $('#memory-usage')
   memUsageTooltip = $('#memory-usage-tooltip')

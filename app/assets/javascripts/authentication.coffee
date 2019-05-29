@@ -15,6 +15,7 @@ init = () ->
       success: (result, textStatus, jqXHR) ->
         window.user = result
         displayLoggedIn(result.fullName)
+        updateUploadView()
 #        $( "input[name='X-AUTH-TOKEN']" ).val(window.authToken)
       error: (jqXHR, textStatus, errorThrown) ->
         displayGuestButton()
@@ -98,6 +99,8 @@ doLogin = (data) ->
   displayLoggedIn(data.fullName)
   $(".login-event").click()
   location.reload()
+
+  updateUploadView()
 
 
 doLogout = (event) ->

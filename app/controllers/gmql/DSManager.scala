@@ -3,7 +3,6 @@ package controllers.gmql
 import java.io._
 import java.net.URL
 import java.util
-import javax.inject.Singleton
 
 import controllers.gmql.ResultUtils._
 import io.swagger.annotations.{ApiImplicitParams, _}
@@ -16,6 +15,7 @@ import it.polimi.genomics.repository.FSRepository.FS_Utilities
 import it.polimi.genomics.repository.GMQLExceptions.{GMQLDSNotFound, GMQLNotValidDatasetNameException, GMQLSampleNotFound}
 import it.polimi.genomics.repository._
 import it.polimi.genomics.spark.implementation.loaders.CustomParser
+import javax.inject.Singleton
 import org.apache.spark.SparkException
 import org.xml.sax.SAXException
 import play.api.Play.current
@@ -523,7 +523,7 @@ class DSManager extends Controller {
     try {
 
 
-      if(datasetName.startsWith("public.")) {
+      if (datasetName.startsWith("public.")) {
         username = "public"
         datasetName = datasetName.replace("public.", "")
       }
@@ -888,6 +888,7 @@ class DSManager extends Controller {
   ))
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name = "schemaName", paramType = "query", dataType = "string", allowableValues = "bed, bedGraph, NarrowPeak, BroadPeak, vcf"),
+    new ApiImplicitParam(name = "userName", paramType = "query", dataType = "string", value = "Admin users can load into others user's account"),
     new ApiImplicitParam(name = "schema", dataType = "file", paramType = "form"),
     new ApiImplicitParam(name = "file1", dataType = "file", paramType = "form"),
     new ApiImplicitParam(name = "file2", dataType = "file", paramType = "form"),
@@ -896,9 +897,13 @@ class DSManager extends Controller {
     new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
   def uploadSample(dataSetName: String) = AuthenticatedAction(parse.multipartFormData) { implicit request =>
     val schemaNameOption = request.getQueryString("schemaName")
+    val userNameInput =  request.getQueryString("userName")
 
-    val username = request.username.get
+    val requesterUser = request.username.get
+    val username = userNameInput.getOrElse(requesterUser)
     val userType = request.user.get.userType
+
+
     Logger.debug("uploadSample => username: " + username)
     //TODO move create empty directory to utils
     val tempDirPath = DatasetUtils.createEmptyTempDirectory(username, dataSetName)
@@ -906,6 +911,9 @@ class DSManager extends Controller {
     var isSchemaUploaded = false
     Logger.debug("uploadSample=>tempDirPath: " + tempDirPath)
     try {
+      if (username != requesterUser && userType != GDMSUserClass.ADMIN)
+        throw new Exception("Non admin user cannot upload DS to other users")
+
       val files = mutable.Set.empty[String]
       request.body.files.foreach {
         file =>
@@ -940,7 +948,7 @@ class DSManager extends Controller {
         BadRequest(message)
       case e: SparkException if Some(e.getCause).getOrElse(new Exception).isInstanceOf[ParsingException] =>
         Logger.error("Parsing Error", e)
-        val message = "Parsing error. \n" + e.getCause.getMessage.replace("[","<code>").replace("]","</code>")
+        val message = "Parsing error. \n" + e.getCause.getMessage.replace("[", "<code>").replace("]", "</code>")
         repository.deleteDS(dataSetName, username)
         BadRequest(message)
       case e: UserExceedsQuota =>
@@ -955,7 +963,7 @@ class DSManager extends Controller {
           }
         BadRequest(message)
     } finally {
-      if(ut.MODE != ut.LOCAL)
+      if (ut.MODE != ut.LOCAL)
         DatasetUtils.deleteTemp(tempDirPath)
     }
   }

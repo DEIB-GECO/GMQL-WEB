@@ -67,12 +67,22 @@ libraryDependencies += "com.sun.jersey" % "jersey-core" % "1.9"
 libraryDependencies += "org.eclipse.persistence" % "eclipselink" % "2.6.3"
 
 
+val development = false
 
 
-//resolvers += Resolver.mavenLocal
-resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+resolvers += {
+  if (development)
+    Resolver.mavenLocal
+  else
+    "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+}
 
-val gmqlVersion = "1.0-gmql_federated-SNAPSHOT"
+val gmqlVersion = {
+  if (development)
+    "1.0-SNAPSHOT"
+  else
+    "1.0-gmql_federated-SNAPSHOT"
+}
 
 
 libraryDependencies ++= Seq(

@@ -897,7 +897,7 @@ class DSManager extends Controller {
     new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
   def uploadSample(dataSetName: String) = AuthenticatedAction(parse.multipartFormData) { implicit request =>
     val schemaNameOption = request.getQueryString("schemaName")
-    val userNameInput =  request.getQueryString("userName")
+    val userNameInput = request.getQueryString("userName")
 
     val requesterUser = request.username.get
     val username = userNameInput.getOrElse(requesterUser)
@@ -911,8 +911,8 @@ class DSManager extends Controller {
     var isSchemaUploaded = false
     Logger.debug("uploadSample=>tempDirPath: " + tempDirPath)
     try {
-      if (username != requesterUser && userType != GDMSUserClass.ADMIN)
-        throw new Exception("Non admin user cannot upload DS to other users")
+      if (username != requesterUser && (userType != GDMSUserClass.ADMIN || username != "public"))
+        throw new Exception("Admin users can upload DS to only to public user space")
 
       val files = mutable.Set.empty[String]
       request.body.files.foreach {

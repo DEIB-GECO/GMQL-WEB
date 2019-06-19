@@ -594,6 +594,7 @@ class DSManager extends Controller {
         <schema>
           <name>{gmqlSchema.name}</name>
           <type>{gmqlSchema.schemaType}</type>
+          <coordinate_system>{gmqlSchema.schemaCoordinateSystem}</coordinate_system>
           {gmqlSchema.fields.map(getXmlGmqlSchemaField)}
         </schema>
 

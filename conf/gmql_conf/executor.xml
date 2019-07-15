@@ -1,7 +1,7 @@
 <gmqlProperties xmlns="http://genomic.elet.polimi.it/impl">
   <property name = "SPARK_HOME">/app/spark-2.2.0-bin-hadoop2.7/</property>
   <property name = "CLI_JAR_NAME">GMQL-Cli.jar</property>
-  <property name = "CLI_CLASS">it.polimi.genomics.cli.GMQLExecuteCommandFederated</property>
+  <property name = "CLI_CLASS">it.polimi.genomics.cli.GMQLExecuteCommand</property>
   <property name = "LAUNCHER_MODE">LOCAL</property>
   <property name = "LIB_DIR_LOCAL">conf/gmql_lib/</property>
   <property name = "LIB_DIR_HDFS">/user/repository/lib/</property>

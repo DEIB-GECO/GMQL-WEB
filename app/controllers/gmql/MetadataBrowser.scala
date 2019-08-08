@@ -147,7 +147,6 @@ class MetadataBrowser extends Controller {
       username = "federated"
       dsName = dsName.substring("federated.".length)
 
-      print(request.body.toString)
       val res = GF_Interface.instance().getFilteredMatrix(dsName, transposed, Json.toJson(request.body).toString())
 
       render { case Accepts.Json() => Ok(Json.toJson(res)) }

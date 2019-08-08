@@ -57,9 +57,7 @@ class MetadataBrowser extends Controller {
 
       val res = GF_Interface.instance().getSampleMetadata(dsName , sampleName)
 
-
-
-      render { case Accepts.Json() => Ok(Json.toJson(res)) }
+      render { case Accepts.Json() => Ok(res) }
 
     } else {
       renderedError(BAD_REQUEST,"")
@@ -187,7 +185,7 @@ class MetadataBrowser extends Controller {
 
       val res = GF_Interface.instance().getFilteredMatrix(dsName, transposed, Json.toJson(request.body).toString())
 
-      render { case Accepts.Json() => Ok(Json.toJson(res)) }
+      render { case Accepts.Json() => Ok(res) }
 
     } else {
       renderedError(BAD_REQUEST,"")
@@ -226,7 +224,8 @@ class MetadataBrowser extends Controller {
       dsName = dsName.substring("federated.".length)
 
       val res = GF_Interface.instance().getFilteredKeys(dsName, Json.toJson(request.body).toString())
-      render { case Accepts.Json() => Ok(Json.toJson(res)) }
+      print(res)
+      render { case Accepts.Json() => Ok(res) }
 
     } else {
       renderedError(BAD_REQUEST,"")
@@ -264,7 +263,7 @@ class MetadataBrowser extends Controller {
       dsName = dsName.substring("federated.".length)
 
       val res = GF_Interface.instance().getFilteredKeys(dsName, key, Json.toJson(request.body).toString())
-      render { case Accepts.Json() => Ok(Json.toJson(res)) }
+      render { case Accepts.Json() => Ok(res) }
     }   else {
       renderedError(BAD_REQUEST,"")
     }

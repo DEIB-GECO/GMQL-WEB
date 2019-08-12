@@ -84,6 +84,7 @@ class JavascriptRoute extends Controller {
 
         controllers.gmql.routes.javascript.GecoQueries.gecoQueriesJson,
 
+        controllers.gmql.routes.javascript.AdminManager.getInfo,
         controllers.gmql.routes.javascript.AdminManager.getUsers,
         controllers.gmql.routes.javascript.AdminManager.getUserTypes,
         controllers.gmql.routes.javascript.AdminManager.updateType

@@ -31,6 +31,20 @@ init = () ->
   $("#forgot-password").click ->
     forgotPassword()
 
+  info_call = jsRoutes.controllers.gmql.AdminManager.getInfo()
+  $.ajax
+    url: info_call.url
+    type: info_call.type
+    method: info_call.method
+    dataType: 'json'
+    headers: {"X-AUTH-TOKEN": window.authToken}
+    success: (result, textStatus, jqXHR) ->
+      if ("adminEmail" of result)
+        console.log(result)
+        $("#menu-items").append("<li id='contact-admin'><a href='mailto:#{result.adminEmail}'>Contact Admin</a></li>")
+    error: (jqXHR, textStatus, errorThrown) ->
+      console.log("error")
+
 
 displayGuestButton = () ->
   $("#login").empty()
@@ -39,7 +53,7 @@ displayGuestButton = () ->
   $('.registered-user').remove()
   $('#login-problem').append('
       <div>
-        <h4>Please login before use the GMQL.</h4>
+        <h4>Please login before using the GMQL.</h4>
         <p>This system is under active development, please forgive us for possible errors and send us your comments, criticisms and congratulations, if any.</p>
         <div id="visit_count"></div>
         <div>GMQL core version: <span id="GMQL-version"></span></div>
@@ -92,8 +106,8 @@ doLogin = (data) ->
   token = data.authToken
   window.user = data
   window.authToken = token # global state holder for the auth token
-#  document.cookie = "auth-token" + "=" + token + "; expires=Tue, 19 Jan 2038 03:14:07 UTC"
-#  $.cookie('authToken', token , { expires: 2147483647 });
+  #  document.cookie = "auth-token" + "=" + token + "; expires=Tue, 19 Jan 2038 03:14:07 UTC"
+  #  $.cookie('authToken', token , { expires: 2147483647 });
   Cookies.set('authToken', token, { expires: 365 })
   displayInfo?("LOGIN OK")
   displayLoggedIn(data.fullName)
@@ -111,7 +125,7 @@ doLogout = (event) ->
     headers: {"X-AUTH-TOKEN": window.authToken}
     success: (data, textStatus, jqXHR) ->
       displayInfo("logout success")
-#      displayGuestButton()
+      #      displayGuestButton()
       $(".login-event").click()
     error: (jqXHR, textStatus, errorThrown) ->
       console.log "document.cookie: " + document.cookie

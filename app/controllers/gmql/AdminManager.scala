@@ -1,10 +1,10 @@
 package controllers.gmql
 
 import javax.inject.Singleton
-
 import controllers.gmql.ResultUtils.NA
 import io.swagger.annotations._
 import it.polimi.genomics.core.GDMSUserClass
+import it.polimi.genomics.repository.Utilities
 import models.UserDao
 import play.api.Logger
 import play.api.libs.json._
@@ -29,6 +29,31 @@ class AdminManager extends Controller {
 
   def adminPage = Action { implicit request =>
     Ok(views.html.admin_main())
+  }
+
+  /**
+    * Return info about the instance (e.g. email of the administrator)
+    *
+    * @return list of infos
+    */
+  @ApiOperation(value = "Get instance info",
+    notes = "E.g. adminEmail")
+  @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = false)))
+  @ApiResponses(value = Array())
+  def getInfo = Action { implicit request =>
+
+    var info = Map[String, String]()
+
+    if(Utilities().ADMIN_EMAIL.isDefined)
+      info = info + ("adminEmail" -> Utilities().ADMIN_EMAIL.get)
+
+
+
+      render {
+        case Accepts.Xml() => Ok(<info>{info.keys.map(k => <item name={k}>{info(k)}</item>)}</info>)
+        case Accepts.Json() => Ok(Json.toJson(info))
+        case _ => NA
+      }
   }
 
   /**

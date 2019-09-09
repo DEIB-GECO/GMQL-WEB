@@ -1,5 +1,5 @@
-fillTable = () ->
-  ajaxUrl = jsRoutes.controllers.gmql.GecoQueries.gecoQueriesJson().url
+fillTable = (q_type) ->
+  ajaxUrl = jsRoutes.controllers.gmql.GecoQueries.gecoQueriesJson(q_type).url
   table = $('#geco_queries_table').DataTable(
     "bSort": false
     'crossDomain': true,
@@ -51,16 +51,19 @@ fillTable = () ->
     showQueryBootstrapDialog("Example query: #{name}", query)
 
 
-showGecoQueriesTable = ->
+showGecoQueriesTable = (q_type) ->
   call = jsRoutes.controllers.gmql.GecoQueries.gecoQueries()
   BootstrapDialog.show
     title: "Example Queries"
     size: BootstrapDialog.SIZE_WIDE
     message: $('<div></div>').load(call.url)
     onshown: ->
-      fillTable()
+      fillTable(q_type)
 
 
 $ ->
   $('#main-query-example').on 'click', (e) ->
-    showGecoQueriesTable()
+    showGecoQueriesTable("default")
+$ ->
+  $('#federated-query-example').on 'click', (e) ->
+    showGecoQueriesTable("federated")

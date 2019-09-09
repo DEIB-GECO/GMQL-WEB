@@ -11,105 +11,91 @@
         </a>
     </div>
     @*<div class="container">*@
-        <div class="navbar-collapse collapse">
-            <ul class="nav navbar-nav" id="menu-items">
+    <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav" id="menu-items">
 
-                 @*<li class="active"><a href="#"><i class="glyphicon glyphicon-home icon-white"></i> Home</a>
-                </li>*@
-                <li><a href="@routes.Application.swagger" target="_gmql-rest">GMQL-REST</a>
-                </li>
-                <li><a href="http://youtu.be/IIx3dYmXJqg?list=PLfWxoOMC6swJS4MeMZKRuuakI054Jcad_" target="_blank">Demo Video</a>
-                </li>
-                <li><a href="http://www.bioinformatics.deib.polimi.it/genomic_computing/GMQLsystem/documentation.html" target="_documentation">Documentation</a>
-                </li>
-                <li><a id="main-query-example" href="#">Example Queries</a>
-                </li>
-                <li><a href="http://www.bioinformatics.deib.polimi.it/GeCo/" target="_geco">GeCo</a>
-                </li>
-                @*                <li><a href="#">Link</a>
-                </li>
-                <li class="dropdown"> <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                Dropdown <b class="caret"></b></a>
-
-                <ul
-                class="dropdown-menu">
-                <li><a href="#">Action</a>
-                </li>
-                <li><a href="#">Another action</a>
-                </li>
-                <li><a href="#">Something else here</a>
-                </li>
-                <li class="divider"></li>
-                <li class="nav-header">Nav header</li>
-                <li><a href="#">Separated link</a>
-                </li>
-                <li><a href="#">One more separated link</a>
-                </li>
+            @*<li class="active"><a href="#"><i class="glyphicon glyphicon-home icon-white"></i> Home</a>
+            </li>*@
+            <li><a href="@routes.Application.swagger" target="_gmql-rest">GMQL-REST</a>
+            </li>
+            <li><a href="http://youtu.be/IIx3dYmXJqg?list=PLfWxoOMC6swJS4MeMZKRuuakI054Jcad_" target="_blank">
+                Demo Video</a>
+            </li>
+            <li><a href="http://www.bioinformatics.deib.polimi.it/genomic_computing/GMQLsystem/documentation.html" target="_documentation">
+                Documentation</a>
+            </li>
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                    Example Queries<span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                    <li><a id="main-query-example" href="#">Default Example Queries</a></li>
+                    <li><a id="federated-query-example" href="#">Federated Example Queries</a></li>
                 </ul>
-                </li>*@
-
-            </ul>
-                <!-- DROPDOWN LOGIN STARTS HERE  -->
-            <ul id="signInDropdown" class="nav navbar-nav navbar-right">
-                <li class="dropdown">
-                    <button type="button" id="dropdownMenu1" data-toggle="dropdown" class="btn btn-primary navbar-btn dropdown-toggle"><span class="glyphicon glyphicon-user"></span>
-                        Login <span class="caret"></span></button>
-                    <ul class="dropdown-menu">
-                        <li style="width: 250px;">
-                            <form class="navbar-form form" role="form" id="loginForm">
-                                <div class="form-group">
-                                    <div class="input-group">
-                                        <span class="input-group-addon"><i class="glyphicon glyphicon-user color-blue"></i></span>
-                                            <!--USERNAME-->
-                                        <input id="usernameInput" placeholder="username" class="form-control" type="text" oninvalid="setCustomValidity('Please enter a username!')" required="" />
-                                        @*onchange="try {
+            </li>
+            <li><a href="http://www.bioinformatics.deib.polimi.it/GeCo/" target="_geco">GeCo</a>
+            </li>
+        </ul>
+            <!-- DROPDOWN LOGIN STARTS HERE  -->
+        <ul id="signInDropdown" class="nav navbar-nav navbar-right">
+            <li class="dropdown">
+                <button type="button" id="dropdownMenu1" data-toggle="dropdown" class="btn btn-primary navbar-btn dropdown-toggle"><span class="glyphicon glyphicon-user"></span>
+                    Login <span class="caret"></span></button>
+                <ul class="dropdown-menu">
+                    <li style="width: 250px;">
+                        <form class="navbar-form form" role="form" id="loginForm">
+                            <div class="form-group">
+                                <div class="input-group">
+                                    <span class="input-group-addon"><i class="glyphicon glyphicon-user color-blue"></i></span>
+                                        <!--USERNAME-->
+                                    <input id="usernameInput" placeholder="username" class="form-control" type="text" oninvalid="setCustomValidity('Please enter a username!')" required="" />
+                                    @*onchange="try {
+                                    setCustomValidity('')
+                                    } catch (e) {
+                                    }"*@
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="input-group">
+                                    <span class="input-group-addon"><i class="glyphicon glyphicon-lock color-blue"></i></span>
+                                        <!--PASSWORD-->
+                                    <input id="passwordInput" placeholder="password" class="form-control" type="password" oninvalid="setCustomValidity('Please enter a password!')" onchange="try {
                                         setCustomValidity('')
-                                        } catch (e) {
-                                        }"*@
-                                    </div>
+                                    } catch (e) {
+                                    }" required=""/>
                                 </div>
-                                <div class="form-group">
-                                    <div class="input-group">
-                                        <span class="input-group-addon"><i class="glyphicon glyphicon-lock color-blue"></i></span>
-                                            <!--PASSWORD-->
-                                        <input id="passwordInput" placeholder="password" class="form-control" type="password" oninvalid="setCustomValidity('Please enter a password!')" onchange="try {
-                                            setCustomValidity('')
-                                        } catch (e) {
-                                        }" required=""/>
-                                    </div>
-                                </div>
-                                    <!--  BASIC ERROR MESSAGE
+                            </div>
+                                <!--  BASIC ERROR MESSAGE
                                     <div class="form-group">
                                     <label class="error-message color-red">*Email &amp; password don't match!</label>
                                     </div>
                                     -->
-                                <div class="form-group">
-                                        <!--BUTTON-->
-                                    <button id="login-button" type="button" class="btn btn-primary form-control">
-                                        Login</button>
-                                </div>
-                                <div class="form-group">
-                                    <button type="button" class="btn btn-info pull-right" data-toggle="modal" data-target="#register-modal">
-                                        New user</button>
-                                </div>
-                                <div class="form-group">
-                                    <span class="pull-right"><a href="#" id="forgot-password">Forgot Password?</a> </span>
-                                </div>
-                            </form>
-                        </li>
-                    </ul>
-                </li>
-            </ul>
-            <ul class="nav navbar-nav navbar-right">
-                @* <li><a href="#"><span class="glyphicon glyphicon-user"></span> Sign Up</a></li>
-                <li><a href="#"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>*@
+                            <div class="form-group">
+                                    <!--BUTTON-->
+                                <button id="login-button" type="button" class="btn btn-primary form-control">
+                                    Login</button>
+                            </div>
+                            <div class="form-group">
+                                <button type="button" class="btn btn-info pull-right" data-toggle="modal" data-target="#register-modal">
+                                    New user</button>
+                            </div>
+                            <div class="form-group">
+                                <span class="pull-right"><a href="#" id="forgot-password">Forgot Password?</a> </span>
+                            </div>
+                        </form>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+            @* <li><a href="#"><span class="glyphicon glyphicon-user"></span> Sign Up</a></li>
+            <li><a href="#"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>*@
             <li><div id="login" class="login-div"></div></li>
             <li><div id="login" class="login-div2"> </div></li>
-            </ul>
-                <!-- DROPDOWN LOGIN ENDS HERE  -->
-                <!-- /.navbar-collapse -->
-        </div>
-            <!-- /.container -->
-   @* </div>*@
+        </ul>
+            <!-- DROPDOWN LOGIN ENDS HERE  -->
+            <!-- /.navbar-collapse -->
+    </div>
+        <!-- /.container -->
+        @* </div>*@
         <!-- /.navbar -->
 </div>

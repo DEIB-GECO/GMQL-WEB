@@ -7,7 +7,9 @@ GET           /swagger.json                                        controllers.A
 GET           /swagger                                             controllers.Application.swagger
 GET           /gecoQueries                                         controllers.gmql.GecoQueries.gecoQueries
 
-GET           /gecoQueriesJson                                     controllers.gmql.GecoQueries.gecoQueriesJson
+GET           /gecoQueriesJson                                     controllers.gmql.GecoQueries.gecoQueriesJson(q_type:String = "default")
+
+GET           /gecoQueriesJson/:q_type                             controllers.gmql.GecoQueries.gecoQueriesJson(q_type:String)
 
 #
 #

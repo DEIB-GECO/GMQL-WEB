@@ -20,9 +20,14 @@ class GecoQueries @Inject()(ws: WSClient, cached: Cached)(implicit ec: Execution
   }
 
   //TODO add cache here
-  def gecoQueriesJson = cached.status(_ => "homePage", 200, 3600) { //1 hour
+  def gecoQueriesJson(q_type: String) = cached.status(_ => "query-" + q_type, 200, 3600) { //1 hour
     Action.async {
-      val request = ws.url("http://www.bioinformatics.deib.polimi.it/geco_queries/geco_queries.json").get
+      val URL = q_type.toLowerCase() match {
+        case "federated" => "http://www.bioinformatics.deib.polimi.it/geco_queries/geco_queries_federated.json"
+        case _ => "http://www.bioinformatics.deib.polimi.it/geco_queries/geco_queries.json"
+      }
+
+      val request = ws.url(URL).get
       Logger.debug("got example query")
 
       request map { response =>

@@ -145,7 +145,10 @@ class SecurityController @Inject()(mailerClient: MailerClient) extends Controlle
           if(user.userType != GDMSUserClass.DISABLED)
             loginResult(createToken(user.id), userOption)
           else {
-            val result = "Your registration request needs approval from the administrator."
+            var result = "Your registration request needs approval from the administrator."
+
+            if (Utilities().ADMIN_EMAIL.isDefined)
+             result+=" Please, <a href='mailto:"+Utilities().ADMIN_EMAIL.get+"'>contact the administrator</a>."
             errorResult(result, Some(UNAUTHORIZED))
           }
         }

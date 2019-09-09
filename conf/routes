@@ -224,6 +224,8 @@ GET         /users                                                  controllers.
 GET         /users/types                                            controllers.gmql.AdminManager.getUserTypes
 PUT         /users/:username/type                                   controllers.gmql.AdminManager.updateType(username)
 
+GET         /instance-info                                          controllers.gmql.AdminManager.getInfo
+
 # FEDERATED
 GET         /federated/download/:fedJobId/:dsName                   controllers.gmql.GFManager.zip(fedJobId, dsName)
 GET         /federated/import/:fedJobId/:dsName/:locationId         controllers.gmql.GFManager.importResult(fedJobId, dsName, locationId)

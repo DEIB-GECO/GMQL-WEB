@@ -35,23 +35,35 @@ class MetadataBrowser extends Controller {
     if (datasetName.startsWith("public.")) {
       username = "public"
       dsName = dsName.substring("public.".length)
+
+      try {
+        lazy val result = DatasetMetadata(username, dsName).getSampleMetadata(sampleName)
+        render {
+          case Accepts.Xml() =>
+            Ok(scala.xml.Utility.trim(result.getXml))
+          case Accepts.Json() =>
+            Ok(Json.toJson(result))
+          case _ => NA
+        }
+      } catch {
+        case e: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found ${e.getMessage}")
+        case e: GMQLSampleNotFound => renderedError(NOT_FOUND, s"Sample not found ${e.getMessage}")
+      }
+
+
     } else if(datasetName.startsWith("federated.")) {
       username = "federated"
       dsName = dsName.substring("federated.".length)
+
+      val res = GF_Interface.instance().getSampleMetadata(dsName , sampleName)
+
+      render { case Accepts.Json() => Ok(res) }
+
+    } else {
+      renderedError(BAD_REQUEST,"")
     }
-    try {
-      lazy val result = DatasetMetadata(username, dsName).getSampleMetadata(sampleName: String)
-      render {
-        case Accepts.Xml() =>
-          Ok(scala.xml.Utility.trim(result.getXml))
-        case Accepts.Json() =>
-          Ok(Json.toJson(result))
-        case _ => NA
-      }
-    } catch {
-      case e: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found ${e.getMessage}")
-      case e: GMQLSampleNotFound => renderedError(NOT_FOUND, s"Sample not found ${e.getMessage}")
-    }
+
+
   }
 
   /**
@@ -142,39 +154,41 @@ class MetadataBrowser extends Controller {
     if (datasetName.startsWith("public.")) {
       username = "public"
       dsName = dsName.substring("public.".length)
-    } else if (datasetName.startsWith("federated.") && Utilities().GF_ENABLED) {
+
+      try {
+        val attributeList = request.body
+        lazy val matrixResult: MatrixResult = DatasetMetadata(username, dsName).getFilteredMatrix(attributeList)
+        lazy val matrixStream = matrixResult.getStream(transposed)
+        val Text = Accepting(MimeTypes.TEXT)
+        render {
+          case Text() =>
+            Ok(matrixStream).withHeaders(
+              "Content-Type" -> "text/plain",
+              "Content-Disposition" -> s"attachment; filename=$dsName.txt"
+            )
+          case Accepts.Xml() => Ok(scala.xml.Utility.trim(matrixResult.getXml))
+          case Accepts.Json() => Ok(Json.toJson(matrixResult))
+          case _ =>
+            Ok(matrixStream).withHeaders(
+              "Content-Type" -> "text/plain",
+              "Content-Disposition" -> s"attachment; filename=$dsName.txt"
+            )
+        }
+      } catch {
+        case e: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found ${e.getMessage}")
+        case e: GMQLSampleNotFound => renderedError(NOT_FOUND, s"Sample not found ${e.getMessage}")
+      }
+    }  else if (datasetName.startsWith("federated.") && Utilities().GF_ENABLED) {
 
       username = "federated"
       dsName = dsName.substring("federated.".length)
 
-      print(request.body.toString)
       val res = GF_Interface.instance().getFilteredMatrix(dsName, transposed, Json.toJson(request.body).toString())
 
-      render { case Accepts.Json() => Ok(Json.toJson(res)) }
+      render { case Accepts.Json() => Ok(res) }
 
-    }
-    try {
-      val attributeList = request.body
-      lazy val matrixResult: MatrixResult = DatasetMetadata(username, dsName).getFilteredMatrix(attributeList)
-      lazy val matrixStream = matrixResult.getStream(transposed)
-      val Text = Accepting(MimeTypes.TEXT)
-      render {
-        case Text() =>
-          Ok(matrixStream).withHeaders(
-            "Content-Type" -> "text/plain",
-            "Content-Disposition" -> s"attachment; filename=$dsName.txt"
-          )
-        case Accepts.Xml() => Ok(scala.xml.Utility.trim(matrixResult.getXml))
-        case Accepts.Json() => Ok(Json.toJson(matrixResult))
-        case _ =>
-          Ok(matrixStream).withHeaders(
-            "Content-Type" -> "text/plain",
-            "Content-Disposition" -> s"attachment; filename=$dsName.txt"
-          )
-      }
-    } catch {
-      case e: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found ${e.getMessage}")
-      case e: GMQLSampleNotFound => renderedError(NOT_FOUND, s"Sample not found ${e.getMessage}")
+    } else {
+      renderedError(BAD_REQUEST,"")
     }
   }
 
@@ -191,29 +205,33 @@ class MetadataBrowser extends Controller {
     if (datasetName.startsWith("public.")) {
       username = "public"
       dsName = dsName.substring("public.".length)
-    } else if (datasetName.startsWith("federated.") && Utilities().GF_ENABLED) {
 
+      try {
+        val attributeList = request.body
+        lazy val result = if (attributeList.attributes.isEmpty) DatasetMetadata(username, dsName).getAllKeys else DatasetMetadata(username, dsName).getFilteredKeys(attributeList)
+        render {
+          case Accepts.Xml() => Ok(scala.xml.Utility.trim(result.getXml))
+          case Accepts.Json() => Ok(Json.toJson(result))
+          case _ => NA
+        }
+      } catch {
+        case e: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found ${e.getMessage}")
+        case e: GMQLSampleNotFound => renderedError(NOT_FOUND, s"Sample not found ${e.getMessage}")
+      }
+
+    } else if (datasetName.startsWith("federated.") && Utilities().GF_ENABLED) {
       username = "federated"
       dsName = dsName.substring("federated.".length)
 
       val res = GF_Interface.instance().getFilteredKeys(dsName, Json.toJson(request.body).toString())
-      render { case Accepts.Json() => Ok(Json.toJson(res)) }
+      print(res)
+      render { case Accepts.Json() => Ok(res) }
+
+    } else {
+      renderedError(BAD_REQUEST,"")
     }
 
 
-
-    try {
-      val attributeList = request.body
-      lazy val result = if (attributeList.attributes.isEmpty) DatasetMetadata(username, dsName).getAllKeys else DatasetMetadata(username, dsName).getFilteredKeys(attributeList)
-      render {
-        case Accepts.Xml() => Ok(scala.xml.Utility.trim(result.getXml))
-        case Accepts.Json() => Ok(Json.toJson(result))
-        case _ => NA
-      }
-    } catch {
-      case e: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found ${e.getMessage}")
-      case e: GMQLSampleNotFound => renderedError(NOT_FOUND, s"Sample not found ${e.getMessage}")
-    }
   }
 
   // TODO: FEDERATED  /metadata/:datasetName/filter
@@ -225,27 +243,29 @@ class MetadataBrowser extends Controller {
     if (datasetName.startsWith("public.")) {
       username = "public"
       dsName = dsName.substring("public.".length)
+
+      try {
+        val attributeList = request.body
+        lazy val result = if (attributeList.attributes.isEmpty) DatasetMetadata(username, dsName).getAllValues(key) else DatasetMetadata(username, dsName).getFilteredValues(attributeList, key)
+
+        render {
+          case Accepts.Xml() => Ok(scala.xml.Utility.trim(result.getXml))
+          case Accepts.Json() => Ok(Json.toJson(result))
+          case _ => NA
+        }
+      } catch {
+        case e: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found ${e.getMessage}")
+        case e: GMQLSampleNotFound => renderedError(NOT_FOUND, s"Sample not found ${e.getMessage}")
+      }
     } else if (datasetName.startsWith("federated.") && Utilities().GF_ENABLED) {
 
       username = "federated"
       dsName = dsName.substring("federated.".length)
 
       val res = GF_Interface.instance().getFilteredKeys(dsName, key, Json.toJson(request.body).toString())
-      render { case Accepts.Json() => Ok(Json.toJson(res)) }
-    }
-
-    try {
-      val attributeList = request.body
-      lazy val result = if (attributeList.attributes.isEmpty) DatasetMetadata(username, dsName).getAllValues(key) else DatasetMetadata(username, dsName).getFilteredValues(attributeList, key)
-
-      render {
-        case Accepts.Xml() => Ok(scala.xml.Utility.trim(result.getXml))
-        case Accepts.Json() => Ok(Json.toJson(result))
-        case _ => NA
-      }
-    } catch {
-      case e: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found ${e.getMessage}")
-      case e: GMQLSampleNotFound => renderedError(NOT_FOUND, s"Sample not found ${e.getMessage}")
+      render { case Accepts.Json() => Ok(res) }
+    }   else {
+      renderedError(BAD_REQUEST,"")
     }
   }
 }

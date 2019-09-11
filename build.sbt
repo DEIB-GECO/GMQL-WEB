@@ -81,7 +81,7 @@ val gmqlVersion = {
   if (development)
     "1.0-SNAPSHOT"
   else
-    "1.0-gmql_federated-SNAPSHOT"
+    "1.0-gmql_federated_policies-SNAPSHOT"
 }
 
 

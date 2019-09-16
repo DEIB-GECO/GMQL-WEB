@@ -1,6 +1,17 @@
 #document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
 $ -> init()
 
+getQueryVariable = (variable) ->
+  query = window.location.search.substring(1)
+  vars = query.split("&")
+  i = 0
+
+  while i < vars.length
+    pair = vars[i].split("=")
+    return pair[1]  if pair[0] is variable
+    i++
+  false
+
 init = () ->
   console.log "document.cookie: " + document.cookie
   window.authToken = Cookies.get('authToken')
@@ -16,6 +27,26 @@ init = () ->
         window.user = result
         displayLoggedIn(result.fullName)
         updateUploadView()
+
+        showExample = getQueryVariable("showExample")
+        if(showExample)
+          ajaxUrl = jsRoutes.controllers.gmql.GecoQueries.gecoQueriesJson("federated")
+          $.ajax
+            url: ajaxUrl.url
+            type: ajaxUrl.type
+            method: ajaxUrl.method
+            headers: {'X-AUTH-TOKEN': window.authToken}
+            success: (result, textStatus, jqXHR) ->
+              console.log("EEEEEXAMPLEEEE"+result)
+              query = result.data.filter((x)-> x.name==showExample )[0].query
+              console.log("EEEEEXAMPLEEEE"+query)
+              ace.edit("main-query-editor").setValue(query)
+
+
+
+
+
+          ace.edit("main-query-editor").setValue(showExample)
 #        $( "input[name='X-AUTH-TOKEN']" ).val(window.authToken)
       error: (jqXHR, textStatus, errorThrown) ->
         displayGuestButton()

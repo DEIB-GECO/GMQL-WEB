@@ -426,7 +426,10 @@ findSelectedNode = ->
 
 startDelete = (selectedNodes) ->
   for node in selectedNodes.data_sets
-    deleteDataset(node)
+    if(node.title!="myMutation" || window.user.username!="demouser")
+      deleteDataset(node)
+    else
+      BootstrapDialog.alert("Action not allowed: dataset myMutation cannot be deleted.")
 
 
 deleteDataset = (node) ->
@@ -808,21 +811,24 @@ renameDataset = (node) ->
       when "data-set"  then data.value
 
   if datasetName?
-    BootstrapDialog.show
-      title: "Change dataset name of #{datasetName}"
-      message: "<div style='height: 100px;'><label>New name:</label> <input id='dataset-new-name'></input></div>"
-      buttons: [
-        {
-          label: 'Rename'
-          action: (dialogItself) ->
-            rename(datasetName, $('#dataset-new-name').val())
-        }
-        {
-          label: 'Close'
-          action: (dialogItself) ->
-            dialogItself.close()
-        }
-      ]
+    if(datasetName!="myMutation" || window.user.username!="demouser")
+      BootstrapDialog.show
+        title: "Change dataset name of #{datasetName}"
+        message: "<div style='height: 100px;'><label>New name:</label> <input id='dataset-new-name'></input></div>"
+        buttons: [
+          {
+            label: 'Rename'
+            action: (dialogItself) ->
+              rename(datasetName, $('#dataset-new-name').val())
+          }
+          {
+            label: 'Close'
+            action: (dialogItself) ->
+              dialogItself.close()
+          }
+        ]
+    else
+      BootstrapDialog.alert("Action not allowed: dataset myMutation cannot be renamed.")
 
 
 rename = (datasetName, datasetNewName) ->

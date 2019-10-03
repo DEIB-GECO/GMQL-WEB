@@ -158,7 +158,7 @@ compileQuery = () ->
         switch status
           when "PENDING", "RUNNING", "EXEC_SUCCESS", "COMPILING", "DS_CREATION_RUNNING", "DS_CREATION_SUCCESS"
             setTimeout checkLastJob, 5000
-            $("#query-stop").show()
+#            $("#query-stop").show()
           when  "SUCCESS"
             setTimeout reloadComponents, 1000
             #          alert('job finished');

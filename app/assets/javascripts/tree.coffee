@@ -232,6 +232,8 @@ glyph_opts = map:
               title: if newType == "data-set" then (att.name.replace /^public\./, "") + result else att.name.split("/").pop()
               folder: false
               lazy: lazy
+              tooltip: if !att.online then "None of the repositories hosting this dataset is online." else ""
+              statusNodeType: if !att.online then "error" else ""
               hideCheckbox: hideCheckBox
               unselectable: hideCheckBox
               type: newType

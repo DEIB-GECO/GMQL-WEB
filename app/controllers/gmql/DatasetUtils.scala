@@ -127,7 +127,8 @@ case class Dataset(var name: String,
                    @ApiModelProperty(dataType = "string", required = false) owner: Option[String] = None,
                    @ApiModelProperty(dataType = "string", required = false) group: Option[String] = None,
                    @ApiModelProperty(dataType = "List[controllers.gmql.Sample]", required = false) samples: Option[Seq[Sample]] = None,
-                   @ApiModelProperty(dataType = "controllers.gmql.Info", required = false) info: Option[Info] = None) extends Ordered[Dataset] {
+                   @ApiModelProperty(dataType = "controllers.gmql.Info", required = false) info: Option[Info] = None,
+                   var online: Boolean = true) extends Ordered[Dataset] {
   def compare(that: Dataset): Int = Ordering.Tuple2[Option[String], String].compare((this.owner, this.name.toLowerCase), (that.owner, that.name.toLowerCase))
 
   @ApiModelProperty(hidden = true)

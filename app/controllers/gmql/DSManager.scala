@@ -65,7 +65,7 @@ class DSManager extends Controller {
         // public datasets
         (for (ds: IRDataSet <- repository.listAllDSs("public")) yield Dataset(ds.position, Some("public"), info = Some(DatasetUtils.getInfo("public", ds.position)))) ++
         // federated datasets
-        (for (ds: IRDataSet <- repository.listAllDSs("federated")) yield Dataset(ds.position, Some("federated"), info = Some(DatasetUtils.getInfo("public", ds.position))))
+        (for (ds: IRDataSet <- repository.listAllDSs("federated")) yield Dataset(ds.position, Some("federated"), info = Some(DatasetUtils.getInfo("public", ds.position)), online = ds.online))
       Datasets(datasetList.sorted)
     }
 

@@ -231,3 +231,5 @@ GET         /federated/download/:fedJobId/:dsName                   controllers.
 GET         /federated/import/:fedJobId/:dsName/:locationId         controllers.gmql.GFManager.importResult(fedJobId, dsName, locationId)
 GET         /federated/checkimport/:fedJobId/:dsName                controllers.gmql.GFManager.checkImportStatus(fedJobId, dsName)
 GET         /federated/delete/:fedJobId/:dsName                     controllers.gmql.GFManager.delete(fedJobId, dsName)
+
+GET         /api-info   controllers.gmql.GFManager.info()

@@ -153,4 +153,25 @@ class GFManager extends Controller {
   }
 
 
+  @ApiOperation(value = "Info about the api", notes = "Used to check if the location in the Name Server is correctly configured")
+  @ApiResponses(value = Array(new ApiResponse(code = 405, message = "Federated mode is not enabled.")))
+  def info() = Action { implicit request =>
+
+    if (GmqlGlobal.federated_interface.isEmpty) {
+      ResultUtils.renderedError(METHOD_NOT_ALLOWED, "Federated mode is not enabled.")
+    } else {
+
+      val result = "gmql-federated-api"
+
+      render {
+        case Accepts.Xml() => Ok(<result>
+          {result}
+        </result>)
+        case Accepts.Json() => Ok(JsObject(Seq("result" -> JsString(result))))
+        case _ => NA
+      }
+    }
+  }
+
+
 }

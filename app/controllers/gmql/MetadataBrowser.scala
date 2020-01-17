@@ -32,12 +32,23 @@ class MetadataBrowser extends Controller {
     var username: String = request.username.get
     var dsName = datasetName
     // if public[federated] then user name is public[federated] and get the correct dataset name
-    if (datasetName.startsWith("public.")) {
-      username = "public"
-      dsName = dsName.substring("public.".length)
 
+    if (datasetName.startsWith("federated.")) {
+      username = "federated"
+      dsName = dsName.substring("federated.".length)
+
+      val res = GF_Interface.instance().getSampleMetadata(dsName, sampleName)
+
+      render { case Accepts.Json() => Ok(res) }
+
+    }
+    else {
+      if (datasetName.startsWith("public.")) {
+        username = "public"
+        dsName = dsName.substring("public.".length)
+      }
       try {
-        lazy val result = DatasetMetadata(username, dsName).getSampleMetadata(sampleName)
+        lazy val result = DatasetMetadata(username, dsName).getSampleMetadata(sampleName: String)
         render {
           case Accepts.Xml() =>
             Ok(scala.xml.Utility.trim(result.getXml))
@@ -49,18 +60,6 @@ class MetadataBrowser extends Controller {
         case e: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found ${e.getMessage}")
         case e: GMQLSampleNotFound => renderedError(NOT_FOUND, s"Sample not found ${e.getMessage}")
       }
-
-
-    } else if(datasetName.startsWith("federated.")) {
-      username = "federated"
-      dsName = dsName.substring("federated.".length)
-
-      val res = GF_Interface.instance().getSampleMetadata(dsName , sampleName)
-
-      render { case Accepts.Json() => Ok(res) }
-
-    } else {
-      renderedError(BAD_REQUEST,"")
     }
 
 
@@ -80,7 +79,7 @@ class MetadataBrowser extends Controller {
     if (datasetName.startsWith("public.")) {
       username = "public"
       dsName = dsName.substring("public.".length)
-    } else if (datasetName.startsWith("federated.")){
+    } else if (datasetName.startsWith("federated.")) {
       username = "federated"
       dsName = dsName.substring("federated.".length)
     }
@@ -147,14 +146,26 @@ class MetadataBrowser extends Controller {
 
   //TODO: FEDERATED /metadata/:datasetName/dataset/matrix
   @ApiImplicitParams(Array(new ApiImplicitParam(name = "X-AUTH-TOKEN", dataType = "string", paramType = "header", required = true)))
-  def getFilteredMaxtrix(datasetName: String, transposed:Boolean = false) = AuthenticatedAction(DatasetUtils.validateJson[AttributeList]) { implicit request =>
+  def getFilteredMaxtrix(datasetName: String, transposed: Boolean = false) = AuthenticatedAction(DatasetUtils.validateJson[AttributeList]) { implicit request =>
     var username: String = request.username.get
     var dsName = datasetName
     // if public then user name is public and get the correct dataset name
-    if (datasetName.startsWith("public.")) {
-      username = "public"
-      dsName = dsName.substring("public.".length)
+    if (datasetName.startsWith("federated.") && Utilities().GF_ENABLED) {
 
+      username = "federated"
+      dsName = dsName.substring("federated.".length)
+
+      val res = GF_Interface.instance().getFilteredMatrix(dsName, transposed, Json.toJson(request.body).toString())
+
+      render { case Accepts.Json() => Ok(res) }
+
+    }
+    else {
+      if (datasetName.startsWith("public.")) {
+        username = "public"
+        dsName = dsName.substring("public.".length)
+
+      }
       try {
         val attributeList = request.body
         lazy val matrixResult: MatrixResult = DatasetMetadata(username, dsName).getFilteredMatrix(attributeList)
@@ -178,17 +189,6 @@ class MetadataBrowser extends Controller {
         case e: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found ${e.getMessage}")
         case e: GMQLSampleNotFound => renderedError(NOT_FOUND, s"Sample not found ${e.getMessage}")
       }
-    }  else if (datasetName.startsWith("federated.") && Utilities().GF_ENABLED) {
-
-      username = "federated"
-      dsName = dsName.substring("federated.".length)
-
-      val res = GF_Interface.instance().getFilteredMatrix(dsName, transposed, Json.toJson(request.body).toString())
-
-      render { case Accepts.Json() => Ok(res) }
-
-    } else {
-      renderedError(BAD_REQUEST,"")
     }
   }
 
@@ -202,10 +202,20 @@ class MetadataBrowser extends Controller {
     var username: String = request.username.get
     var dsName = datasetName
     // if public then user name is public and get the correct dataset name
-    if (datasetName.startsWith("public.")) {
-      username = "public"
-      dsName = dsName.substring("public.".length)
+    if (datasetName.startsWith("federated.") && Utilities().GF_ENABLED) {
+      username = "federated"
+      dsName = dsName.substring("federated.".length)
 
+      val res = GF_Interface.instance().getFilteredKeys(dsName, Json.toJson(request.body).toString())
+      print(res)
+      render { case Accepts.Json() => Ok(res) }
+
+    }
+    else {
+      if (datasetName.startsWith("public.")) {
+        username = "public"
+        dsName = dsName.substring("public.".length)
+      }
       try {
         val attributeList = request.body
         lazy val result = if (attributeList.attributes.isEmpty) DatasetMetadata(username, dsName).getAllKeys else DatasetMetadata(username, dsName).getFilteredKeys(attributeList)
@@ -218,17 +228,6 @@ class MetadataBrowser extends Controller {
         case e: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found ${e.getMessage}")
         case e: GMQLSampleNotFound => renderedError(NOT_FOUND, s"Sample not found ${e.getMessage}")
       }
-
-    } else if (datasetName.startsWith("federated.") && Utilities().GF_ENABLED) {
-      username = "federated"
-      dsName = dsName.substring("federated.".length)
-
-      val res = GF_Interface.instance().getFilteredKeys(dsName, Json.toJson(request.body).toString())
-      print(res)
-      render { case Accepts.Json() => Ok(res) }
-
-    } else {
-      renderedError(BAD_REQUEST,"")
     }
 
 
@@ -240,10 +239,19 @@ class MetadataBrowser extends Controller {
     var username: String = request.username.get
     var dsName = datasetName
     // if public then user name is public and get the correct dataset name
-    if (datasetName.startsWith("public.")) {
-      username = "public"
-      dsName = dsName.substring("public.".length)
+    if (datasetName.startsWith("federated.") && Utilities().GF_ENABLED) {
 
+      username = "federated"
+      dsName = dsName.substring("federated.".length)
+
+      val res = GF_Interface.instance().getFilteredKeys(dsName, key, Json.toJson(request.body).toString())
+      render { case Accepts.Json() => Ok(res) }
+    }
+    else {
+      if (datasetName.startsWith("public.")) {
+        username = "public"
+        dsName = dsName.substring("public.".length)
+      }
       try {
         val attributeList = request.body
         lazy val result = if (attributeList.attributes.isEmpty) DatasetMetadata(username, dsName).getAllValues(key) else DatasetMetadata(username, dsName).getFilteredValues(attributeList, key)
@@ -257,15 +265,6 @@ class MetadataBrowser extends Controller {
         case e: GMQLDSNotFound => renderedError(NOT_FOUND, s"Dataset not found ${e.getMessage}")
         case e: GMQLSampleNotFound => renderedError(NOT_FOUND, s"Sample not found ${e.getMessage}")
       }
-    } else if (datasetName.startsWith("federated.") && Utilities().GF_ENABLED) {
-
-      username = "federated"
-      dsName = dsName.substring("federated.".length)
-
-      val res = GF_Interface.instance().getFilteredKeys(dsName, key, Json.toJson(request.body).toString())
-      render { case Accepts.Json() => Ok(res) }
-    }   else {
-      renderedError(BAD_REQUEST,"")
     }
   }
 }
